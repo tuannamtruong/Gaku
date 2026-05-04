@@ -1,0 +1,24 @@
+services:
+  jenkins:
+    image: jenkins/jenkins:lts-jdk21
+    container_name: gaku-jenkins
+    restart: unless-stopped
+
+    ports:
+      - "8090:8080"
+      - "50000:50000"
+
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/nam/Gaku:/home/nam/Gaku:ro
+
+    # GID 1001 matches the docker socket group on this host.
+    # Run `stat /var/run/docker.sock` to verify if docker socket access fails.
+    group_add:
+      - "1001"
+
+
+volumes:
+  jenkins_home:
+    name: gaku-jenkins-home

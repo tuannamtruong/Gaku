@@ -1,0 +1,14 @@
+**/bin/
+**/obj/
+**/TestResults/
+**/.git/
+**/.vs/
+**/.vscode/
+**/.idea/
+appsettings.Development.json
+*.pfx
+*.p12
+.env
+.env.*
+**/.DS_Store
+**/Thumbs.db

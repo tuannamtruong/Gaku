@@ -106,3 +106,27 @@ All interactive pages use `@rendermode InteractiveServer` so server-side service
 ```
 ConnectionStrings__DefaultConnection   PostgreSQL connection string
 ```
+
+---
+
+## CI/CD Pipeline (Local — Docker + Jenkins)
+
+### Files
+
+```
+Jenkinsfile                  declarative pipeline (repo root)
+.dockerignore                excludes bin/, obj/, .git/, .vs/ from build context
+docker/Dockerfile.ci         multi-stage: stage `build` compiles, stage `test` runs tests
+jenkins/docker-compose.yml   Jenkins container (port 8090) with Docker socket mounted
+```
+### Starting Jenkins
+
+```bash
+cd jenkins && docker compose up -d
+# UI at http://localhost:8090
+docker exec gaku-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+```
+
+Required Jenkins plugins: **Pipeline**, **Git**, **JUnit**, **Timestamper**.
+
+Pipeline job config: SCM → Git → `file:///home/nam/Gaku` → branch `*/master` → script path `Jenkinsfile`.
