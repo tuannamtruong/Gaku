@@ -1,0 +1,66 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.5.11723.231
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{AA000001-0000-0000-0000-000000000000}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{AA000002-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gaku.Core", "src\Gaku.Core\Gaku.Core.csproj", "{AA000003-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gaku.Application", "src\Gaku.Application\Gaku.Application.csproj", "{AA000004-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gaku.Infrastructure", "src\Gaku.Infrastructure\Gaku.Infrastructure.csproj", "{AA000005-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gaku.Core.Tests", "tests\Gaku.Core.Tests\Gaku.Core.Tests.csproj", "{AA000008-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gaku.Application.Tests", "tests\Gaku.Application.Tests\Gaku.Application.Tests.csproj", "{AA000009-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gaku.Infrastructure.Tests", "tests\Gaku.Infrastructure.Tests\Gaku.Infrastructure.Tests.csproj", "{AA00000A-0000-0000-0000-000000000000}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AA000003-0000-0000-0000-000000000000}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA000003-0000-0000-0000-000000000000}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA000003-0000-0000-0000-000000000000}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA000003-0000-0000-0000-000000000000}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA000004-0000-0000-0000-000000000000}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA000004-0000-0000-0000-000000000000}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA000004-0000-0000-0000-000000000000}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA000004-0000-0000-0000-000000000000}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA000005-0000-0000-0000-000000000000}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA000005-0000-0000-0000-000000000000}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA000005-0000-0000-0000-000000000000}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA000005-0000-0000-0000-000000000000}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA000008-0000-0000-0000-000000000000}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA000008-0000-0000-0000-000000000000}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA000008-0000-0000-0000-000000000000}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA000008-0000-0000-0000-000000000000}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA000009-0000-0000-0000-000000000000}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA000009-0000-0000-0000-000000000000}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA000009-0000-0000-0000-000000000000}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA000009-0000-0000-0000-000000000000}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA00000A-0000-0000-0000-000000000000}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA00000A-0000-0000-0000-000000000000}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA00000A-0000-0000-0000-000000000000}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA00000A-0000-0000-0000-000000000000}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AA000003-0000-0000-0000-000000000000} = {AA000001-0000-0000-0000-000000000000}
+		{AA000004-0000-0000-0000-000000000000} = {AA000001-0000-0000-0000-000000000000}
+		{AA000005-0000-0000-0000-000000000000} = {AA000001-0000-0000-0000-000000000000}
+		{AA000008-0000-0000-0000-000000000000} = {AA000002-0000-0000-0000-000000000000}
+		{AA000009-0000-0000-0000-000000000000} = {AA000002-0000-0000-0000-000000000000}
+		{AA00000A-0000-0000-0000-000000000000} = {AA000002-0000-0000-0000-000000000000}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1B98AF7A-E748-44D0-9869-064AE6F4C1AC}
+	EndGlobalSection
+EndGlobal
