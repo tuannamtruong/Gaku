@@ -18,14 +18,13 @@ ASP.NET Core 10 application for discovering and navigating hiking trails across 
 ## Architecture — Clean Architecture
 
 ```
-Gaku.Core
-  ├── Gaku.Application
-  └── Gaku.Infrastructure
+Gaku.Domain                       business rules and data shapes
+  ├── Gaku.Application            business workflows and capability contracts
+  │     └── Gaku.Infrastructure   technical implementations of those contracts
+  └── Gaku.Infrastructure   
 ```
 
-**Dependency rule**: arrows point inward only — outer rings depend on inner rings, never the reverse.
-
-**Rule**: `Application` must never reference `Infrastructure`.
+**Dependency rule**: arrows point inward only — outer layers depend on inner layers, never the reverse. `Application` must never reference `Infrastructure`.
 
 ### Presentation layer and Infrastructure
 
