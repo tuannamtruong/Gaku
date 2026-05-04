@@ -1,10 +1,10 @@
 using FluentAssertions;
 using Xunit;
 using Gaku.Application.Services;
-using Gaku.Core.Entities;
-using Gaku.Core.Enums;
-using Gaku.Core.Interfaces;
-using Gaku.Core.ValueObjects;
+using Gaku.Domain.Entities;
+using Gaku.Domain.Enums;
+using Gaku.Domain.Interfaces;
+using Gaku.Domain.ValueObjects;
 using NSubstitute;
 
 namespace Gaku.Application.Tests.Services;

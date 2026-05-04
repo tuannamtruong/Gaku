@@ -1,10 +1,10 @@
 using FluentAssertions;
 using Xunit;
-using Gaku.Core.Entities;
-using Gaku.Core.Enums;
-using Gaku.Core.ValueObjects;
+using Gaku.Domain.Entities;
+using Gaku.Domain.Enums;
+using Gaku.Domain.ValueObjects;
 
-namespace Gaku.Core.Tests.Entities;
+namespace Gaku.Domain.Tests.Entities;
 
 public class TrailTests
 {

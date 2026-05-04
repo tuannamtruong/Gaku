@@ -1,4 +1,4 @@
-namespace Gaku.Core.ValueObjects;
+namespace Gaku.Domain.ValueObjects;
 
 public sealed record Coordinates
 {

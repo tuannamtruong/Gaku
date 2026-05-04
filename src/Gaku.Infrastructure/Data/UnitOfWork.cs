@@ -1,4 +1,4 @@
-using Gaku.Core.Interfaces;
+using Gaku.Domain.Interfaces;
 
 namespace Gaku.Infrastructure.Data;
 

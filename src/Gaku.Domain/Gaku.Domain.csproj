@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <RootNamespace>Gaku.Core</RootNamespace>
+    <RootNamespace>Gaku.Domain</RootNamespace>
   </PropertyGroup>
 </Project>

@@ -1,8 +1,8 @@
 using FluentAssertions;
 using Xunit;
-using Gaku.Core.ValueObjects;
+using Gaku.Domain.ValueObjects;
 
-namespace Gaku.Core.Tests.ValueObjects;
+namespace Gaku.Domain.Tests.ValueObjects;
 
 public class CoordinatesTests
 {

@@ -1,7 +1,7 @@
-using Gaku.Core.Enums;
-using Gaku.Core.ValueObjects;
+using Gaku.Domain.Enums;
+using Gaku.Domain.ValueObjects;
 
-namespace Gaku.Core.Entities;
+namespace Gaku.Domain.Entities;
 
 public class Trail
 {

@@ -6,13 +6,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{AA000001-000
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{AA000002-0000-0000-0000-000000000000}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gaku.Core", "src\Gaku.Core\Gaku.Core.csproj", "{AA000003-0000-0000-0000-000000000000}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gaku.Domain", "src\Gaku.Domain\Gaku.Domain.csproj", "{AA000003-0000-0000-0000-000000000000}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gaku.Application", "src\Gaku.Application\Gaku.Application.csproj", "{AA000004-0000-0000-0000-000000000000}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gaku.Infrastructure", "src\Gaku.Infrastructure\Gaku.Infrastructure.csproj", "{AA000005-0000-0000-0000-000000000000}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gaku.Core.Tests", "tests\Gaku.Core.Tests\Gaku.Core.Tests.csproj", "{AA000008-0000-0000-0000-000000000000}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gaku.Domain.Tests", "tests\Gaku.Domain.Tests\Gaku.Domain.Tests.csproj", "{AA000008-0000-0000-0000-000000000000}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gaku.Application.Tests", "tests\Gaku.Application.Tests\Gaku.Application.Tests.csproj", "{AA000009-0000-0000-0000-000000000000}"
 EndProject

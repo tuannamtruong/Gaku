@@ -3,7 +3,8 @@
     <RootNamespace>Gaku.Infrastructure</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Gaku.Core\Gaku.Core.csproj" />
+    <ProjectReference Include="..\Gaku.Domain\Gaku.Domain.csproj" />
+    <ProjectReference Include="..\Gaku.Application\Gaku.Application.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />

@@ -1,4 +1,4 @@
-namespace Gaku.Core.Enums;
+namespace Gaku.Domain.Enums;
 
 public enum TrailType
 {

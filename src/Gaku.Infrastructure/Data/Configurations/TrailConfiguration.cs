@@ -1,5 +1,5 @@
-using Gaku.Core.Entities;
-using Gaku.Core.ValueObjects;
+using Gaku.Domain.Entities;
+using Gaku.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using NtsGeometries = NetTopologySuite.Geometries;

@@ -1,5 +1,5 @@
 using Gaku.Application.DTOs;
-using Gaku.Core.Enums;
+using Gaku.Domain.Enums;
 
 namespace Gaku.Application.Services;
 

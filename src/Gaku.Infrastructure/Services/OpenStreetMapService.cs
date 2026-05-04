@@ -1,8 +1,8 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Gaku.Core.Interfaces;
-using Gaku.Core.ValueObjects;
+using Gaku.Application.Interfaces;
+using Gaku.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
 namespace Gaku.Infrastructure.Services;

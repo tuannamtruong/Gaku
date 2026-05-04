@@ -1,4 +1,4 @@
-using Gaku.Core.Entities;
+using Gaku.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Gaku.Infrastructure.Data;

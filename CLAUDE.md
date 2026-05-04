@@ -15,7 +15,7 @@ ASP.NET Core 10 application for discovering and navigating hiking trails across 
 | Backend tests | xUnit + FluentAssertions + NSubstitute |
 | Frontend tests | bUnit + NSubstitute |
 
-## Architecture — Onion
+## Architecture — Clean Architecture
 
 ```
 Gaku.Core
@@ -23,18 +23,28 @@ Gaku.Core
   └── Gaku.Infrastructure
 ```
 
+**Dependency rule**: arrows point inward only — outer rings depend on inner rings, never the reverse.
+
+**Rule**: `Application` must never reference `Infrastructure`.
+
+### Presentation layer and Infrastructure
+
+`Gaku.Api` and `Gaku.Web` reference Infrastructure **only** in `Program.cs` (the composition root) to call `AddInfrastructure()` and wire up DI. No page, component, or controller should import an Infrastructure type directly — all business interactions go through Application service interfaces. If code outside `Program.cs` references an Infrastructure namespace, it is a layering violation.
+
+---
 
 ## Project Map
 
 ```
 src/
-  Gaku.Core/
+  Gaku.Domain/
     Entities/        Trail, Waypoint, Location  (aggregate roots + children)
     Enums/           DifficultyLevel, TrailType
-    Interfaces/      ITrailRepository, IOpenStreetMapService, IUnitOfWork
+    Interfaces/      ITrailRepository, IUnitOfWork
     ValueObjects/    Coordinates  (pure record, haversine helper)
   Gaku.Application/
-    DTOs/            TrailDto, MapInfoDto, LocationDto, …
+    DTOs/            TrailDto, MapInfoDto, LocationDto, ...
+    Interfaces/      IOpenStreetMapService  (OSM facade contract)
     Services/        ITrailService / TrailService
                      IMapService   / MapService
     Extensions/      ServiceCollectionExtensions (AddApplication)
@@ -45,14 +55,14 @@ src/
     Services/        OpenStreetMapService (Nominatim + Overpass API)
     Extensions/      ServiceCollectionExtensions (AddInfrastructure)
 tests/
-  Gaku.Core.Tests/         Entity + value-object unit tests
+  Gaku.Domain.Tests/       Entity + value-object unit tests
   Gaku.Application.Tests/  Service tests with NSubstitute fakes
   Gaku.Infrastructure.Tests/ OSM service tests with MockHttp
 ```
 
 ## Architecture Diagrams
 
-> See [docs/architecture.md](docs/architecture.md) for rendered C4, onion, container, ER, and sequence diagrams.
+> See [docs/architecture.md](docs/architecture.md) for rendered C4, clean architecture, container, ER, and sequence diagrams.
 > See [docs/class-diagram.md](docs/class-diagram.md) for per-project class diagrams.
 
 **Class diagram rule**: when creating or updating class diagrams, exclude enums, value objects, and record types — show only classes and interfaces.
@@ -62,7 +72,7 @@ tests/
 ## Naming Conventions
 
 - **Entities, DTOs, value objects**: singular — `Trail`, `TrailDto`, `Coordinates`
-- **C# folders**: singular — `Entity/`, `ValueObject/`, `Endpoint/`, `Repository/`, `Service/`
+- **C# folders**: singular — `Entity/`, `ValueObject/`, `Endpoint/`, `Repository/`, `Service/`, `Interface/`
 - **Interfaces**: `I` prefix + singular noun — `ITrailRepository`, `IUnitOfWork`
 - **DB tables**: singular — `Trail`, `Waypoint`, `Location` (EF default; do not pluralise)
 - **Enums**: singular type name, plural only for `[Flags]` — `DifficultyLevel`, `TrailType`
@@ -70,7 +80,7 @@ tests/
 ## Key Design Decisions
 
 ### PostGIS spatial storage
-`Coordinates` (domain value object) is mapped to a PostGIS `geography(Point,4326)` column via an EF Core `HasConversion` to `NetTopologySuite.Geometries.Point`. This keeps the Core layer free of NTS types.  
+`Coordinates` (domain value object) is mapped to a PostGIS `geography(Point,4326)` column via an EF Core `HasConversion` to `NetTopologySuite.Geometries.Point`. This keeps the Domain layer free of NTS types.
 The `TrailRepository.GetNearbyAsync` uses `FromSqlRaw` with `ST_DWithin` to leverage the GIST spatial index.
 
 ### OpenStreetMap integration

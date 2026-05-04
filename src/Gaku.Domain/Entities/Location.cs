@@ -1,6 +1,6 @@
-using Gaku.Core.ValueObjects;
+using Gaku.Domain.ValueObjects;
 
-namespace Gaku.Core.Entities;
+namespace Gaku.Domain.Entities;
 
 public class Location
 {

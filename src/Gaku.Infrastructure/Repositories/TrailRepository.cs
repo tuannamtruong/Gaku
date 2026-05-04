@@ -1,6 +1,6 @@
-using Gaku.Core.Entities;
-using Gaku.Core.Interfaces;
-using Gaku.Core.ValueObjects;
+using Gaku.Domain.Entities;
+using Gaku.Domain.Interfaces;
+using Gaku.Domain.ValueObjects;
 using Gaku.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
