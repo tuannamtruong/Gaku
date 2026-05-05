@@ -127,6 +127,6 @@ cd jenkins && docker compose up -d
 docker exec gaku-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 ```
 
-Required Jenkins plugins: **Pipeline**, **Git**, **JUnit**, **Timestamper**.
+Required Jenkins plugins: **Pipeline**, **Git**, **GitHub**, **JUnit**, **Timestamper**.
 
 Pipeline job config: SCM → Git → `file:///home/nam/Gaku` → branch `*/master` → script path `Jenkinsfile`.
