@@ -17,17 +17,37 @@ async function relay(payload) {
     if (SKIP.has(k.toLowerCase())) continue;
     headers[k] = v;
   }
+
+  // Smee.io sends periodic keep-alive events with no GitHub headers — skip them.
+  if (!headers['x-github-event']) return;
+
   // Guarantee the header Jenkins' GitHub plugin requires.
   if (!headers['content-type']) headers['content-type'] = 'application/json';
 
-  const body =
-    payload.body == null             ? '' :
-    typeof payload.body === 'string' ? payload.body :
-                                       JSON.stringify(payload.body);
+  // Smee stores form-encoded webhooks as { payload: "<json-string>" }.
+  // Reconstruct the proper wire format based on Content-Type so Jenkins can parse it.
+  let body;
+  if (payload.body == null) {
+    body = '';
+  } else if (typeof payload.body === 'string') {
+    body = payload.body;
+  } else if ((headers['content-type'] || '').includes('x-www-form-urlencoded')) {
+    body = new URLSearchParams(
+      Object.entries(payload.body).map(([k, v]) => [k, typeof v === 'string' ? v : JSON.stringify(v)])
+    ).toString();
+  } else {
+    body = JSON.stringify(payload.body);
+  }
 
   try {
     const res = await fetch(TARGET, { method: 'POST', headers, body });
-    console.log(`POST ${TARGET} - ${res.status}`);
+    // Log the response body on non-200 so we can see what Jenkins says.
+    if (res.status === 200) {
+      console.log(`POST ${TARGET} - ${res.status} [${headers['x-github-event']}]`);
+    } else {
+      const text = await res.text();
+      console.log(`POST ${TARGET} - ${res.status} [${headers['x-github-event']}]: ${text.slice(0, 300)}`);
+    }
   } catch (e) {
     console.error('Relay error:', e.message);
   }
