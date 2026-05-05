@@ -20,6 +20,13 @@ services:
     group_add:
       - "1001"
 
+  smee:
+    image: node:lts-alpine
+    command: npx --yes smee-client --url ${SMEE_URL} --target http://jenkins:8080/github-webhook/ --port 80
+    restart: unless-stopped
+    depends_on:
+      - jenkins
+
 
 volumes:
   jenkins_home:

@@ -122,9 +122,20 @@ jenkins/docker-compose.yml   Jenkins container (port 8090) with Docker socket mo
 ### Starting Jenkins
 
 ```bash
+# 1. Get a Smee channel URL (one-time, free, permanent)
+#    Visit https://smee.io/new — copy the URL, then:
+echo "SMEE_URL=https://smee.io/your-channel-id" > jenkins/.env
+
+# 2. Start Jenkins + Smee relay
 cd jenkins && docker compose up -d
 # UI at http://localhost:8090
 docker exec gaku-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+
+# 3. Register the Smee URL as a webhook in the GitHub repo
+#    GitHub repo → Settings → Webhooks → Add webhook
+#    Payload URL : <your smee.io URL>
+#    Content type: application/json
+#    Events      : Just the push event
 ```
 
 Required Jenkins plugins: **Pipeline**, **Git**, **GitHub**, **JUnit**, **Timestamper**.
