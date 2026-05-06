@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
                     .UseNetTopologySuite()
                     .MigrationsAssembly(typeof(GakuDbContext).Assembly.FullName)));
 
+        services.AddScoped<DataSeeder>();
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<GakuDbContext>());
         services.AddScoped<ITrailRepository, TrailRepository>();
         services.AddScoped<IOpenStreetMapService, OpenStreetMapService>();

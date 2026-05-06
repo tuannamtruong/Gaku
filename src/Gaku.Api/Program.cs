@@ -15,6 +15,17 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<Gaku.Infrastructure.Data.DataSeeder>();
+    try { await seeder.SeedAsync(); }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Seeding failed — continuing without seed data");
+    }
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();

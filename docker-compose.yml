@@ -34,7 +34,8 @@ services:
     environment:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
     depends_on:
-      postgres: { condition: service_healthy }
+      postgres:    { condition: service_healthy }
+      db-migrator: { condition: service_completed_successfully }
 
   gaku-web:
     build:
@@ -44,7 +45,8 @@ services:
     environment:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
     depends_on:
-      postgres: { condition: service_healthy }
+      postgres:    { condition: service_healthy }
+      db-migrator: { condition: service_completed_successfully }
 
 volumes:
   postgres_data:
