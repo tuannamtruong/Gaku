@@ -66,14 +66,14 @@ jenkins/
 **Files to create:**
 ```
 docker/
-  api/Dockerfile
-  web/Dockerfile
-  migrator/Dockerfile
+  Dockerfile.Gaku.Api
+  Dockerfile.Gaku.Web
+  Dockerfile.Migrator
 .dockerignore
 docker-compose.yml   ← extend existing (add gaku-api + gaku-web + db-migrator)
 ```
 
-**`docker/api/Dockerfile`** — multi-stage build:
+**`docker/Dockerfile.Gaku.Api`** — multi-stage build:
 ```dockerfile
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
@@ -89,7 +89,7 @@ EXPOSE 8080
 ENTRYPOINT ["dotnet", "Gaku.Api.dll"]
 ```
 
-**`docker/web/Dockerfile`** — identical pattern, different project path:
+**`docker/Dockerfile.Gaku.Web`** — identical pattern, different project path:
 ```dockerfile
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
@@ -105,7 +105,7 @@ EXPOSE 8080
 ENTRYPOINT ["dotnet", "Gaku.Web.dll"]
 ```
 
-**`docker/migrator/Dockerfile`** — runs EF Core migrations:
+**`docker/Dockerfile.Migrator`** — runs EF Core migrations:
 ```dockerfile
 FROM mcr.microsoft.com/dotnet/sdk:10.0
 WORKDIR /src
@@ -124,7 +124,7 @@ services:
   db-migrator:
     build:
       context: .
-      dockerfile: docker/migrator/Dockerfile
+      dockerfile: docker/Dockerfile.Migrator
     environment:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=gaku;Username=gaku;Password=gaku_password"
     depends_on:
@@ -134,7 +134,7 @@ services:
   gaku-api:
     build:
       context: .
-      dockerfile: docker/api/Dockerfile
+      dockerfile: docker/Dockerfile.Gaku.Api
     ports: ["8080:8080"]
     environment:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=gaku;Username=gaku;Password=gaku_password"
@@ -144,7 +144,7 @@ services:
   gaku-web:
     build:
       context: .
-      dockerfile: docker/web/Dockerfile
+      dockerfile: docker/Dockerfile.Gaku.Web
     ports: ["8081:8080"]
     environment:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=gaku;Username=gaku;Password=gaku_password"
@@ -212,8 +212,8 @@ pipeline {
     }
     stage('Docker Build') {
       steps {
-        sh "docker build -f docker/api/Dockerfile -t ${API_IMAGE}:${IMAGE_TAG} ."
-        sh "docker build -f docker/web/Dockerfile -t ${WEB_IMAGE}:${IMAGE_TAG} ."
+        sh "docker build -f docker/Dockerfile.Gaku.Api -t ${API_IMAGE}:${IMAGE_TAG} ."
+        sh "docker build -f docker/Dockerfile.Gaku.Web -t ${WEB_IMAGE}:${IMAGE_TAG} ."
       }
     }
     stage('Deploy to Local K8s') {
