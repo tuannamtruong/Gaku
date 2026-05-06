@@ -10,7 +10,7 @@ public class TrailConfiguration : IEntityTypeConfiguration<Trail>
 {
     public void Configure(EntityTypeBuilder<Trail> builder)
     {
-        builder.ToTable("trails");
+        builder.ToTable("Trail");
         builder.HasKey(t => t.Id);
 
         builder.Property(t => t.Name)

@@ -10,7 +10,7 @@ public class WaypointConfiguration : IEntityTypeConfiguration<Waypoint>
 {
     public void Configure(EntityTypeBuilder<Waypoint> builder)
     {
-        builder.ToTable("waypoints");
+        builder.ToTable("Waypoint");
         builder.HasKey(w => w.Id);
 
         builder.Property(w => w.Name)
