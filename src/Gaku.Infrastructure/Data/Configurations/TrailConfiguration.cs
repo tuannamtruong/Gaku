@@ -59,6 +59,6 @@ public class TrailConfiguration : IEntityTypeConfiguration<Trail>
 
         builder.HasIndex(t => t.Country);
         builder.HasIndex(t => t.Difficulty);
-        builder.HasIndex("start_point").HasMethod("gist");
+        builder.HasIndex(t => t.StartPoint).HasMethod("gist");
     }
 }
