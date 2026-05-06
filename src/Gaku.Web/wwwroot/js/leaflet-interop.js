@@ -1,3 +1,5 @@
+import L from 'https://esm.sh/leaflet@1.9.4';
+
 // Leaflet map instances keyed by element ID
 const maps = {};
 
