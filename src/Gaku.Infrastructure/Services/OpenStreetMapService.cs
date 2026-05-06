@@ -89,8 +89,8 @@ public class OpenStreetMapService(
             .Select(e => new OsmTrailData(
                 e.Id,
                 e.Tags!.GetValueOrDefault("name", $"Trail {e.Id}"),
-                e.Tags.GetValueOrDefault("surface"),
-                e.Tags.GetValueOrDefault("sac_scale"),
+                e.Tags!.GetValueOrDefault("surface"),
+                e.Tags!.GetValueOrDefault("sac_scale"),
                 e.Nodes!.Where(nodes.ContainsKey).Select(n => nodes[n]).ToList()))
             .Where(t => t.Path.Count > 1)
             .ToList();

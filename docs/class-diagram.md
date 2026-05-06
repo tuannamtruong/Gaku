@@ -210,3 +210,88 @@ classDiagram
     WaypointConfiguration --> GakuCore : configures Waypoint entity
     LocationConfiguration --> GakuCore : configures Location entity
 ```
+
+---
+
+## 4. Gaku.Api
+
+```mermaid
+classDiagram
+    namespace Endpoints {
+        class TrailEndpoints {
+            <<static>>
+            +MapTrailEndpoints(IEndpointRouteBuilder)$ IEndpointRouteBuilder
+            +GetAll(ITrailService, CancellationToken)$ Task~Ok~
+            +GetById(Guid, ITrailService, CancellationToken)$ Task~Results~
+            +GetNearby(double, double, double, ITrailService, CancellationToken)$ Task~Ok~
+            +Search(string, ITrailService, CancellationToken)$ Task~Ok~
+            +Create(CreateTrailRequest, ITrailService, CancellationToken)$ Task~Created~
+            +Update(Guid, UpdateTrailRequest, ITrailService, CancellationToken)$ Task~Results~
+            +Delete(Guid, ITrailService, CancellationToken)$ Task~NoContent~
+        }
+        class MapEndpoints {
+            <<static>>
+            +MapMapEndpoints(IEndpointRouteBuilder)$ IEndpointRouteBuilder
+            +GetMapInfo(double, double, int, IMapService, CancellationToken)$ Task~Ok~
+            +SearchLocations(string, IMapService, CancellationToken)$ Task~Ok~
+        }
+    }
+
+    class Program {
+        +Main(string[]) void
+    }
+
+    class GakuApplication["Gaku.Application"] {
+        <<package>>
+        ITrailService · IMapService
+    }
+
+    class GakuInfrastructure["Gaku.Infrastructure"] {
+        <<package>>
+        AddInfrastructure(IServiceCollection, IConfiguration)
+    }
+
+    TrailEndpoints --> GakuApplication : ITrailService
+    MapEndpoints --> GakuApplication : IMapService
+    Program --> GakuApplication : AddApplication()
+    Program --> GakuInfrastructure : AddInfrastructure()
+```
+
+---
+
+## 5. Gaku.Web
+
+```mermaid
+classDiagram
+    namespace Services {
+        class LeafletInterop {
+            <<sealed>>
+            -IJSObjectReference? _module
+            -IJSRuntime _jsRuntime
+            +InitMapAsync(string, double, double, int) Task
+            +RenderTrailsAsync(string, IReadOnlyList~OsmTrailDataDto~) Task
+            +SetViewAsync(string, double, double, int) Task
+            +DestroyMapAsync(string) Task
+            +DisposeAsync() ValueTask
+            -GetModuleAsync() Task~IJSObjectReference~
+        }
+    }
+
+    class Program {
+        +Main(string[]) void
+    }
+
+    class GakuApplication["Gaku.Application"] {
+        <<package>>
+        ITrailService · IMapService
+    }
+
+    class GakuInfrastructure["Gaku.Infrastructure"] {
+        <<package>>
+        AddInfrastructure(IServiceCollection, IConfiguration)
+    }
+
+    LeafletInterop --> GakuApplication
+    Program --> GakuApplication : AddApplication()
+    Program --> GakuInfrastructure : AddInfrastructure()
+```

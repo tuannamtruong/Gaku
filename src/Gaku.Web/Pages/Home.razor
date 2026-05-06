@@ -1,0 +1,45 @@
+@page "/"
+@rendermode InteractiveServer
+@inject IMapService MapService
+
+<PageTitle>Gaku — Map</PageTitle>
+
+<LeafletMap Latitude="@_lat" Longitude="@_lon" Zoom="@_zoom"
+            Trails="@_mapInfo?.NearbyTrails"
+            OnMapMoved="OnMapMoved" />
+
+@if (_loading)
+{
+    <div class="map-overlay-loading">Loading trails…</div>
+}
+
+@code {
+    private double _lat = 46.8;
+    private double _lon = 8.2;
+    private int _zoom = 7;
+    private MapInfoDto? _mapInfo;
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync() =>
+        await LoadMapInfoAsync();
+
+    private async Task OnMapMoved((double Lat, double Lon) pos)
+    {
+        _lat = pos.Lat;
+        _lon = pos.Lon;
+        await LoadMapInfoAsync();
+    }
+
+    private async Task LoadMapInfoAsync()
+    {
+        _loading = true;
+        try
+        {
+            _mapInfo = await MapService.GetMapInfoAsync(_lat, _lon, _zoom);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

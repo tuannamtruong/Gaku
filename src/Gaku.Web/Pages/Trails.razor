@@ -1,0 +1,95 @@
+@page "/trails"
+@rendermode InteractiveServer
+@inject ITrailService TrailService
+
+<PageTitle>Gaku — Trails</PageTitle>
+
+<div class="page-container">
+    <h1 class="page-title">Hiking Trails</h1>
+
+    <div class="search-bar">
+        <input type="search" placeholder="Search trails, countries, regions…"
+               @bind="_query" @bind:event="oninput" @onkeyup="OnKeyUp" />
+        <button class="btn-primary" @onclick="SearchAsync">Search</button>
+    </div>
+
+    @if (_loading)
+    {
+        <p class="loading-text">Loading…</p>
+    }
+    else if (_trails is { Count: 0 })
+    {
+        <p class="loading-text">No trails found.</p>
+    }
+    else
+    {
+        <div class="trail-grid">
+            @foreach (var trail in _trails ?? [])
+            {
+                <div class="trail-card">
+                    <h3>@trail.Name</h3>
+                    <p>@trail.Country — @trail.Region</p>
+                    <div class="trail-meta">
+                        <span class="badge @trail.Difficulty.ToString().ToLower()">
+                            @trail.Difficulty
+                        </span>
+                        <span>@trail.DistanceKm.ToString("F1") km</span>
+                        <span>&#8593;@trail.ElevationGainMeters m</span>
+                        <span>@trail.Type</span>
+                    </div>
+                    @if (trail.Tags.Any())
+                    {
+                        <div class="trail-meta" style="margin-top:.5rem">
+                            @foreach (var tag in trail.Tags)
+                            {
+                                <span class="badge">@tag</span>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private string _query = string.Empty;
+    private IReadOnlyList<TrailSummaryDto>? _trails;
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync() =>
+        await LoadAllAsync();
+
+    private async Task OnKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await SearchAsync();
+    }
+
+    private async Task SearchAsync()
+    {
+        _loading = true;
+        try
+        {
+            _trails = string.IsNullOrWhiteSpace(_query)
+                ? await TrailService.GetAllAsync()
+                : await TrailService.SearchAsync(_query);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadAllAsync()
+    {
+        _loading = true;
+        try
+        {
+            _trails = await TrailService.GetAllAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

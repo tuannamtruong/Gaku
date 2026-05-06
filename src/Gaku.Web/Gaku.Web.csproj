@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <RootNamespace>Gaku.Web</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Gaku.Application\Gaku.Application.csproj" />
+    <ProjectReference Include="..\Gaku.Infrastructure\Gaku.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

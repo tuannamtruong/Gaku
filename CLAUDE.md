@@ -31,6 +31,7 @@ Gaku.Domain                       business rules and data shapes
 `Gaku.Api` and `Gaku.Web` reference Infrastructure **only** in `Program.cs` (the composition root) to call `AddInfrastructure()` and wire up DI. No page, component, or controller should import an Infrastructure type directly — all business interactions go through Application service interfaces. If code outside `Program.cs` references an Infrastructure namespace, it is a layering violation.
 
 ---
+**Rule**: dependencies only point inward. `Core` must never reference `Application`, `Infrastructure`, `Api`, or `Web`. `Application` and `Infrastructure` are sibling layers — neither references the other.
 
 ## Project Map
 
@@ -53,10 +54,20 @@ src/
     Repositories/    TrailRepository  (PostGIS ST_DWithin for nearby)
     Services/        OpenStreetMapService (Nominatim + Overpass API)
     Extensions/      ServiceCollectionExtensions (AddInfrastructure)
+  Gaku.Api/
+    Endpoints/       TrailEndpoints, MapEndpoints  (Minimal API)
+    Program.cs
+  Gaku.Web/
+    Components/Layout/   MainLayout, NavMenu
+    Components/Map/      LeafletMap  (JS interop wrapper)
+    Pages/               Home (map view), Trails (trail list)
+    Services/            LeafletInterop  (IJSRuntime wrapper)
+    wwwroot/js/          leaflet-interop.js  (ES module)
 tests/
   Gaku.Domain.Tests/       Entity + value-object unit tests
   Gaku.Application.Tests/  Service tests with NSubstitute fakes
   Gaku.Infrastructure.Tests/ OSM service tests with MockHttp
+  Gaku.Web.Tests/          bUnit component tests
 ```
 
 ## Architecture Diagrams

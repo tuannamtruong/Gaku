@@ -1,0 +1,37 @@
+@rendermode InteractiveServer
+@inject LeafletInterop Leaflet
+@implements IAsyncDisposable
+
+<div id="@MapId" class="leaflet-map-container"></div>
+
+@code {
+    [Parameter] public double Latitude { get; set; } = 46.8;
+    [Parameter] public double Longitude { get; set; } = 8.2;
+    [Parameter] public int Zoom { get; set; } = 6;
+    [Parameter] public IReadOnlyList<OsmTrailDataDto>? Trails { get; set; }
+    [Parameter] public EventCallback<(double Lat, double Lon)> OnMapMoved { get; set; }
+
+    private readonly string MapId = $"map-{Guid.NewGuid():N}";
+    private bool _initialised;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Leaflet.InitMapAsync(MapId, Latitude, Longitude, Zoom);
+            _initialised = true;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_initialised && Trails is not null)
+            await Leaflet.RenderTrailsAsync(MapId, Trails);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_initialised)
+            await Leaflet.DestroyMapAsync(MapId);
+    }
+}

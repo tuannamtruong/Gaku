@@ -64,6 +64,38 @@ graph TD
   style Infra fill:#fff3cd,stroke:#ffc107
   style Hosts fill:#f8d7da,stroke:#dc3545
 ```
+
+---
+
+### Containers — runtime components and communication
+
+```mermaid
+graph LR
+  Browser["(Hiker)"]
+
+  subgraph GakuSystem["Gaku — ASP.NET Core 10"]
+    Web["Web App:5001  InteractiveServer"]
+    API["REST API:5000  Minimal API"]
+  end
+
+  subgraph Data["Data"]
+    PG[("PostgreSQL + PostGIS :5432")]
+  end
+
+  subgraph OSM["OpenStreetMap"]
+    Tiles["OSM Tile Server"]
+    Nom["Nominatim"]
+    Over["Overpass API"]
+  end
+
+  Browser -->|"Blazor SignalR / HTTPS"| Web
+  Browser -->|"Leaflet tile requests"| Tiles
+  Web -->|"direct service calls\nsame process"| API
+  API -->|"EF Core / Npgsql"| PG
+  API -->|"HTTPS"| Nom
+  API -->|"HTTPS"| Over
+```
+
 ---
 
 ### Entity Relationship — database schema
