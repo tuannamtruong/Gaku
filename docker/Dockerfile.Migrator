@@ -1,0 +1,9 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+WORKDIR /src
+COPY . .
+RUN dotnet restore Gaku.sln
+RUN dotnet tool install --global dotnet-ef --version 10.0.7
+ENV PATH="$PATH:/root/.dotnet/tools"
+ENTRYPOINT ["dotnet", "ef", "database", "update", \
+  "--project", "src/Gaku.Infrastructure", \
+  "--startup-project", "src/Gaku.Api"]
