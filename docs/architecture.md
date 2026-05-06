@@ -73,7 +73,7 @@ graph TD
 graph LR
   Browser["(Hiker)"]
 
-  subgraph GakuSystem["Gaku — ASP.NET Core 10"]
+  subgraph GakuSystem["Gaku"]
     Web["Web App:5001  InteractiveServer"]
     API["REST API:5000  Minimal API"]
   end
