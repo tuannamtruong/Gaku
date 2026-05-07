@@ -13,3 +13,6 @@ j_restart:
 
 j_rebuild:
 	cd $(jenkins_folder) && docker compose up -d --build
+
+pg_up:
+	docker compose up -d postgres
