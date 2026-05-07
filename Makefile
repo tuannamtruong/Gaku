@@ -26,3 +26,4 @@ gph:
 #Apply git diff in host system
 gap:
 	git apply .\my-changes.patch
+	rm  .\my-changes.patch
