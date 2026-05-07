@@ -37,6 +37,7 @@ public static class ServiceCollectionExtensions
         {
             client.BaseAddress = new Uri("https://overpass-api.de");
             client.Timeout = TimeSpan.FromSeconds(60);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Gaku/1.0 (hiking-app)");
         });
 
         return services;
