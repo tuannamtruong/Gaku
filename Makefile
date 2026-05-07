@@ -1,3 +1,5 @@
+include .env
+export
 .PHONY: jenkins
 
 jenkins_folder := ./jenkins
@@ -16,3 +18,11 @@ j_rebuild:
 
 pg_up:
 	docker compose up -d postgres
+
+#Pass git diff to host system
+gph:
+	git diff > $(HOST_SYSTEM_REPO)/my-changes.patch
+
+#Apply git diff in host system
+gap:
+	git apply .\my-changes.patch
