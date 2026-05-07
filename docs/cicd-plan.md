@@ -54,7 +54,7 @@ jenkins/
 
 ---
 
-### Phase 1: Docker — Containerize the Applications
+### Phase 1: Docker — Containerize the Applications  ✅ COMPLETE
 
 **What gets Dockerized:**
 | Service | Image name | Base image |
@@ -217,7 +217,7 @@ pipeline {
       }
     }
     stage('Deploy to Local K8s') {
-      when { branch 'main' }
+      when { branch 'master' }
       steps {
         sh "kubectl set image deployment/gaku-api gaku-api=${API_IMAGE}:${IMAGE_TAG} -n gaku"
         sh "kubectl set image deployment/gaku-web gaku-web=${WEB_IMAGE}:${IMAGE_TAG} -n gaku"
@@ -230,7 +230,7 @@ pipeline {
 ```
 
 **Branch strategy:**
-- `main` → runs all stages including K8s deploy
+- `master` → runs all stages including K8s deploy
 - Feature branches → Build + Test only
 
 **Setup steps (manual, once):**
@@ -423,7 +423,7 @@ infra/k8s/
 ```
 
 ### Phase 8: Jenkinsfile Extended Cloud Stages
-Add to the existing `Jenkinsfile` behind `when { branch 'main' }`:
+Add to the existing `Jenkinsfile` behind `when { branch 'master' }`:
 ```
 Stage 5: Push to ECR      ← aws ecr get-login-password | docker push <ecr>/gaku-api:${BUILD_NUMBER}
 Stage 6: DB Migration     ← kubectl apply db-migration/job.yaml, wait for completion
@@ -489,7 +489,7 @@ Gaku/
 
 ### Stage 1 (local Docker + K8s)
 6. `docker compose up --build` → `curl http://localhost:8080/health` returns 200; web opens at `http://localhost:8081`
-7. Jenkins pipeline on `main` → all stages green including Docker Build and K8s Deploy
+7. Jenkins pipeline on `master` → all stages green including Docker Build and K8s Deploy
 8. `minikube start && eval $(minikube docker-env)` → builds go into minikube cache
 9. `kubectl get pods -n gaku` → all pods Running
 10. `curl http://gaku.local/health` → 200 via minikube ingress
@@ -499,5 +499,5 @@ Gaku/
 12. `terraform apply` in `environments/staging/` → VPC, ECR, RDS, EKS, Jenkins EC2 created
 13. `docker push <ecr-url>/gaku-api:latest` succeeds
 14. `kubectl get nodes` (EKS context) → nodes Ready
-15. Jenkins pipeline on `main` → all stages green, staging ALB responds
+15. Jenkins pipeline on `master` → all stages green, staging ALB responds
 16. Production deploy after manual approval → `kubectl rollout status` confirms zero-downtime
