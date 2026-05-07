@@ -3,6 +3,8 @@ using Gaku.Infrastructure.Extensions;
 using Gaku.Api.Endpoints;
 using Scalar.AspNetCore;
 
+DotNetEnv.Env.TraversePath().Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplication();

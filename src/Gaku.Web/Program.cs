@@ -1,8 +1,9 @@
 using Gaku.Application.Extensions;
 using Gaku.Infrastructure.Extensions;
 using Gaku.Web;
-using Gaku.Web.Components;
 using Gaku.Web.Services;
+
+DotNetEnv.Env.TraversePath().Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
