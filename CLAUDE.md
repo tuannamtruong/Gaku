@@ -142,35 +142,30 @@ Used by: `jenkins/local/docker-compose.yml` to configure the Smee relay sidecar.
 
 ---
 
-## CI/CD Pipeline (Local — Docker + Jenkins)
+## Local Development — PostgreSQL
 
-### Files
-
-```
-Jenkinsfile                  declarative pipeline (repo root)
-.dockerignore                excludes bin/, obj/, .git/, .vs/ from build context
-docker/Dockerfile.ci         multi-stage: stage `build` compiles, stage `test` runs tests
-jenkins/docker-compose.yml   Jenkins container (port 8090) with Docker socket mounted
-```
-### Starting Jenkins
+PostgreSQL + PostGIS runs in Docker via the root `docker-compose.yml`. Credentials are read from `.env`.
 
 ```bash
-# 1. Get a Smee channel URL (one-time, free, permanent)
-#    Visit https://smee.io/new — copy the URL, then:
-echo "SMEE_URL=https://smee.io/your-channel-id" > jenkins/.env
+# Start database only
+docker compose up postgres -d
 
-# 2. Start Jenkins + Smee relay
-cd jenkins && docker compose up -d
-# UI at http://localhost:8090
-docker exec gaku-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+# Start database + run EF Core migrations
+docker compose up postgres db-migrator -d
 
-# 3. Register the Smee URL as a webhook in the GitHub repo
-#    GitHub repo → Settings → Webhooks → Add webhook
-#    Payload URL : <your smee.io URL>
-#    Content type: application/json
-#    Events      : Just the push event
+# Start full stack (postgres + migrations + api + web)
+docker compose up --build -d
 ```
 
-Required Jenkins plugins: **Pipeline**, **Git**, **GitHub**, **JUnit**, **Timestamper**.
+Ports: PostgreSQL on `5432` · API on `8080` · Web on `8081`.
 
-Pipeline job config: SCM → Git → `https://github.com/tuannamtruong/Gaku` → branch `*/master` → script path `Jenkinsfile`.
+Stop and remove containers (data volume is preserved):
+```bash
+docker compose down
+```
+
+---
+
+## CICD + Infrastructure 
+> For CI/CD setup (Jenkins, pipeline, Smee) see [docs/cicd-workflow.md](docs/cicd-workflow.md).
+> For Infrastructure setup (Kubernetes, Minikube, Terraform) setup see [docs/infrastructure.md](docs/infrastructure.md).

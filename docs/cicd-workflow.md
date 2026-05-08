@@ -77,3 +77,31 @@ sequenceDiagram
     J->>D: Remove the CI image
     J->>J: Publish test results
 ```
+
+---
+
+## Starting Jenkins
+
+Relay using Smee — `SMEE_URL` is in `jenkins/local/.env`.
+
+```bash
+# Start Jenkins + Smee relay
+cd jenkins/local && docker compose up -d
+
+# UI at http://localhost:8090
+docker exec gaku-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+
+# Register the Smee URL as a webhook in the GitHub repo
+#   GitHub repo → Settings → Webhooks → Add webhook
+#   Payload URL : <your smee.io URL>
+#   Content type: application/json
+#   Events      : the push event
+```
+
+Required plugins: **Pipeline**, **Git**, **GitHub**, **JUnit**, **Timestamper**.
+
+Pipeline job config: SCM → Git → `https://github.com/tuannamtruong/Gaku` → Webhook to Smee → Relay to Jenkins → Filter by branch `*/master` → script path `Jenkinsfile`.
+
+---
+
+> For local Kubernetes (Minikube) setup see [docs/infrastructure.md](infrastructure.md).
