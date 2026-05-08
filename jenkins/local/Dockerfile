@@ -18,15 +18,10 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends docker-ce-cli && \
     rm -rf /var/lib/apt/lists/*
 
-# --- kubectl (stable v1.30) ---
-RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key \
-        | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] \
-          https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /" \
-        > /etc/apt/sources.list.d/kubernetes.list && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends kubectl && \
-    rm -rf /var/lib/apt/lists/*
+# --- kubectl (binary download — avoids Debian Trixie sqv v3-signature rejection) ---
+RUN curl -fsSL "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+        -o /usr/local/bin/kubectl && \
+    chmod +x /usr/local/bin/kubectl
 
 # --- minikube binary ---
 RUN curl -fsSL -o /usr/local/bin/minikube \
