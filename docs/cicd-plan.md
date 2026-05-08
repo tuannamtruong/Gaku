@@ -166,7 +166,7 @@ services:
 
 ---
 
-### Phase 2: Jenkins — Full CI Pipeline (Build + Docker)
+### Phase 2: Jenkins — Full CI Pipeline (Build + Docker) ✅ COMPLETE
 
 Jenkins runs as a Docker container on the local machine with access to the Docker daemon.
 
@@ -241,7 +241,7 @@ pipeline {
 
 ---
 
-### Phase 3: Kubernetes — Local Cluster
+### Phase 3: Kubernetes — Local Cluster 
 
 **Local K8s tool:** minikube (recommended) or Docker Desktop Kubernetes.
 
