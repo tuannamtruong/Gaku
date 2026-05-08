@@ -125,6 +125,32 @@ pipeline {
             }
         }
 
+        stage('Test — Web') {
+            steps {
+                sh """
+                    docker run --name ${env.CONTAINER}-web \\
+                        --entrypoint dotnet \\
+                        ${env.CI_IMAGE} \\
+                        test tests/Gaku.Web.Tests/Gaku.Web.Tests.csproj \\
+                            -c Release --no-build \\
+                            --logger "junit;LogFilePath=/TestResults/web/junit.xml" \\
+                            --results-directory /TestResults/web
+                """
+            }
+            post {
+                always {
+                    sh """
+                        mkdir -p ${env.TEST_RESULTS}/web
+                        docker cp ${env.CONTAINER}-web:/TestResults/web/junit.xml \\
+                            ${env.TEST_RESULTS}/web/junit.xml || true
+                        docker rm -f ${env.CONTAINER}-web || true
+                    """
+                    junit allowEmptyResults: true,
+                          testResults: "${env.TEST_RESULTS}/web/junit.xml"
+                }
+            }
+        }
+
         stage('Docker Build') {
             steps {
                 sh "docker build -f docker/Dockerfile.Gaku.Api -t ${env.API_IMAGE}:${env.IMAGE_TAG} ."

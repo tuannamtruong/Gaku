@@ -33,12 +33,14 @@ RUN dotnet build src/Gaku.Domain/Gaku.Domain.csproj \
     && dotnet build tests/Gaku.Application.Tests/Gaku.Application.Tests.csproj \
         -c Release --no-restore \
     && dotnet build tests/Gaku.Infrastructure.Tests/Gaku.Infrastructure.Tests.csproj \
+        -c Release --no-restore \
+    && dotnet build tests/Gaku.Web.Tests/Gaku.Web.Tests.csproj \
         -c Release --no-restore
 
 # ── Stage 2: test runner ──────────────────────────────────────────────────────
 FROM build AS test
 
-RUN mkdir -p /TestResults/domain /TestResults/application /TestResults/infrastructure
+RUN mkdir -p /TestResults/domain /TestResults/application /TestResults/infrastructure /TestResults/web
 
 RUN dotnet test tests/Gaku.Domain.Tests/Gaku.Domain.Tests.csproj \
         -c Release --no-build \
@@ -51,4 +53,8 @@ RUN dotnet test tests/Gaku.Domain.Tests/Gaku.Domain.Tests.csproj \
     ; dotnet test tests/Gaku.Infrastructure.Tests/Gaku.Infrastructure.Tests.csproj \
         -c Release --no-build \
         --logger "junit;LogFilePath=/TestResults/infrastructure/junit.xml" \
-        --results-directory /TestResults/infrastructure
+        --results-directory /TestResults/infrastructure \
+    ; dotnet test tests/Gaku.Web.Tests/Gaku.Web.Tests.csproj \
+        -c Release --no-build \
+        --logger "junit;LogFilePath=/TestResults/web/junit.xml" \
+        --results-directory /TestResults/web
