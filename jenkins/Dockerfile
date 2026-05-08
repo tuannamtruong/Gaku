@@ -2,6 +2,7 @@ FROM jenkins/jenkins:lts-jdk21
 
 USER root
 
+# --- docker-ce-cli (lets Jenkins run docker commands via the host socket) ---
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates curl gnupg lsb-release && \
@@ -16,5 +17,20 @@ RUN apt-get update && \
     apt-get update && \
     apt-get install -y --no-install-recommends docker-ce-cli && \
     rm -rf /var/lib/apt/lists/*
+
+# --- kubectl (stable v1.30) ---
+RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key \
+        | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] \
+          https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /" \
+        > /etc/apt/sources.list.d/kubernetes.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends kubectl && \
+    rm -rf /var/lib/apt/lists/*
+
+# --- minikube binary ---
+RUN curl -fsSL -o /usr/local/bin/minikube \
+        https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && \
+    chmod +x /usr/local/bin/minikube
 
 USER jenkins

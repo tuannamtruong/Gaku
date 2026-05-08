@@ -10,10 +10,14 @@ services:
       - "8090:8080"
       - "50000:50000"
 
+    environment:
+      KUBECONFIG: /home/nam/.kube/config
+
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/nam/Gaku:/home/nam/Gaku:ro
+      - /home/nam/.kube:/home/nam/.kube:ro
 
     # GID 1001 matches the docker socket group on this host.
     # Run `stat /var/run/docker.sock` to verify if docker socket access fails.

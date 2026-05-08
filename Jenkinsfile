@@ -153,8 +153,28 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh "docker build -f docker/Dockerfile.Gaku.Api -t ${env.API_IMAGE}:${env.IMAGE_TAG} ."
-                sh "docker build -f docker/Dockerfile.Gaku.Web -t ${env.WEB_IMAGE}:${env.IMAGE_TAG} ."
+                sh "docker build -f docker/Dockerfile.Gaku.Api -t ${env.API_IMAGE}:${env.IMAGE_TAG} -t ${env.API_IMAGE}:latest ."
+                sh "docker build -f docker/Dockerfile.Gaku.Web -t ${env.WEB_IMAGE}:${env.IMAGE_TAG} -t ${env.WEB_IMAGE}:latest ."
+            }
+        }
+
+        stage('Load Images into Minikube') {
+            when { branch 'master' }
+            steps {
+                sh "minikube image load ${env.API_IMAGE}:${env.IMAGE_TAG}"
+                sh "minikube image load ${env.API_IMAGE}:latest"
+                sh "minikube image load ${env.WEB_IMAGE}:${env.IMAGE_TAG}"
+                sh "minikube image load ${env.WEB_IMAGE}:latest"
+            }
+        }
+
+        stage('Deploy to Local K8s') {
+            when { branch 'master' }
+            steps {
+                sh "kubectl set image deployment/gaku-api gaku-api=${env.API_IMAGE}:${env.IMAGE_TAG} -n gaku"
+                sh "kubectl set image deployment/gaku-web gaku-web=${env.WEB_IMAGE}:${env.IMAGE_TAG} -n gaku"
+                sh "kubectl rollout status deployment/gaku-api -n gaku --timeout=120s"
+                sh "kubectl rollout status deployment/gaku-web -n gaku --timeout=120s"
             }
         }
     }
