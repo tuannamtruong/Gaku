@@ -133,8 +133,8 @@ Used by: local `docker compose`, EF Core CLI tools, and `kubectl apply -k` (Kust
 | `ConnectionStrings__DefaultConnection` | Full ADO.NET connection string for the ASP.NET Core apps and EF Core migrations |
 | `HOST_SYSTEM_REPO` | Absolute path to the repo on the host machine (used when bind-mounting the source into containers) |
 
-### `jenkins/.env`
-Used by: `jenkins/docker-compose.yml` to configure the Smee relay sidecar.
+### `jenkins/local/.env`
+Used by: `jenkins/local/docker-compose.yml` to configure the Smee relay sidecar.
 
 | Variable | Responsibility |
 |---|---|

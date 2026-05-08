@@ -23,7 +23,7 @@ The plan implements CI/CD in **two stages**:
 Jenkinsfile                    declarative pipeline at repo root
 docker/
   Dockerfile.ci                multi-stage: stage build (restore + compile), stage test (unused by pipeline — build stage image is used directly)
-jenkins/
+jenkins/local/
   Dockerfile                   extends jenkins/jenkins:lts-jdk21 — installs Docker CLI
   docker-compose.yml           two services: gaku-jenkins + smee relay sidecar
   smee-relay.js                pure Node.js SSE→HTTP relay; no npm packages required
@@ -40,8 +40,8 @@ jenkins/
 
 **Setup steps (manual, once):**
 1. Get a Smee channel: visit `https://smee.io/new`, copy the URL
-2. `echo "SMEE_URL=https://smee.io/<your-id>" > jenkins/.env`
-3. `cd jenkins && docker compose up -d`
+2. `echo "SMEE_URL=https://smee.io/<your-id>" > jenkins/local/.env`
+3. `cd jenkins/local && docker compose up -d`
 4. Open `http://localhost:8090`, unlock with `docker exec gaku-jenkins cat /var/jenkins_home/secrets/initialAdminPassword`
 5. Install plugins: **Pipeline**, **Git**, **GitHub**, **JUnit**, **Timestamper**
 6. Create Pipeline job → SCM → Git → `https://github.com/tuannamtruong/Gaku` → branch `*/master` → script path `Jenkinsfile`
@@ -172,12 +172,12 @@ Jenkins runs as a Docker container on the local machine with access to the Docke
 
 **Files to create:**
 ```
-jenkins/
+jenkins/local/
   docker-compose.jenkins.yml   ← spin up Jenkins locally
 Jenkinsfile                    ← pipeline definition at repo root
 ```
 
-**`jenkins/docker-compose.jenkins.yml`:**
+**`jenkins/local/docker-compose.jenkins.yml`:**
 ```yaml
 services:
   jenkins:
@@ -234,7 +234,7 @@ pipeline {
 - Feature branches → Build + Test only
 
 **Setup steps (manual, once):**
-1. `docker compose -f jenkins/docker-compose.jenkins.yml up -d`
+1. `docker compose -f jenkins/local/docker-compose.jenkins.yml up -d`
 2. Open `http://localhost:8090`, unlock with initial admin password
 3. Install plugins: Pipeline, Git, Docker Pipeline, JUnit, Kubernetes CLI
 4. Create pipeline job pointing to repo `Jenkinsfile`
@@ -447,7 +447,8 @@ Gaku/
 ├── docker-compose.yml               ← extended: postgres + migrator + api + web
 ├── Jenkinsfile
 ├── jenkins/
-│   └── docker-compose.jenkins.yml
+│   └── local/
+│       └── docker-compose.jenkins.yml
 └── infra/
     ├── k8s/
     │   ├── local/
@@ -481,7 +482,7 @@ Gaku/
 ## Verification Checkpoints
 
 ### Phase 0 (Jenkins test automation)
-1. `docker compose -f jenkins/docker-compose.jenkins.yml up -d` → Jenkins at `http://localhost:8090`
+1. `docker compose -f jenkins/local/docker-compose.jenkins.yml up -d` → Jenkins at `http://localhost:8090`
 2. Create pipeline job pointing to `Jenkinsfile`, branch `master`
 3. Push a change to `src/Gaku.Core/` → Build + Test: Core stages run; Application and Infrastructure stages skipped
 4. Push a change to `src/Gaku.Application/` → Build + Test: Application runs; others skipped

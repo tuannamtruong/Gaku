@@ -36,14 +36,14 @@ flowchart TD
 
 | Container | Image | Purpose |
 |---|---|---|
-| `gaku-jenkins` | built from `jenkins/Dockerfile` | Jenkins server — hosts UI, schedules jobs, runs pipeline |
+| `gaku-jenkins` | built from `jenkins/local/Dockerfile` | Jenkins server — hosts UI, schedules jobs, runs pipeline |
 | `smee` | `node:lts-alpine` | Runs `smee-relay.js` — SSE client that forwards GitHub webhook payloads to Jenkins |
 | `gaku-ci-<build>` | built from `docker/Dockerfile.ci` | Ephemeral per-build container — compiles and tests .NET code |
 
 ## File Map
 
 ```
-jenkins/
+jenkins/local/
   Dockerfile           custom Jenkins image (adds Docker CLI to jenkins/jenkins:lts-jdk21)
   docker-compose.yml   two services: gaku-jenkins + smee relay sidecar
   smee-relay.js        pure Node.js SSE client; no npm packages; converts Smee payloads to JSON for Jenkins
