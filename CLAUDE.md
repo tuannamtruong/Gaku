@@ -118,6 +118,28 @@ All interactive pages use `@rendermode InteractiveServer` so server-side service
 ConnectionStrings__DefaultConnection   PostgreSQL connection string
 ```
 
+## Environment Files
+
+All `.env` files are gitignored and must be created manually. Two files exist in the project:
+
+### `.env` (repo root)
+Used by: local `docker compose`, EF Core CLI tools, and `kubectl apply -k` (Kustomize reads this to generate the `gaku-secret` Kubernetes secret).
+
+| Variable | Responsibility |
+|---|---|
+| `POSTGRES_DB` | Database name for the PostgreSQL container |
+| `POSTGRES_USER` | PostgreSQL login role |
+| `POSTGRES_PASSWORD` | PostgreSQL login password |
+| `ConnectionStrings__DefaultConnection` | Full ADO.NET connection string for the ASP.NET Core apps and EF Core migrations |
+| `HOST_SYSTEM_REPO` | Absolute path to the repo on the host machine (used when bind-mounting the source into containers) |
+
+### `jenkins/.env`
+Used by: `jenkins/docker-compose.yml` to configure the Smee relay sidecar.
+
+| Variable | Responsibility |
+|---|---|
+| `SMEE_URL` | Smee.io channel URL that relays GitHub webhook payloads to the local Jenkins instance |
+
 ---
 
 ## CI/CD Pipeline (Local — Docker + Jenkins)
