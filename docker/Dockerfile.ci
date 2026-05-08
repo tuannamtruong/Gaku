@@ -10,9 +10,12 @@ COPY Gaku.sln .
 COPY src/Gaku.Domain/Gaku.Domain.csproj                             src/Gaku.Domain/
 COPY src/Gaku.Application/Gaku.Application.csproj                   src/Gaku.Application/
 COPY src/Gaku.Infrastructure/Gaku.Infrastructure.csproj             src/Gaku.Infrastructure/
+COPY src/Gaku.Api/Gaku.Api.csproj                                   src/Gaku.Api/
+COPY src/Gaku.Web/Gaku.Web.csproj                                   src/Gaku.Web/
 COPY tests/Gaku.Domain.Tests/Gaku.Domain.Tests.csproj               tests/Gaku.Domain.Tests/
 COPY tests/Gaku.Application.Tests/Gaku.Application.Tests.csproj     tests/Gaku.Application.Tests/
 COPY tests/Gaku.Infrastructure.Tests/Gaku.Infrastructure.Tests.csproj tests/Gaku.Infrastructure.Tests/
+COPY tests/Gaku.Web.Tests/Gaku.Web.Tests.csproj                     tests/Gaku.Web.Tests/
 
 RUN dotnet restore Gaku.sln
 
