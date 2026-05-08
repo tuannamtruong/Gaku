@@ -16,37 +16,48 @@ pipeline {
         CI_IMAGE      = "gaku-ci:${env.BUILD_NUMBER}"
         CONTAINER     = "gaku-ci-${env.BUILD_NUMBER}"
         TEST_RESULTS  = "TestResults"
+        API_IMAGE     = "gaku-api"
+        WEB_IMAGE     = "gaku-web"
+        IMAGE_TAG     = "${env.BUILD_NUMBER}"
     }
 
     stages {
 
+        stage('Environment Info') {
+            steps {
+                sh """
+                    echo "WORKSPACE   = ${env.WORKSPACE}"
+                    echo "BUILD_NUMBER = ${env.BUILD_NUMBER}"
+                    uname -a
+                    docker version --format 'Docker {{.Server.Version}}'
+                    dotnet --version || true
+                """
+            }
+        }
+
         stage('Restore & Build') {
             steps {
-                dir('/home/nam/Gaku') {
-                    sh """
-                        docker build \\
-                            --target build \\
-                            --tag ${env.CI_IMAGE} \\
-                            --file docker/Dockerfile.ci \\
-                            .
-                    """
-                }
+                sh """
+                    docker build \\
+                        --target build \\
+                        --tag ${env.CI_IMAGE} \\
+                        --file docker/Dockerfile.ci \\
+                        .
+                """
             }
         }
 
         stage('Test — Domain') {
             steps {
-                dir('/home/nam/Gaku') {
-                    sh """
-                        docker run --name ${env.CONTAINER}-domain \\
-                            --entrypoint dotnet \\
-                            ${env.CI_IMAGE} \\
-                            test tests/Gaku.Domain.Tests/Gaku.Domain.Tests.csproj \\
-                                -c Release --no-build \\
-                                --logger "junit;LogFilePath=/TestResults/domain/junit.xml" \\
-                                --results-directory /TestResults/domain
-                    """
-                }
+                sh """
+                    docker run --name ${env.CONTAINER}-domain \\
+                        --entrypoint dotnet \\
+                        ${env.CI_IMAGE} \\
+                        test tests/Gaku.Domain.Tests/Gaku.Domain.Tests.csproj \\
+                            -c Release --no-build \\
+                            --logger "junit;LogFilePath=/TestResults/domain/junit.xml" \\
+                            --results-directory /TestResults/domain
+                """
             }
             post {
                 always {
@@ -64,17 +75,15 @@ pipeline {
 
         stage('Test — Application') {
             steps {
-                dir('/home/nam/Gaku') {
-                    sh """
-                        docker run --name ${env.CONTAINER}-application \\
-                            --entrypoint dotnet \\
-                            ${env.CI_IMAGE} \\
-                            test tests/Gaku.Application.Tests/Gaku.Application.Tests.csproj \\
-                                -c Release --no-build \\
-                                --logger "junit;LogFilePath=/TestResults/application/junit.xml" \\
-                                --results-directory /TestResults/application
-                    """
-                }
+                sh """
+                    docker run --name ${env.CONTAINER}-application \\
+                        --entrypoint dotnet \\
+                        ${env.CI_IMAGE} \\
+                        test tests/Gaku.Application.Tests/Gaku.Application.Tests.csproj \\
+                            -c Release --no-build \\
+                            --logger "junit;LogFilePath=/TestResults/application/junit.xml" \\
+                            --results-directory /TestResults/application
+                """
             }
             post {
                 always {
@@ -92,17 +101,15 @@ pipeline {
 
         stage('Test — Infrastructure') {
             steps {
-                dir('/home/nam/Gaku') {
-                    sh """
-                        docker run --name ${env.CONTAINER}-infrastructure \\
-                            --entrypoint dotnet \\
-                            ${env.CI_IMAGE} \\
-                            test tests/Gaku.Infrastructure.Tests/Gaku.Infrastructure.Tests.csproj \\
-                                -c Release --no-build \\
-                                --logger "junit;LogFilePath=/TestResults/infrastructure/junit.xml" \\
-                                --results-directory /TestResults/infrastructure
-                    """
-                }
+                sh """
+                    docker run --name ${env.CONTAINER}-infrastructure \\
+                        --entrypoint dotnet \\
+                        ${env.CI_IMAGE} \\
+                        test tests/Gaku.Infrastructure.Tests/Gaku.Infrastructure.Tests.csproj \\
+                            -c Release --no-build \\
+                            --logger "junit;LogFilePath=/TestResults/infrastructure/junit.xml" \\
+                            --results-directory /TestResults/infrastructure
+                """
             }
             post {
                 always {
@@ -115,6 +122,13 @@ pipeline {
                     junit allowEmptyResults: true,
                           testResults: "${env.TEST_RESULTS}/infrastructure/junit.xml"
                 }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh "docker build -f docker/Dockerfile.Gaku.Api -t ${env.API_IMAGE}:${env.IMAGE_TAG} ."
+                sh "docker build -f docker/Dockerfile.Gaku.Web -t ${env.WEB_IMAGE}:${env.IMAGE_TAG} ."
             }
         }
     }
