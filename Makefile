@@ -2,7 +2,7 @@ include .env
 export
 .PHONY: jenkins
 
-jenkins_folder := ./jenkins
+jenkins_folder := ./jenkins/local
 
 j_up:
 	cd $(jenkins_folder) && docker compose up -d
