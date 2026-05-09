@@ -1,4 +1,4 @@
-namespace Gaku.Domain.Interfaces;
+namespace Gaku.Application.Interfaces;
 
 /// <summary>
 /// Abstracts a single database transaction boundary so Application-layer services

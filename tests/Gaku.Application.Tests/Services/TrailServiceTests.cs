@@ -3,7 +3,7 @@ using Xunit;
 using Gaku.Application.Services;
 using Gaku.Domain.Entities;
 using Gaku.Domain.Enums;
-using Gaku.Domain.Interfaces;
+using Gaku.Application.Interfaces;
 using Gaku.Domain.ValueObjects;
 using NSubstitute;
 

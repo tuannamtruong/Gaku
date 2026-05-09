@@ -1,5 +1,4 @@
 using Gaku.Application.Interfaces;
-using Gaku.Domain.Interfaces;
 using Gaku.Infrastructure.Data;
 using Gaku.Infrastructure.Repositories;
 using Gaku.Infrastructure.Services;

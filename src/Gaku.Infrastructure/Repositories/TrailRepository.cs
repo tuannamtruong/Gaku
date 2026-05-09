@@ -1,5 +1,5 @@
 using Gaku.Domain.Entities;
-using Gaku.Domain.Interfaces;
+using Gaku.Application.Interfaces;
 using Gaku.Domain.ValueObjects;
 using Gaku.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

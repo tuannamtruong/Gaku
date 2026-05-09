@@ -1,7 +1,7 @@
 using Gaku.Domain.Entities;
 using Gaku.Domain.ValueObjects;
 
-namespace Gaku.Domain.Interfaces;
+namespace Gaku.Application.Interfaces;
 
 /// <summary>Persistence contract for <see cref="Trail"/> aggregate roots.</summary>
 public interface ITrailRepository
