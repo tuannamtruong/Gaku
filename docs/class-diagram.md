@@ -295,3 +295,5 @@ classDiagram
     Program --> GakuApplication : AddApplication()
     Program --> GakuInfrastructure : AddInfrastructure()
 ```
+
+**Class diagram rule**: when creating or updating class diagrams, exclude enums, value objects, and record types — show only classes and interfaces.
