@@ -40,21 +40,6 @@ flowchart TD
 | `smee` | `node:lts-alpine` | Runs `smee-relay.js` — SSE client that forwards GitHub webhook payloads to Jenkins |
 | `gaku-ci-<build>` | built from `docker/Dockerfile.ci` | Ephemeral per-build container — compiles and tests .NET code |
 
-## File Map
-
-```
-jenkins/local/
-  Dockerfile           custom Jenkins image (adds Docker CLI to jenkins/jenkins:lts-jdk21)
-  docker-compose.yml   two services: gaku-jenkins + smee relay sidecar
-  smee-relay.js        pure Node.js SSE client; no npm packages; converts Smee payloads to JSON for Jenkins
-  .env                 single var: SMEE_URL=https://smee.io/<channel-id>  (not committed)
-
-docker/
-  Dockerfile.ci        multi-stage: stage build (restore + compile all projects), stage test (unused by Jenkinsfile — tests run via docker run on the build stage image)
-
-Jenkinsfile            declarative pipeline — builds CI image, runs three test containers, publishes JUnit results, removes image
-```
-
 ## Stage Detail
 
 ```mermaid
@@ -80,28 +65,88 @@ sequenceDiagram
 
 ---
 
-## Starting Jenkins
+## Local CI Setup for Smee.io + Jenkins
 
-Relay using Smee — `SMEE_URL` is in `jenkins/local/.env`.
+Pipeline job config: Git push → `https://github.com/tuannamtruong/Gaku` → Webhook to Smee → Relay to Jenkins → Filter by branch `*/master` → script path `Jenkinsfile`.
 
-```bash
-# Start Jenkins + Smee relay
-cd jenkins/local && docker compose up -d
+### 1. Smee.io Channel
 
-# UI at http://localhost:8090
-docker exec gaku-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
-
-# Register the Smee URL as a webhook in the GitHub repo
-#   GitHub repo → Settings → Webhooks → Add webhook
-#   Payload URL : <your smee.io URL>
-#   Content type: application/json
-#   Events      : the push event
+Go to [smee.io](https://smee.io) and get a new channel.
+Save `SMEE_URL` in `jenkins/local/.env`
+```
+  SMEE_URL=https://smee.io/<your-channel-id>
 ```
 
-Required plugins: **Pipeline**, **Git**, **GitHub**, **JUnit**, **Timestamper**.
+### 2. GitHub Webhook
 
-Pipeline job config: SCM → Git → `https://github.com/tuannamtruong/Gaku` → Webhook to Smee → Relay to Jenkins → Filter by branch `*/master` → script path `Jenkinsfile`.
+Register the Smee URL as a webhook in the GitHub repo
+GitHub repo → Settings → Webhooks → Add webhook
+
+| Field | Value |
+|---|---|
+| Payload URL | your Smee.io channel URL |
+| Content type | `application/json` |
+| Events | push event |
+
+### 3. Jenkins
+
+Start Jenkins and the Smee relay:
+
+```bash
+cd jenkins/local && docker compose up -d
+```
+
+Retrieve the initial admin password under 
+
+```bash
+docker exec gaku-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+```
+
+Open `http://localhost:8090`, log in, and install plugins: Pipeline, Git, GitHub, JUnit, Timestamper.
+
+
+### 4. Pipeline Job Creation
+
+Fetch crumb and save the session cookie
+
+```
+CRUMB=$(curl -s --cookie-jar /tmp/jenkins-cookies.txt \
+"http://localhost:8090/crumbIssuer/api/json" \
+--user "<username>:<password>" | grep -o '"crumb":"[^"]*"' | cut -d'"' -f4)
+```
+
+Create the job reusing the same session cookie
+```
+curl -X POST "http://localhost:8090/createItem?name=gaku" \
+--user "<username>:<password>" \
+--cookie /tmp/jenkins-cookies.txt \
+--header "Content-Type: application/xml" \
+--header "Jenkins-Crumb: $CRUMB" \
+--data @job-config.xml
+```
+
+### 5. Verification
+
+| Check | Command / Action |
+|---|---|
+| Smee relay is running | `docker logs smee` — should show SSE connected |
+| Jenkins is reachable | `curl -s -o /dev/null -w "%{http_code}" http://localhost:8090` → `200` |
+| Webhook delivery | Push a commit; GitHub repo → Settings → Webhooks → Recent Deliveries → `200` response |
+| Pipeline triggered | Jenkins dashboard shows a new build for the pipeline job |
 
 ---
 
-> For local Kubernetes (Minikube) setup see [docs/infrastructure.md](infrastructure.md).
+## File Map
+
+```
+jenkins/local/
+  Dockerfile           custom Jenkins image
+  docker-compose.yml   jenkins + smee
+  smee-relay.js        pure Node.js SSE client; converts Smee payloads to JSON for Jenkins
+  .env                 
+
+docker/
+  Dockerfile.ci        
+
+Jenkinsfile            builds CI image, runs test containers, publishes JUnit results, removes image
+```
