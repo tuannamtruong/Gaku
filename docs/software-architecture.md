@@ -5,33 +5,34 @@
 ```mermaid
 graph TD
   subgraph Hosts["Frontend"]
-    direction LR
-    API["API · Scalar"]
-    Web["Web Blazor InteractiveServer"]
+    direction TB
+    API["RestAPI"]
+    Web["Web App"]
   end
 
   subgraph Infra["Gaku.Infrastructure"]
     direction TB
-    DB["EF Core + PostGIS"]
-    Repo["ST_DWithin spatial queries"]
-    OSMSvc["Nominatim + Overpass"]
+    ContractImp["Contract Implementation"]
+    DB["Communication with Repo/DB \n (PostgreSQL, PostGIS, OSM)"]
+    OSMSvc["Communication with external Service \n (Nominatim, Overpass)"]
   end
 
   subgraph App["Gaku.Application"]
     direction TB
-    TrailSvc["TrailService"]
-    MapSvc["MapService"]
-    DTOs["DTOs"]
+    DTOs["DTO"]
+    ContractDef["Contract Definition \n Repository & Service"]
+    UseCase["Domain Logic Usecase"]
   end
 
   subgraph Core["Gaku.Core"]
     direction TB
-    Entity["Hiking Domain Entity \nTrail&nbsp;·&nbsp;Waypoint&nbsp;·&nbsp;Location"]
-    ValueObject["Value Object \n Coordinates"]
-    Inf["ITrailRepository · IOpenStreetMapService · IUnitOfWork"]
+    Entity["Domain Entity"]
+    DomainLogic["Domain Logic"]
+    ValueObject["Value Object"]
   end
 
   App -->| | Core
+  Infra -->| | App
   Infra -->| | Core
   Hosts -->| | App
   Hosts -->| | Infra
@@ -44,13 +45,9 @@ graph TD
 
 | Project | Layer | Responsibility |
 |---|---|---|
-| `Gaku.Domain` | Domain | Business rules and data shapes. Defines entities (`Trail`, `Waypoint`, `Location`), value objects (`Coordinates`), enums, and repository/unit-of-work interfaces. |
-| `Gaku.Application` | Application | Defines what the application can do (trail management and map exploration). Orchestrates domain logic to fulfil use cases, and declares contracts for external services that Infrastructure must satisfy. |
+| `Gaku.Web` | Presentation | Browser-facing UI. Renders interactive pages and map components.|
+| `Gaku.Api` | Presentation | HTTP entry point. Exposes application use cases as REST endpoints. |
 | `Gaku.Infrastructure` | Infrastructure | Fulfils the contracts defined by Application using real technology (database persistence, spatial queries, and external HTTP APIs). No business logic.|
-| `Gaku.Api` | Presentation | HTTP entry point. Exposes application use cases as REST endpoints and translates between HTTP requests/responses and Application service calls. |
-| `Gaku.Web` | Presentation | Browser-facing UI. Renders interactive pages and map components, calls Application services directly (same process), and bridges to JavaScript for map rendering.|
-
----
 
 
 ## System Context - Gaku
