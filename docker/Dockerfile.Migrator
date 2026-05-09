@@ -1,9 +1,20 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0
 WORKDIR /src
-COPY . .
-RUN dotnet restore Gaku.sln
+
 RUN dotnet tool install --global dotnet-ef --version 10.0.7
 ENV PATH="$PATH:/root/.dotnet/tools"
+
+COPY global.json .
+COPY Directory.Build.props .
+COPY Gaku.sln .
+COPY src/Gaku.Api/Gaku.Api.csproj src/Gaku.Api/
+COPY src/Gaku.Domain/Gaku.Domain.csproj src/Gaku.Domain/
+COPY src/Gaku.Application/Gaku.Application.csproj src/Gaku.Application/
+COPY src/Gaku.Infrastructure/Gaku.Infrastructure.csproj src/Gaku.Infrastructure/
+RUN dotnet restore src/Gaku.Infrastructure/Gaku.Infrastructure.csproj
+
+COPY . .
+
 ENTRYPOINT ["dotnet", "ef", "database", "update", \
   "--project", "src/Gaku.Infrastructure", \
   "--startup-project", "src/Gaku.Api"]
