@@ -87,7 +87,7 @@ OSM tile attribution is rendered by Leaflet on the map itself.
 
 ## See Also
 
-`docs/architecture.md` - map load sequence diagram showing the full request flow
+`docs/software-architecture.md` - map load sequence diagram showing the full request flow
 `src/Gaku.Application/Interfaces/IOpenStreetMapService.cs` - contract
 `src/Gaku.Infrastructure/Services/OpenStreetMapService.cs` - implementation
 `tests/Gaku.Infrastructure.Tests/Services/OpenStreetMapServiceTests.cs` - test
