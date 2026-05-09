@@ -17,6 +17,7 @@ services:
       retries: 5
 
   db-migrator:
+    image: db-migrator
     build:
       context: .
       dockerfile: docker/Dockerfile.Migrator
@@ -27,6 +28,7 @@ services:
     restart: "no"
 
   gaku-api:
+    image: gaku-api
     build:
       context: .
       dockerfile: docker/Dockerfile.Gaku.Api
@@ -38,6 +40,7 @@ services:
       db-migrator: { condition: service_completed_successfully }
 
   gaku-web:
+    image: gaku-web
     build:
       context: .
       dockerfile: docker/Dockerfile.Gaku.Web
