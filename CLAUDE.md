@@ -1,85 +1,72 @@
 # Gaku — Hiking in Europe
 
-ASP.NET Core 10 application for discovering and navigating hiking trails across Europe.
+ASP.NET application for hiking across Europe.
 
-## Tech Stack
+## Architecture 
 
-| Layer | Technology |
-|---|---|
-| Runtime | .NET 10 |
-| Backend API | ASP.NET Core Minimal APIs |
-| Frontend | Blazor Web App (InteractiveServer) |
-| Maps | Leaflet.js + OpenStreetMap tiles |
-| ORM | EF Core 10 + Npgsql |
-| Database | PostgreSQL 16 + PostGIS 3.4 |
-| Backend tests | xUnit + FluentAssertions + NSubstitute |
-| Frontend tests | bUnit + NSubstitute |
+### Deep dive
 
-## Architecture — Clean Architecture
+See [docs/software-architecture.md](docs/software-architecture.md) for more architectural details and diagrams.
+
+### Clean Architecture Overview 
 
 ```
-Gaku.Domain                       business rules and data shapes
-  ├── Gaku.Application            business workflows and capability contracts
-  │     └── Gaku.Infrastructure   technical implementations of those contracts
-  └── Gaku.Infrastructure   
-```
+Gaku.Domain                             business rules and data shapes
+  ├── Gaku.Application───────┐          business workflows and capability contracts
+  │     │                    │
+  └── Gaku.Infrastructure────│          technical implementations of those contracts
+                         Frontend
 
-**Dependency rule**: arrows point inward only — outer layers depend on inner layers, never the reverse. `Application` must never reference `Infrastructure`.
+``` 
+**Dependency rule**: arrows point inward only — outer layers depend on inner layers, never the reverse. `Core` must never reference `Application`, `Infrastructure`, or Frontend. `Application` must never reference `Infrastructure`.
 
-### Presentation layer and Infrastructure
+
+### Frontend and Infrastructure
 
 `Gaku.Api` and `Gaku.Web` reference Infrastructure **only** in `Program.cs` (the composition root) to call `AddInfrastructure()` and wire up DI. No page, component, or controller should import an Infrastructure type directly — all business interactions go through Application service interfaces. If code outside `Program.cs` references an Infrastructure namespace, it is a layering violation.
 
 ---
-**Rule**: dependencies only point inward. `Core` must never reference `Application`, `Infrastructure`, `Api`, or `Web`. `Application` and `Infrastructure` are sibling layers — neither references the other.
 
-## Project Map
 
+## Project
+
+See [docs/class-diagram.md](docs/class-diagram.md) for per-project class diagrams.
+
+### Project Map
 ```
 src/
   Gaku.Domain/
-    Entities/        Trail, Waypoint, Location  (aggregate roots + children)
-    Enums/           DifficultyLevel, TrailType
-    Interfaces/      ITrailRepository, IUnitOfWork
-    ValueObjects/    Coordinates  (pure record, haversine helper)
+    Entities/                   Aggregate roots + children
+    Enums/           
+    Interfaces/      
+    ValueObjects/    
   Gaku.Application/
-    DTOs/            TrailDto, MapInfoDto, LocationDto, ...
-    Interfaces/      IOpenStreetMapService  (OSM facade contract)
-    Services/        ITrailService / TrailService
-                     IMapService   / MapService
-    Extensions/      ServiceCollectionExtensions (AddApplication)
+    DTOs/            
+    Interfaces/      
+    Services/        
+    Extensions/      
   Gaku.Infrastructure/
-    Data/            GakuDbContext (also implements IUnitOfWork)
-    Data/Configurations/  EF IEntityTypeConfiguration per entity
-    Repositories/    TrailRepository  (PostGIS ST_DWithin for nearby)
-    Services/        OpenStreetMapService (Nominatim + Overpass API)
-    Extensions/      ServiceCollectionExtensions (AddInfrastructure)
+    Data/                
+    Data/Configurations/    
+    Repositories/     
+    Services/        
+    Extensions/      
   Gaku.Api/
-    Endpoints/       TrailEndpoints, MapEndpoints  (Minimal API)
+    Endpoints/       
     Program.cs
   Gaku.Web/
-    Components/Layout/   MainLayout, NavMenu
-    Components/Map/      LeafletMap  (JS interop wrapper)
-    Pages/               Home (map view), Trails (trail list)
-    Services/            LeafletInterop  (IJSRuntime wrapper)
-    wwwroot/js/          leaflet-interop.js  (ES module)
+    Components/Layout/   
+    Components/Map/      
+    Pages/                      Home (map view), Trails (trail list)
+    Services/            
+    wwwroot/js/          
 tests/
-  Gaku.Domain.Tests/       Entity + value-object unit tests
-  Gaku.Application.Tests/  Service tests with NSubstitute fakes
-  Gaku.Infrastructure.Tests/ OSM service tests with MockHttp
-  Gaku.Web.Tests/          bUnit component tests
+  Gaku.Domain.Tests/       
+  Gaku.Application.Tests/  
+  Gaku.Infrastructure.Tests/
+  Gaku.Web.Tests/          
 ```
-
-## Architecture Diagrams
-
-> See [docs/architecture.md](docs/architecture.md) for rendered C4, clean architecture, container, ER, and sequence diagrams.
-> See [docs/class-diagram.md](docs/class-diagram.md) for per-project class diagrams.
-
-**Class diagram rule**: when creating or updating class diagrams, exclude enums, value objects, and record types — show only classes and interfaces.
-
----
-
-## Naming Conventions
+### Naming Conventions
 
 - **Entities, DTOs, value objects**: singular — `Trail`, `TrailDto`, `Coordinates`
 - **C# folders**: singular — `Entity/`, `ValueObject/`, `Endpoint/`, `Repository/`, `Service/`, `Interface/`
@@ -104,6 +91,20 @@ The `TrailRepository.GetNearbyAsync` uses `FromSqlRaw` with `ST_DWithin` to leve
 ### Blazor render mode
 All interactive pages use `@rendermode InteractiveServer` so server-side services (EF Core, HTTP clients) are available directly without a separate API call from the frontend.
 
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Runtime | .NET 10 |
+| Backend API | ASP.NET Core Minimal APIs |
+| Frontend | Blazor Web App (InteractiveServer) |
+| Maps | Leaflet.js + OpenStreetMap tiles |
+| ORM | EF Core 10 + Npgsql |
+| Database | PostgreSQL 16 + PostGIS 3.4 |
+| Backend tests | xUnit + FluentAssertions + NSubstitute |
+| Frontend tests | bUnit + NSubstitute |
+
 ## External API Rate Limits
 
 | Service | Policy |
@@ -111,6 +112,8 @@ All interactive pages use `@rendermode InteractiveServer` so server-side service
 | Nominatim | Max 1 req/sec; `User-Agent` header required |
 | Overpass | Public instance; avoid hammering; consider self-hosting for production |
 | OSM Tiles | Tile Usage Policy applies; add attribution |
+
+---
 
 ## Environment Variables (override in appsettings)
 
