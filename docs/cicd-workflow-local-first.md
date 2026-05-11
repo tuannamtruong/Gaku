@@ -1,4 +1,4 @@
-# CI/CD Workflow
+# Local-First CI/CD Workflow
 
 ## Overview
 
@@ -65,11 +65,11 @@ sequenceDiagram
 
 ---
 
-## Local CI Setup for Smee.io + Jenkins
+## Local CI Setup for Smee & Jenkins
 
 Pipeline job config: Git push → `https://github.com/tuannamtruong/Gaku` → Webhook to Smee → Relay to Jenkins → Filter by branch `*/master` → script path `Jenkinsfile`.
 
-### 1. Smee.io Channel
+### 1. Smee Channel
 
 Go to [smee.io](https://smee.io) and get a new channel.
 Save `SMEE_URL` in `jenkins/local/.env`
@@ -134,8 +134,41 @@ curl -X POST "http://localhost:8090/createItem?name=gaku" \
 | Webhook delivery | Push a commit; GitHub repo → Settings → Webhooks → Recent Deliveries → `200` response |
 | Pipeline triggered | Jenkins dashboard shows a new build for the pipeline job |
 
+
 ---
 
+## Local CD Setup for minikube + K8s
+
+Minikube install
+https://minikube.sigs.k8s.io/docs/start/
+
+
+Start cluster and enable ingress controller
+```
+  minikube start
+  minikube addons enable ingress
+```
+
+Point Docker CLI at minikube's daemon
+```
+  eval $(minikube docker-env)
+```
+
+Build the projects with minikube context
+```
+  docker build -f docker/Dockerfile.Gaku.Api      -t gaku-api:latest      .
+  docker build -f docker/Dockerfile.Gaku.Web      -t gaku-web:latest      .
+  docker build -f docker/Dockerfile.Migrator      -t gaku-migrator:latest .
+```
+
+Re/apply the k8s infrastructure
+```
+  cp .env infra/k8s/local/.env
+  kubectl apply -k infra/k8s/local/
+  rm -f $(K8S_FOLDER).env
+```
+
+---
 ## File Map
 
 ```

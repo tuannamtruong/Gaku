@@ -2,23 +2,23 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- namespace.yaml
-- configmap.yaml
-- ingress.yaml
-- postgres/pvc.yaml
-- postgres/statefulset.yaml
-- postgres/service.yaml
-- api/deployment.yaml
-- api/service.yaml
-- web/deployment.yaml
-- web/service.yaml
-- db-migration/job.yaml
+  - namespace.yaml
+  - configmap.yaml
+  - ingress.yaml
+  - postgres/pvc.yaml
+  - postgres/statefulset.yaml
+  - postgres/service.yaml
+  - api/deployment.yaml
+  - api/service.yaml
+  - web/deployment.yaml
+  - web/service.yaml
+  - db-migration/job.yaml
 
 generatorOptions:
   disableNameSuffixHash: true
 
 secretGenerator:
-- name: gaku-secret
-  namespace: gaku
-  envs:
-  - ../../../.env
+  - name: gaku-secret
+    namespace: gaku
+    envs:
+      - .env
