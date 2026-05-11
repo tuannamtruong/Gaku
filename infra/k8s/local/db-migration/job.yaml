@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+  namespace: gaku
+spec:
+  template:
+    spec:
+      containers:
+      - name: migrator
+        image: gaku-migrator:latest
+        imagePullPolicy: Never
+        envFrom:
+        - secretRef:
+            name: gaku-secret
+      restartPolicy: OnFailure

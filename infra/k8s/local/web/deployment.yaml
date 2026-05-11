@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gaku-web
+  namespace: gaku
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gaku-web
+  template:
+    metadata:
+      labels:
+        app: gaku-web
+    spec:
+      containers:
+      - name: gaku-web
+        image: gaku-web:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: gaku-config
+        - secretRef:
+            name: gaku-secret
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5

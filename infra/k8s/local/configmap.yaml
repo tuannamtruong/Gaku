@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gaku-config
+  namespace: gaku
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
