@@ -2,23 +2,28 @@ include .env
 export
 .PHONY: jenkins
 
-jenkins_folder := ./jenkins/local
+JENKINS_FOLDER := ./jenkins/local
 K8S_FOLDER=infra/k8s/local/
 
-j_up:
-	cd $(jenkins_folder) && docker compose up -d
+jenkins_up:
+	cd $(JENKINS_FOLDER) && docker compose up -d
 
-j_down:
-	cd $(jenkins_folder) && docker compose down
+jenkins_down:
+	cd $(JENKINS_FOLDER) && docker compose down
 
-j_restart:
-	cd $(jenkins_folder) && docker compose restart
+jenkins_restart:
+	cd $(JENKINS_FOLDER) && docker compose restart
 
-j_rebuild:
-	cd $(jenkins_folder) && docker compose up -d --build
+jenkins_rebuild:
+	cd $(JENKINS_FOLDER) && docker compose up -d --build
+
+minikube_up:
+	minikube start
 
 pg_up:
 	docker compose up -d postgres
+
+local_up: jenkins_up minikube_up pg_up
 
 k8s_apply:
 	cp .env $(K8S_FOLDER).env

@@ -1,6 +1,5 @@
 #!/bin/bash
-make j_up ;
-make pg_up ;
+make local_up ;
 
 cursor . ; 
 claude . ;
