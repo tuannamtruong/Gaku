@@ -11,7 +11,7 @@ COPY src/Gaku.Api/Gaku.Api.csproj src/Gaku.Api/
 COPY src/Gaku.Domain/Gaku.Domain.csproj src/Gaku.Domain/
 COPY src/Gaku.Application/Gaku.Application.csproj src/Gaku.Application/
 COPY src/Gaku.Infrastructure/Gaku.Infrastructure.csproj src/Gaku.Infrastructure/
-RUN dotnet restore src/Gaku.Infrastructure/Gaku.Infrastructure.csproj
+RUN dotnet restore src/Gaku.Api/Gaku.Api.csproj
 
 COPY . .
 

@@ -26,9 +26,12 @@ pg_up:
 local_up: jenkins_up minikube_up pg_up
 
 k8s_apply:
-	cp .env $(K8S_FOLDER).env
+	cp .env.k8s $(K8S_FOLDER).env.k8s
 	kubectl apply -k $(K8S_FOLDER)
-	rm -f $(K8S_FOLDER).env
+	rm -f $(K8S_FOLDER).env.k8s
+
+k8s_postgres:
+	kubectl exec -it -n gaku statefulset/postgres -- psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
 
 #Pass git diff to host system
 gph:

@@ -21,4 +21,4 @@ secretGenerator:
   - name: gaku-secret
     namespace: gaku
     envs:
-      - .env
+      - .env.k8s
