@@ -248,9 +248,9 @@ pipeline {
 **Files to create:**
 ```
 infra/k8s/local/
+  kustomization.yaml
   namespace.yaml
   configmap.yaml
-  secret.yaml
   postgres/
     statefulset.yaml
     service.yaml
@@ -285,16 +285,32 @@ data:
   ASPNETCORE_ENVIRONMENT: "Production"
 ```
 
-**`secret.yaml`** (base64-encoded, local only — never commit real credentials):
+**`kustomization.yaml`** — `gaku-secret` is generated from the root `.env` file via Kustomize `secretGenerator` (no credentials in source control):
 ```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: gaku-secret
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- namespace.yaml
+- configmap.yaml
+- ingress.yaml
+- postgres/pvc.yaml
+- postgres/statefulset.yaml
+- postgres/service.yaml
+- api/deployment.yaml
+- api/service.yaml
+- web/deployment.yaml
+- web/service.yaml
+- db-migration/job.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+- name: gaku-secret
   namespace: gaku
-type: Opaque
-stringData:
-  ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=gaku;Username=gaku;Password=gaku_password"
+  envs:
+  - ../../../.env
 ```
 
 **`api/deployment.yaml`:**
@@ -373,7 +389,10 @@ spec:
 minikube start
 minikube addons enable ingress
 eval $(minikube docker-env)          # point Docker CLI to minikube's daemon
-kubectl apply -f infra/k8s/local/
+
+# Applies all k8s infrastructure + generates secret from root .env
+kubectl apply -k infra/k8s/local/ --load-restrictor LoadRestrictionsNone
+
 echo "$(minikube ip) gaku.local" | sudo tee -a /etc/hosts
 ```
 
@@ -452,9 +471,9 @@ Gaku/
 └── infra/
     ├── k8s/
     │   ├── local/
+    │   │   ├── kustomization.yaml
     │   │   ├── namespace.yaml
     │   │   ├── configmap.yaml
-    │   │   ├── secret.yaml
     │   │   ├── postgres/
     │   │   ├── api/
     │   │   ├── web/
