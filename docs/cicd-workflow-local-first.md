@@ -178,7 +178,7 @@ Build the projects with minikube context
 
 Apply and validate layer by layer.
 
-### 3. Layer 1 - k8s resources apply
+### 3. Layer 1 - k8s resources
 
 ```
   cp .env infra/k8s/local/.env
