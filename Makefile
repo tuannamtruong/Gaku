@@ -1,9 +1,9 @@
 include .env
+include infra/k8s/k8s.mk
 export
 .PHONY: jenkins
 
 JENKINS_FOLDER := ./jenkins/local
-K8S_FOLDER=infra/k8s/local/
 
 jenkins_up:
 	cd $(JENKINS_FOLDER) && docker compose up -d
@@ -17,21 +17,10 @@ jenkins_restart:
 jenkins_rebuild:
 	cd $(JENKINS_FOLDER) && docker compose up -d --build
 
-minikube_up:
-	minikube start
-
 pg_up:
 	docker compose up -d postgres
 
 local_up: jenkins_up minikube_up pg_up
-
-k8s_apply:
-	cp .env.k8s $(K8S_FOLDER).env.k8s
-	kubectl apply -k $(K8S_FOLDER)
-	rm -f $(K8S_FOLDER).env.k8s
-
-k8s_postgres:
-	kubectl exec -it -n gaku statefulset/postgres -- psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
 
 #Pass git diff to host system
 gph:
