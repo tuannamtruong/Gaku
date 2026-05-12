@@ -1,21 +1,7 @@
 include .env
 include infra/k8s/k8s.mk
+include jenkins/jenkins.mk
 export
-.PHONY: jenkins
-
-JENKINS_FOLDER := ./jenkins/local
-
-jenkins_up:
-	cd $(JENKINS_FOLDER) && docker compose up -d
-
-jenkins_down:
-	cd $(JENKINS_FOLDER) && docker compose down
-
-jenkins_restart:
-	cd $(JENKINS_FOLDER) && docker compose restart
-
-jenkins_rebuild:
-	cd $(JENKINS_FOLDER) && docker compose up -d --build
 
 pg_up:
 	docker compose up -d postgres
