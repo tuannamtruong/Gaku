@@ -134,6 +134,19 @@ curl -X POST "http://localhost:8090/createItem?name=gaku" \
 | Webhook delivery | Push a commit; GitHub repo → Settings → Webhooks → Recent Deliveries → `200` response |
 | Pipeline triggered | Jenkins dashboard shows a new build for the pipeline job |
 
+### 6. Filemap
+```
+jenkins/local/
+  Dockerfile           custom Jenkins image
+  docker-compose.yml   jenkins + smee
+  smee-relay.js        pure Node.js SSE client; converts Smee payloads to JSON for Jenkins
+  .env                 
+
+docker/
+  Dockerfile.ci        
+
+Jenkinsfile            builds CI image, runs test containers, publishes JUnit results, removes image
+```
 
 ---
 
@@ -169,17 +182,3 @@ Re/apply the k8s infrastructure
 ```
 
 ---
-## File Map
-
-```
-jenkins/local/
-  Dockerfile           custom Jenkins image
-  docker-compose.yml   jenkins + smee
-  smee-relay.js        pure Node.js SSE client; converts Smee payloads to JSON for Jenkins
-  .env                 
-
-docker/
-  Dockerfile.ci        
-
-Jenkinsfile            builds CI image, runs test containers, publishes JUnit results, removes image
-```
