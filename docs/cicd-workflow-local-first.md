@@ -152,6 +152,7 @@ Jenkinsfile            builds CI image, runs test containers, publishes JUnit re
 
 ## Local CD Setup for minikube + K8s
 
+### 1. Minikube
 Minikube install
 https://minikube.sigs.k8s.io/docs/start/
 
@@ -162,6 +163,7 @@ Start cluster and enable ingress controller
   minikube addons enable ingress
 ```
 
+### 2. Local image build process
 Point Docker CLI at minikube's daemon
 ```
   eval $(minikube docker-env)
@@ -174,11 +176,30 @@ Build the projects with minikube context
   docker build -f docker/Dockerfile.Migrator      -t gaku-migrator:latest .
 ```
 
-Re/apply the k8s infrastructure
+Apply and validate layer by layer.
+
+### 3. Layer 1 - k8s resources apply
+
 ```
   cp .env infra/k8s/local/.env
   kubectl apply -k infra/k8s/local/
   rm -f $(K8S_FOLDER).env
 ```
+```
+  make k8s_test_layer1
+```
+
+### 5. Layer 2 - Pods   
+
+```
+  kubectl rollout status statefulset/postgres -n gaku --timeout=120s
+  kubectl wait --for=condition=complete job/db-migrate -n gaku --timeout=120s
+  kubectl rollout status deployment/gaku-api -n gaku --timeout=120s
+  kubectl rollout status deployment/gaku-web -n gaku --timeout=120s
+```
+```
+  make k8s_test_layer2
+```
+
 
 ---
