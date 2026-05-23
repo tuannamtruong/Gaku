@@ -201,16 +201,10 @@ Apply and validate layer by layer.
   make k8s_test_layer2
 ```
 
-### 5. Layer 3 - Pods   
+### 5. Layer 3 - test if the API/WEB/DB pods are reachable from inside the cluster via its internal DNS name    
 
 ```
-  kubectl rollout status statefulset/postgres -n gaku --timeout=120s
-  kubectl wait --for=condition=complete job/db-migrate -n gaku --timeout=120s
-  kubectl rollout status deployment/gaku-api -n gaku --timeout=120s
-  kubectl rollout status deployment/gaku-web -n gaku --timeout=120s
-```
-```
-  make k8s_test_layer2
+  make k8s_test_layer3
 ```
 
 
