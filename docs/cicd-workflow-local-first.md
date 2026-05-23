@@ -207,5 +207,17 @@ Apply and validate layer by layer.
   make k8s_test_layer3
 ```
 
+### 5. Layer 4 - test in-cluster service routing between api->db and web->db
+  
+```
+  make k8s_test_layer4
+```
+
+### 6. Layer 5 - test Ingress External Routing
+  
+```
+  make k8s_test_layer5
+```
+
 
 ---

@@ -66,4 +66,36 @@ k8s_test_layer3:
 	kubectl run pg-test --rm -i --restart=Never --image=postgres:16 -n gaku \
 	-- pg_isready -h postgres.gaku.svc.cluster.local -p 5432
 
-k8s_test: k8s_test_layer1 k8s_test_layer2 k8s_test_layer3
+k8s_test_layer4:
+	@echo "=== Test: In-cluster service routing between api->db and web->db ==="
+	kubectl exec -n gaku deploy/gaku-api -- \
+	sh -c 'timeout 3 bash -c "echo > /dev/tcp/postgres/5432" && echo "->DB reachable from api" || echo "->DB not reachable from api"'
+
+	kubectl exec -n gaku deploy/gaku-web -- \
+	sh -c 'timeout 3 bash -c "echo > /dev/tcp/postgres/5432" && echo "->DB reachable from web" || echo "->DB not reachable from web"'
+
+k8s_test_layer5:
+	@echo "=== Test: Ingress External Routing  ==="
+	@MINIKUBE_IP=$$(minikube ip 2>/dev/null); \
+	INGRESS_IP=$$(kubectl get ingress gaku-ingress -n gaku \
+	  -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null); \
+	TARGET_IP=$${INGRESS_IP:-$$MINIKUBE_IP}; \
+	if [ -z "$$TARGET_IP" ]; then echo "[ERROR] Could not determine target IP (minikube running?)"; exit 1; fi; \
+	echo "  Ingress IP : $${INGRESS_IP:-(none assigned)}"; \
+	echo "  Minikube IP: $$MINIKUBE_IP"; \
+	echo "  Testing via: $$TARGET_IP"; \
+	echo ""; \
+	RESOLVE="gaku.local:80:$$TARGET_IP"; \
+	WEB_CODE=$$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 --resolve "$$RESOLVE" \
+	  "http://gaku.local/health" 2>&1); \
+	API_CODE=$$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 --resolve "$$RESOLVE" \
+	  "http://gaku.local/api/health" 2>&1); \
+	echo "=== Checklist ==="; \
+	[ "$$WEB_CODE" = "200" ] \
+	  && echo "[OK]   Web  gaku.local/health     → gaku-web  : HTTP $$WEB_CODE" \
+	  || echo "[FAIL] Web  gaku.local/health     → gaku-web  : HTTP $$WEB_CODE (expected 200, HTTP 000 = no response)"; \	
+	[ "$$API_CODE" = "200" ] \
+	  && echo "[OK]   API  gaku.local/api/health → gaku-api  : HTTP $$API_CODE" \
+	  || echo "[FAIL] API  gaku.local/api/health → gaku-api  : HTTP $$API_CODE (expected 200)"
+
+k8s_test: k8s_test_layer1 k8s_test_layer2 k8s_test_layer3 k8s_test_layer4 k8s_test_layer5
