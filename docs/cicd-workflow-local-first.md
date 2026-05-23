@@ -189,7 +189,19 @@ Apply and validate layer by layer.
   make k8s_test_layer1
 ```
 
-### 5. Layer 2 - Pods   
+### 4. Layer 2 - Pods   
+
+```
+  kubectl rollout status statefulset/postgres -n gaku --timeout=120s
+  kubectl wait --for=condition=complete job/db-migrate -n gaku --timeout=120s
+  kubectl rollout status deployment/gaku-api -n gaku --timeout=120s
+  kubectl rollout status deployment/gaku-web -n gaku --timeout=120s
+```
+```
+  make k8s_test_layer2
+```
+
+### 5. Layer 3 - Pods   
 
 ```
   kubectl rollout status statefulset/postgres -n gaku --timeout=120s
