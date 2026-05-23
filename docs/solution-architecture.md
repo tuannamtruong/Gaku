@@ -19,16 +19,16 @@ C4Context
 
 ---
 
-
 ## Containers — runtime components and communication
 
 ```mermaid
 graph LR
-  Browser["(Hiker)"]
+  Browser["Browser"]
+  Service["External Service"]
 
   subgraph GakuSystem["Gaku"]
-    Web["Web App:5001  InteractiveServer"]
-    API["REST API:5000  Minimal API"]
+    Web["Web App:5001  Blazor InteractiveServer"]
+    API["REST API:5000  Minimal API\n(external consumers)"]
   end
 
   subgraph Data["Data"]
@@ -43,10 +43,10 @@ graph LR
 
   Browser -->|"Blazor SignalR / HTTPS"| Web
   Browser -->|"Leaflet tile requests"| Tiles
-  Web -->|"direct service calls\nsame process"| API
-  API -->|"EF Core / Npgsql"| PG
-  API -->|"HTTPS"| Nom
-  API -->|"HTTPS"| Over
+  Service -->|"HTTPS"| API
+  GakuSystem -->|"EF Core / Npgsql"| PG
+  GakuSystem -->|"HTTPS"| Nom
+  GakuSystem -->|"HTTPS"| Over
 ```
 
 ---
