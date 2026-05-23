@@ -29,4 +29,6 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
+app.MapGet("/health", () => Results.Ok());
+
 app.Run();
