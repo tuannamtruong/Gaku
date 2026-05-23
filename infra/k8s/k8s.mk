@@ -54,27 +54,39 @@ k8s_test_layer2:
 
 
 k8s_test_layer3:
-	@echo "=== Test: API/WEB/DB pods' reachability from inside the cluster via its internal DNS name ==="
-	@echo "=== No error -> functional ==="
-	kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl -n gaku \
-	-- curl -s http://gaku-api.gaku.svc.cluster.local:8080/health
-
-	kubectl run web-test --rm -i --restart=Never --image=curlimages/curl -n gaku \
-	-- curl -s http://gaku-web.gaku.svc.cluster.local:8080/health
-
-	kubectl run pg-test --rm -i --restart=Never --image=postgres:16 -n gaku \
-	-- pg_isready -h postgres.gaku.svc.cluster.local -p 5432
+	@echo "=== Test: In-cluster DNS reachability ==="
+	@API_RC=1; WEB_RC=1; DB_RC=1; \
+	kubectl delete pod curl-api curl-web curl-pg -n gaku --ignore-not-found >/dev/null 2>&1; \
+	kubectl run curl-api --rm -i --restart=Never --image=curlimages/curl -n gaku \
+	  -- curl -sf http://gaku-api.gaku.svc.cluster.local:8080/health >/dev/null 2>&1 \
+	  && API_RC=0 || true; \
+	kubectl run curl-web --rm -i --restart=Never --image=curlimages/curl -n gaku \
+	  -- curl -sf http://gaku-web.gaku.svc.cluster.local:8080/health >/dev/null 2>&1 \
+	  && WEB_RC=0 || true; \
+	kubectl run curl-pg --rm -i --restart=Never --image=postgres:16 -n gaku \
+	  -- pg_isready -h postgres.gaku.svc.cluster.local -p 5432 >/dev/null 2>&1 \
+	  && DB_RC=0 || true; \
+	echo "=== Checklist ==="; \
+	[ $$API_RC -eq 0 ] && echo "[OK]   gaku-api  DNS + /health reachable"   || echo "[FAIL] gaku-api  DNS or /health unreachable"; \
+	[ $$WEB_RC -eq 0 ] && echo "[OK]   gaku-web  DNS + /health reachable"   || echo "[FAIL] gaku-web  DNS or /health unreachable"; \
+	[ $$DB_RC  -eq 0 ] && echo "[OK]   postgres  DNS + pg_isready passed"   || echo "[FAIL] postgres  DNS or pg_isready failed"
 
 k8s_test_layer4:
-	@echo "=== Test: In-cluster service routing between api->db and web->db ==="
-	kubectl exec -n gaku deploy/gaku-api -- \
-	sh -c 'timeout 3 bash -c "echo > /dev/tcp/postgres/5432" && echo "->DB reachable from api" || echo "->DB not reachable from api"'
-
-	kubectl exec -n gaku deploy/gaku-web -- \
-	sh -c 'timeout 3 bash -c "echo > /dev/tcp/postgres/5432" && echo "->DB reachable from web" || echo "->DB not reachable from web"'
+	@echo "=== Test: In-cluster TCP routing to postgres ==="
+	@API_RC=1; WEB_RC=1; \
+	kubectl delete pod nc-api nc-web -n gaku --ignore-not-found >/dev/null 2>&1; \
+	kubectl run nc-api --rm -i --restart=Never --image=busybox -n gaku \
+	  -- sh -c 'nc -zw3 postgres.gaku.svc.cluster.local 5432' >/dev/null 2>&1 \
+	  && API_RC=0 || true; \
+	kubectl run nc-web --rm -i --restart=Never --image=busybox -n gaku \
+	  -- sh -c 'nc -zw3 postgres.gaku.svc.cluster.local 5432' >/dev/null 2>&1 \
+	  && WEB_RC=0 || true; \
+	echo "=== Checklist ==="; \
+	[ $$API_RC -eq 0 ] && echo "[OK]   gaku-api → postgres:5432 reachable" || echo "[FAIL] gaku-api → postgres:5432 not reachable"; \
+	[ $$WEB_RC -eq 0 ] && echo "[OK]   gaku-web → postgres:5432 reachable" || echo "[FAIL] gaku-web → postgres:5432 not reachable"
 
 k8s_test_layer5:
-	@echo "=== Test: Ingress External Routing  ==="
+	@echo "=== Test: Ingress External Routing ==="
 	@MINIKUBE_IP=$$(minikube ip 2>/dev/null); \
 	INGRESS_IP=$$(kubectl get ingress gaku-ingress -n gaku \
 	  -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null); \
@@ -92,7 +104,7 @@ k8s_test_layer5:
 	echo "=== Checklist ==="; \
 	[ "$$WEB_CODE" = "200" ] \
 	  && echo "[OK]   Web  gaku.local/health     → gaku-web  : HTTP $$WEB_CODE" \
-	  || echo "[FAIL] Web  gaku.local/health     → gaku-web  : HTTP $$WEB_CODE (expected 200, HTTP 000 = no response)"; \	
+	  || echo "[FAIL] Web  gaku.local/health     → gaku-web  : HTTP $$WEB_CODE (expected 200, HTTP 000 = no response)"; \
 	[ "$$API_CODE" = "200" ] \
 	  && echo "[OK]   API  gaku.local/api/health → gaku-api  : HTTP $$API_CODE" \
 	  || echo "[FAIL] API  gaku.local/api/health → gaku-api  : HTTP $$API_CODE (expected 200)"
