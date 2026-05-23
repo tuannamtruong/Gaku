@@ -55,13 +55,15 @@ k8s_test_layer2:
 
 
 k8s_test_layer3:
-  kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl -n gaku \
-    -- curl -s http://gaku-api.gaku.svc.cluster.local:8080/health
+	@echo "=== Test: API/WEB/DB pods' reachability from inside the cluster via its internal DNS name ==="
+	@echo "=== No error -> functional ==="
+	kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl -n gaku \
+	-- curl -s http://gaku-api.gaku.svc.cluster.local:8080/health
 
-  kubectl run web-test --rm -i --restart=Never --image=curlimages/curl -n gaku \
-    -- curl -s http://gaku-web.gaku.svc.cluster.local:8080/health
+	kubectl run web-test --rm -i --restart=Never --image=curlimages/curl -n gaku \
+	-- curl -s http://gaku-web.gaku.svc.cluster.local:8080/health
 
-  kubectl run pg-test --rm -i --restart=Never --image=postgres:16 -n gaku \
-    -- pg_isready -h postgres.gaku.svc.cluster.local -p 5432
+	kubectl run pg-test --rm -i --restart=Never --image=postgres:16 -n gaku \
+	-- pg_isready -h postgres.gaku.svc.cluster.local -p 5432
 
 k8s_test: k8s_test_layer1 k8s_test_layer2 k8s_test_layer3
