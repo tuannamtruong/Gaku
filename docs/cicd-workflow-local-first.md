@@ -34,11 +34,11 @@ flowchart TD
 
 ## Container Roles
 
-| Container | Image | Purpose |
-|---|---|---|
-| `gaku-jenkins` | built from `jenkins/local/Dockerfile` | Jenkins server — hosts UI, schedules jobs, runs pipeline |
-| `smee` | `node:lts-alpine` | Runs `smee-relay.js` — SSE client that forwards GitHub webhook payloads to Jenkins |
-| `gaku-ci-<build>` | built from `docker/Dockerfile.ci` | Ephemeral per-build container — compiles and tests .NET code |
+| Container         | Image                                 | Purpose                                                                            |
+| ----------------- | ------------------------------------- | ---------------------------------------------------------------------------------- |
+| `gaku-jenkins`    | built from `jenkins/local/Dockerfile` | Jenkins server — hosts UI, schedules jobs, runs pipeline                           |
+| `smee`            | `node:lts-alpine`                     | Runs `smee-relay.js` — SSE client that forwards GitHub webhook payloads to Jenkins |
+| `gaku-ci-<build>` | built from `docker/Dockerfile.ci`     | Ephemeral per-build container — compiles and tests .NET code                       |
 
 ## Stage Detail
 
@@ -73,6 +73,7 @@ Pipeline job config: Git push → `https://github.com/tuannamtruong/Gaku` → We
 
 Go to [smee.io](https://smee.io) and get a new channel.
 Save `SMEE_URL` in `jenkins/local/.env`
+
 ```
   SMEE_URL=https://smee.io/<your-channel-id>
 ```
@@ -82,11 +83,11 @@ Save `SMEE_URL` in `jenkins/local/.env`
 Register the Smee URL as a webhook in the GitHub repo
 GitHub repo → Settings → Webhooks → Add webhook
 
-| Field | Value |
-|---|---|
-| Payload URL | your Smee.io channel URL |
-| Content type | `application/json` |
-| Events | push event |
+| Field        | Value                    |
+| ------------ | ------------------------ |
+| Payload URL  | your Smee.io channel URL |
+| Content type | `application/json`       |
+| Events       | push event               |
 
 ### 3. Jenkins
 
@@ -96,14 +97,13 @@ Start Jenkins and the Smee relay:
 cd jenkins/local && docker compose up -d
 ```
 
-Retrieve the initial admin password under 
+Retrieve the initial admin password under
 
 ```bash
 docker exec gaku-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 ```
 
 Open `http://localhost:8090`, log in, and install plugins: Pipeline, Git, GitHub, JUnit, Timestamper.
-
 
 ### 4. Pipeline Job Creation
 
@@ -116,6 +116,7 @@ CRUMB=$(curl -s --cookie-jar /tmp/jenkins-cookies.txt \
 ```
 
 Create the job reusing the same session cookie
+
 ```
 curl -X POST "http://localhost:8090/createItem?name=gaku" \
 --user "<username>:<password>" \
@@ -127,23 +128,25 @@ curl -X POST "http://localhost:8090/createItem?name=gaku" \
 
 ### 5. Verification
 
-| Check | Command / Action |
-|---|---|
-| Smee relay is running | `docker logs smee` — should show SSE connected |
-| Jenkins is reachable | `curl -s -o /dev/null -w "%{http_code}" http://localhost:8090` → `200` |
-| Webhook delivery | Push a commit; GitHub repo → Settings → Webhooks → Recent Deliveries → `200` response |
-| Pipeline triggered | Jenkins dashboard shows a new build for the pipeline job |
+| Check                 | Command / Action                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| Smee relay is running | `docker logs smee` — should show SSE connected                                        |
+| Jenkins is reachable  | `curl -s -o /dev/null -w "%{http_code}" http://localhost:8090` → `200`                |
+| Webhook delivery      | Push a commit; GitHub repo → Settings → Webhooks → Recent Deliveries → `200` response |
+| Pipeline triggered    | Jenkins dashboard shows a new build for the pipeline job                              |
 
 ### 6. Filemap
+
 ```
 jenkins/local/
   Dockerfile           custom Jenkins image
   docker-compose.yml   jenkins + smee
   smee-relay.js        pure Node.js SSE client; converts Smee payloads to JSON for Jenkins
-  .env                 
+  job-config.xml       Jenkins pipeline job config
+  .env
 
 docker/
-  Dockerfile.ci        
+  Dockerfile.ci
 
 Jenkinsfile            builds CI image, runs test containers, publishes JUnit results, removes image
 ```
@@ -153,23 +156,27 @@ Jenkinsfile            builds CI image, runs test containers, publishes JUnit re
 ## Local CD Setup for minikube + K8s
 
 ### 1. Minikube
+
 Minikube install
 https://minikube.sigs.k8s.io/docs/start/
 
-
 Start cluster and enable ingress controller
+
 ```
   minikube start
   minikube addons enable ingress
 ```
 
 ### 2. Local image build process
+
 Point Docker CLI at minikube's daemon
+
 ```
   eval $(minikube docker-env)
 ```
 
 Build the projects with minikube context
+
 ```
   docker build -f docker/Dockerfile.Gaku.Api      -t gaku-api:latest      .
   docker build -f docker/Dockerfile.Gaku.Web      -t gaku-web:latest      .
@@ -181,15 +188,14 @@ Apply and validate layer by layer.
 ### 3. Layer 1 - k8s resources
 
 ```
-  cp .env infra/k8s/local/.env
-  kubectl apply -k infra/k8s/local/
-  rm -f $(K8S_FOLDER).env
+  make k8s_apply
 ```
+
 ```
   make k8s_test_layer1
 ```
 
-### 4. Layer 2 - Pods   
+### 4. Layer 2 - Pods
 
 ```
   kubectl rollout status statefulset/postgres -n gaku --timeout=120s
@@ -197,27 +203,27 @@ Apply and validate layer by layer.
   kubectl rollout status deployment/gaku-api -n gaku --timeout=120s
   kubectl rollout status deployment/gaku-web -n gaku --timeout=120s
 ```
+
 ```
   make k8s_test_layer2
 ```
 
-### 5. Layer 3 - test if the API/WEB/DB pods are reachable from inside the cluster via its internal DNS name    
+### 5. Layer 3 - test if the API/WEB/DB pods are reachable from inside the cluster via its internal DNS name
 
 ```
   make k8s_test_layer3
 ```
 
-### 5. Layer 4 - test in-cluster service routing between api->db and web->db
-  
+### 6. Layer 4 - test in-cluster TCP routing to postgres
+
 ```
   make k8s_test_layer4
 ```
 
-### 6. Layer 5 - test Ingress External Routing
-  
+### 7. Layer 5 - test Ingress External Routing
+
 ```
   make k8s_test_layer5
 ```
-
 
 ---

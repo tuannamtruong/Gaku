@@ -4,9 +4,7 @@ minikube_up:
 	minikube start
 
 k8s_apply:
-	cp .env.k8s $(K8S_FOLDER).env.k8s
 	kubectl apply -k $(K8S_FOLDER)
-	rm -f $(K8S_FOLDER).env.k8s
 
 k8s_postgres:
 	kubectl exec -it -n gaku statefulset/postgres -- psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
@@ -19,14 +17,15 @@ k8s_test_layer1:
 	echo "=== Checklist ==="; \
 	echo "$$RAW" | grep -q "secret/gaku-secret"       && echo "[OK] Secret:      gaku-secret"       || echo "[MISSING] Secret:      gaku-secret"; \
 	echo "$$RAW" | grep -q "configmap/gaku-config"    && echo "[OK] ConfigMap:   gaku-config"        || echo "[MISSING] ConfigMap:   gaku-config"; \
-	echo "$$RAW" | grep -q "postgres-pvc"             && echo -n "[OK] PVC:         postgres-pvc" || echo -n "[MISSING] PVC:         postgres-pvc"; \
-	echo "$$RAW" | grep "postgres-pvc" | grep -q "Bound" && echo " (Bound)" || echo " (NOT Bound)"; \
+	echo "$$RAW" | grep "postgres-pvc" | grep -q "Bound" && echo "[OK] PVC:         postgres-pvc (Bound)" || echo "[MISSING] PVC:         postgres-pvc (not Bound)"; \
 	echo "$$RAW" | grep -q "statefulset.apps/postgres" && echo "[OK] StatefulSet: postgres"          || echo "[MISSING] StatefulSet: postgres"; \
 	echo "$$RAW" | grep -q "deployment.apps/gaku-api" && echo "[OK] Deployment:  gaku-api"           || echo "[MISSING] Deployment:  gaku-api"; \
 	echo "$$RAW" | grep -q "deployment.apps/gaku-web" && echo "[OK] Deployment:  gaku-web"           || echo "[MISSING] Deployment:  gaku-web"; \
 	echo "$$RAW" | grep -q "job.batch/db-migrate"     && echo "[OK] Job:         db-migrate"         || echo "[MISSING] Job:         db-migrate"; \
 	echo "$$RAW" | grep -q "ingress.networking.k8s.io/gaku-ingress" && echo "[OK] Ingress:     gaku-ingress" || echo "[MISSING] Ingress:     gaku-ingress"; \
-	echo "$$RAW" | grep -q "service/"                 && echo "[OK] Services:    present"            || echo "[MISSING] Services:    none found"
+	echo "$$RAW" | grep -q "service/gaku-api"          && echo "[OK] Service:     gaku-api"           || echo "[MISSING] Service:     gaku-api"; \
+	echo "$$RAW" | grep -q "service/gaku-web"          && echo "[OK] Service:     gaku-web"           || echo "[MISSING] Service:     gaku-web"; \
+	echo "$$RAW" | grep -q "service/postgres"          && echo "[OK] Service:     postgres"           || echo "[MISSING] Service:     postgres"
 
 k8s_test_layer2:
 	@echo "=== Gaku Kubernetes Pod Rollout Report ==="
