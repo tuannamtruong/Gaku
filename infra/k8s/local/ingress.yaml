@@ -3,24 +3,22 @@ kind: Ingress
 metadata:
   name: gaku-ingress
   namespace: gaku
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   rules:
-  - host: gaku.local
-    http:
-      paths:
-      - path: /api(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: gaku-api
-            port:
-              number: 8080
-      - path: /()(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: gaku-web
-            port:
-              number: 8080
+    - host: gaku.local
+      http:
+        paths:
+          - path: /api/
+            pathType: Prefix
+            backend:
+              service:
+                name: gaku-api
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gaku-web
+                port:
+                  number: 8080
