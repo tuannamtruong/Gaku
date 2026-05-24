@@ -9,17 +9,19 @@ ASP.NET application for hiking across Europe.
 See [docs/software-architecture.md](docs/software-architecture.md) for more architectural details and diagrams.
 
 ### Clean Architecture Overview
-
+   
 ```
 Gaku.Domain                             business rules and data shapes
-  ├── Gaku.Application───────┐          business workflows and capability contracts
+  ▲   
+  ├── Gaku.Application ◄─────┐          business workflows and capability contracts
+  │     ▲                    │
   │     │                    │
-  └── Gaku.Infrastructure────│          technical implementations of those contracts
+  └── Gaku.Infrastructure ◄──│          technical implementations of those contracts
                          Frontend
 
 ```
 
-**Dependency rule**: arrows point inward only — outer layers depend on inner layers, never the reverse. `Core` must never reference `Application`, `Infrastructure`, or Frontend. `Application` must never reference `Infrastructure`.
+**Dependency rule**: arrows point inward only — outer layers depend on inner layers, never the reverse. `Domain` must never reference `Application`, `Infrastructure`, or Frontend. `Application` must never reference `Infrastructure`.
 
 ### Frontend and Infrastructure
 
@@ -46,6 +48,7 @@ src/
     Services/
     Extensions/
   Gaku.Infrastructure/
+    Cache/
     Data/
     Data/Configurations/
     Repositories/
