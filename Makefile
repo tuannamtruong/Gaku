@@ -3,12 +3,6 @@ include infra/k8s/k8s.mk
 include jenkins/jenkins.mk
 export
 
-docker_compose_build:
-	GIT_COMMIT=$(shell git rev-parse HEAD) \
-	BUILD_TIMESTAMP=$(shell date -u +%Y-%m-%dT%H:%M:%SZ) \
-	docker compose up --build
-
-
 pg_up:
 	docker compose up -d postgres
 
