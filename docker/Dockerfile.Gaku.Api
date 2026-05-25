@@ -14,9 +14,15 @@ COPY . .
 RUN dotnet publish src/Gaku.Api/Gaku.Api.csproj -c Release --no-restore -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+ARG GIT_COMMIT=unknown
+ARG BUILD_NUMBER=local
+ARG BUILD_TIMESTAMP=unknown
 WORKDIR /app
 COPY --from=build /app/publish .
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 EXPOSE 8080
+LABEL org.opencontainers.image.revision="${GIT_COMMIT}" \
+      org.opencontainers.image.version="${BUILD_NUMBER}" \
+      org.opencontainers.image.created="${BUILD_TIMESTAMP}"
 ENTRYPOINT ["dotnet", "Gaku.Api.dll"]

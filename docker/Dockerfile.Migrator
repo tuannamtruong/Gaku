@@ -1,4 +1,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0
+ARG GIT_COMMIT=unknown
+ARG BUILD_NUMBER=local
+ARG BUILD_TIMESTAMP=unknown
+LABEL org.opencontainers.image.revision="${GIT_COMMIT}" \
+      org.opencontainers.image.version="${BUILD_NUMBER}" \
+      org.opencontainers.image.created="${BUILD_TIMESTAMP}"
 WORKDIR /src
 
 RUN dotnet tool install --global dotnet-ef --version 10.0.7

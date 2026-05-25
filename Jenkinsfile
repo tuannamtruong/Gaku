@@ -153,8 +153,22 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh "docker build -f docker/Dockerfile.Gaku.Api -t ${env.API_IMAGE}:${env.IMAGE_TAG} -t ${env.API_IMAGE}:latest ."
-                sh "docker build -f docker/Dockerfile.Gaku.Web -t ${env.WEB_IMAGE}:${env.IMAGE_TAG} -t ${env.WEB_IMAGE}:latest ."
+                sh """
+                    GIT_SHA=\$(git rev-parse HEAD)
+                    BUILD_TS=\$(date -u +%Y-%m-%dT%H:%M:%SZ)
+                    docker build \\
+                        --build-arg GIT_COMMIT=\${GIT_SHA} \\
+                        --build-arg BUILD_NUMBER=${env.IMAGE_TAG} \\
+                        --build-arg BUILD_TIMESTAMP=\${BUILD_TS} \\
+                        -f docker/Dockerfile.Gaku.Api \\
+                        -t ${env.API_IMAGE}:${env.IMAGE_TAG} -t ${env.API_IMAGE}:latest .
+                    docker build \\
+                        --build-arg GIT_COMMIT=\${GIT_SHA} \\
+                        --build-arg BUILD_NUMBER=${env.IMAGE_TAG} \\
+                        --build-arg BUILD_TIMESTAMP=\${BUILD_TS} \\
+                        -f docker/Dockerfile.Gaku.Web \\
+                        -t ${env.WEB_IMAGE}:${env.IMAGE_TAG} -t ${env.WEB_IMAGE}:latest .
+                """
             }
         }
 
@@ -175,6 +189,18 @@ pipeline {
                 sh "kubectl set image deployment/gaku-web gaku-web=${env.WEB_IMAGE}:${env.IMAGE_TAG} -n gaku"
                 sh "kubectl rollout status deployment/gaku-api -n gaku --timeout=120s"
                 sh "kubectl rollout status deployment/gaku-web -n gaku --timeout=120s"
+                sh """
+                    GIT_SHA=\$(git rev-parse HEAD)
+                    BUILD_TS=\$(date -u +%Y-%m-%dT%H:%M:%SZ)
+                    kubectl annotate deployment/gaku-api -n gaku --overwrite \\
+                        org.opencontainers.image.revision=\${GIT_SHA} \\
+                        org.opencontainers.image.version=${env.IMAGE_TAG} \\
+                        org.opencontainers.image.created=\${BUILD_TS}
+                    kubectl annotate deployment/gaku-web -n gaku --overwrite \\
+                        org.opencontainers.image.revision=\${GIT_SHA} \\
+                        org.opencontainers.image.version=${env.IMAGE_TAG} \\
+                        org.opencontainers.image.created=\${BUILD_TS}
+                """
             }
         }
     }
