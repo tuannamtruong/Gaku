@@ -1,0 +1,37 @@
+{
+  "expectations": [
+    {
+      "text": "The agent checked gaku-api pod logs (or attempted to curl the endpoint) to find the exception",
+      "passed": true,
+      "evidence": "Report confirms curl (HTTP 500) and quotes the exception from pod logs: 'Npgsql.PostgresException: 42P01: relation \"trails\" does not exist'."
+    },
+    {
+      "text": "The agent traced through the code stack: endpoint → service → repository (not just 'there's an error in the API')",
+      "passed": false,
+      "evidence": "Report names only 'TrailRepository.cs around line 26'. The endpoint (TrailEndpoints.cs) and service (TrailService.cs) layers are not mentioned — stack not traversed."
+    },
+    {
+      "text": "The root cause section identifies a specific method, file, or query responsible — not a vague layer",
+      "passed": true,
+      "evidence": "'TrailRepository.cs around line 26' and 'relation \"trails\" does not exist' is reasonably specific. The mismatch vs actual table name 'Trail' is implied ('might be named Trail with a capital T') though not confirmed by reading the source."
+    },
+    {
+      "text": "The agent distinguished the symptom (spinner / 500) from the root cause (the specific code or config that is broken)",
+      "passed": false,
+      "evidence": "Report says 'failing because the SQL query references a table called trails that doesn't exist' — conflates the SQL error with the root cause. Does not explain WHY the name is wrong (wrong casing in raw SQL vs EF model), which is the actual defect."
+    },
+    {
+      "text": "The report includes a 'How to confirm' section with a runnable command",
+      "passed": false,
+      "evidence": "No 'How to confirm' section. Closing advice says 'Running \\dt in psql will show the actual table names' but this is inline advice, not a structured confirmation step."
+    }
+  ],
+  "summary": { "passed": 2, "failed": 3, "total": 5, "pass_rate": 0.4 },
+  "execution_metrics": {
+    "tool_calls": { "Bash": 3, "Read": 0, "Write": 1 },
+    "total_tool_calls": 4,
+    "total_steps": 2,
+    "errors_encountered": 0,
+    "output_chars": 680
+  }
+}

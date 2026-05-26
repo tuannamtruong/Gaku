@@ -1,0 +1,37 @@
+{
+  "expectations": [
+    {
+      "text": "The agent read the migrator pod logs (not just job status) to look for an error message",
+      "passed": true,
+      "evidence": "Phase 2 explicitly: 'kubectl logs db-migrate-bkhq9 -n gaku: Build succeeded, migrations ran successfully, Done.' — pod logs read, not just job describe."
+    },
+    {
+      "text": "The agent checked migration files in src/Gaku.Infrastructure/Migrations/ or ran 'dotnet ef migrations list'",
+      "passed": true,
+      "evidence": "Phase 2: 'ls src/Gaku.Infrastructure/Migrations/' and 'grep -r Waypoint src/Gaku.Infrastructure/Migrations/' — both executed and findings reported."
+    },
+    {
+      "text": "The root cause names a specific migration file, SQL error type, or schema conflict",
+      "passed": true,
+      "evidence": "Root Cause names 'src/Gaku.Infrastructure/Migrations/20260506160058_InitialCreate.cs' as where Waypoint was created, and explains the likely error type ('42P07: relation already exists') if a duplicate migration were added."
+    },
+    {
+      "text": "The agent addressed both parts of the symptom: why db-migrate fails AND why the Web app won't start",
+      "passed": true,
+      "evidence": "Separate sections cover both: db-migrate (no current failure, Waypoint in InitialCreate) and gaku-web (JSDisconnectedException at LeafletInterop.cs:35 / LeafletMap.razor:35 — not a startup failure)."
+    },
+    {
+      "text": "The report includes a 'How to confirm' section with a runnable command",
+      "passed": true,
+      "evidence": "'## How to confirm' section includes kubectl exec + ls and psql \\d commands."
+    }
+  ],
+  "summary": { "passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0 },
+  "execution_metrics": {
+    "tool_calls": { "Bash": 5, "Read": 0, "Write": 1 },
+    "total_tool_calls": 6,
+    "total_steps": 4,
+    "errors_encountered": 0,
+    "output_chars": 2640
+  }
+}

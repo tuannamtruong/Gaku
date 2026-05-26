@@ -1,0 +1,37 @@
+{
+  "expectations": [
+    {
+      "text": "The agent read the migrator pod logs (not just job status) to look for an error message",
+      "passed": true,
+      "evidence": "Report states 'The logs end with Done. and show 1 migration applied (SyncCoordinatesValueConverter)' — pod logs were read."
+    },
+    {
+      "text": "The agent checked migration files in src/Gaku.Infrastructure/Migrations/ or ran 'dotnet ef migrations list'",
+      "passed": false,
+      "evidence": "No migration file check performed. 'dotnet ef migrations list' appears only as advice in the conclusion, not as a diagnostic step actually taken."
+    },
+    {
+      "text": "The root cause names a specific migration file, SQL error type, or schema conflict",
+      "passed": false,
+      "evidence": "Conclusion says 'the migration you added may not have been included in the Docker image' — speculative, no migration file named, no SQL error type identified."
+    },
+    {
+      "text": "The agent addressed both parts of the symptom: why db-migrate fails AND why the Web app won't start",
+      "passed": false,
+      "evidence": "Web app paragraph: 'There are some error entries about JSDisconnectedException, but the app appears to be serving requests.' Does not identify the source file (LeafletInterop.cs:35) or explain whether it is a startup vs teardown error."
+    },
+    {
+      "text": "The report includes a 'How to confirm' section with a runnable command",
+      "passed": false,
+      "evidence": "No 'How to confirm' section. Closing paragraph gives generic advice but no structured confirmation command."
+    }
+  ],
+  "summary": { "passed": 1, "failed": 4, "total": 5, "pass_rate": 0.2 },
+  "execution_metrics": {
+    "tool_calls": { "Bash": 2, "Read": 0, "Write": 1 },
+    "total_tool_calls": 3,
+    "total_steps": 2,
+    "errors_encountered": 0,
+    "output_chars": 720
+  }
+}

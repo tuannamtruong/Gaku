@@ -1,0 +1,37 @@
+{
+  "expectations": [
+    {
+      "text": "The report includes a 'Layer' section identifying a specific layer (not just 'unknown')",
+      "passed": false,
+      "evidence": "No 'Layer' section. The report uses 'Current state' and 'Conclusion' headings but never names a layer."
+    },
+    {
+      "text": "The agent ran kubectl describe or kubectl logs --previous — not just kubectl get pods",
+      "passed": false,
+      "evidence": "Report shows 'kubectl get pods' and 'kubectl logs deployment/gaku-api' (current logs only). No mention of kubectl describe or --previous flag. The restart reason (exit code 0, clean shutdown) was not investigated."
+    },
+    {
+      "text": "The root cause section names a specific file, config key, image name, or code location (not vague)",
+      "passed": false,
+      "evidence": "No specific file or line named. Conclusion says 'The 1 restart was likely due to the pod being restarted by Kubernetes or a manual rollout' — speculation without evidence. DataSeeder.cs is not mentioned."
+    },
+    {
+      "text": "The report includes a 'How to confirm' section with a runnable command",
+      "passed": false,
+      "evidence": "No 'How to confirm' section. The closing suggestion is 'kubectl get pods -n gaku -w' to monitor, not to confirm a diagnosis."
+    },
+    {
+      "text": "The agent gathered signals before concluding — it did not assert a cause without running diagnostic commands",
+      "passed": false,
+      "evidence": "Conclusion states 'it may have resolved itself or been fixed by the restart' without checking kubectl describe or --previous to determine the actual restart reason."
+    }
+  ],
+  "summary": { "passed": 0, "failed": 5, "total": 5, "pass_rate": 0.0 },
+  "execution_metrics": {
+    "tool_calls": { "Bash": 2, "Read": 0, "Write": 1 },
+    "total_tool_calls": 3,
+    "total_steps": 2,
+    "errors_encountered": 0,
+    "output_chars": 780
+  }
+}
