@@ -1,0 +1,35 @@
+{
+  "eval_id": 1,
+  "eval_name": "rebuild-api",
+  "prompt": "Write me a script that rebuilds the gaku-api Docker image and reloads it into minikube, then restarts the deployment.",
+  "assertions": [
+    {
+      "text": "Script file exists (scripts/ directory)",
+      "check": "script output file is non-empty"
+    },
+    {
+      "text": "Script has set -euo pipefail for error safety",
+      "check": "grep 'set -euo pipefail' in script"
+    },
+    {
+      "text": "Script references the correct Dockerfile (docker/Dockerfile.Gaku.Api)",
+      "check": "grep 'Dockerfile.Gaku.Api' in script"
+    },
+    {
+      "text": "Script sources OCI env vars (export-oci-env.sh) or sets GIT_COMMIT/BUILD_TIMESTAMP",
+      "check": "grep 'export-oci-env' or 'GIT_COMMIT' in script"
+    },
+    {
+      "text": "Script loads image into minikube",
+      "check": "grep 'minikube image load' in script"
+    },
+    {
+      "text": "Script restarts or redeploys gaku-api deployment",
+      "check": "grep 'rollout restart' or 'rollout status' in script"
+    },
+    {
+      "text": "Script has a verification/result section with [OK] or [FAIL] checks",
+      "check": "grep '[OK]' or '=== Result' or 'Checklist' in script"
+    }
+  ]
+}

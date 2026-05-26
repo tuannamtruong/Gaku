@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "Script file exists",
+      "passed": true,
+      "evidence": "script.sh is non-empty"
+    },
+    {
+      "text": "set -euo pipefail present",
+      "passed": true,
+      "evidence": "grep confirmed"
+    },
+    {
+      "text": "[OK] marker in output",
+      "passed": true,
+      "evidence": "[OK] text in final conditional echo"
+    },
+    {
+      "text": "Result/checklist section",
+      "passed": false,
+      "evidence": "No structured '=== Result ===' checklist; success/failure is inline in the wait command only"
+    },
+    {
+      "text": "Correct Dockerfile (Dockerfile.Migrator)",
+      "passed": true,
+      "evidence": "docker build --file docker/Dockerfile.Migrator"
+    },
+    {
+      "text": "OCI env args",
+      "passed": false,
+      "evidence": "docker build does NOT pass --build-arg GIT_COMMIT or BUILD_TIMESTAMP; OCI labels in Dockerfile would get default values"
+    },
+    {
+      "text": "minikube image load",
+      "passed": true,
+      "evidence": "minikube image load present"
+    },
+    {
+      "text": "kubectl delete job",
+      "passed": true,
+      "evidence": "kubectl delete job with --ignore-not-found"
+    },
+    {
+      "text": "kubectl apply (re-apply manifests)",
+      "passed": true,
+      "evidence": "kubectl apply -k infra/k8s/local present"
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 2,
+    "total": 9,
+    "pass_rate": 0.78
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "eval_id": 3,
+  "eval_name": "redeploy-migrator",
+  "prompt": "I keep doing this manually: docker build the migrator image, minikube image load it, delete the old db-migrate job, then kubectl apply the k8s folder. Can you scriptize this whole flow?",
+  "assertions": [
+    {
+      "text": "Script file exists and is non-empty",
+      "check": "script output file is non-empty"
+    },
+    {
+      "text": "Script has set -euo pipefail for error safety",
+      "check": "grep 'set -euo pipefail' in script"
+    },
+    {
+      "text": "Script builds gaku-migrator Docker image using correct Dockerfile",
+      "check": "grep 'Dockerfile.Migrator' in script"
+    },
+    {
+      "text": "Script sources OCI env vars or sets GIT_COMMIT/BUILD_TIMESTAMP build args",
+      "check": "grep 'export-oci-env' or 'GIT_COMMIT' in script"
+    },
+    {
+      "text": "Script loads image into minikube",
+      "check": "grep 'minikube image load' in script"
+    },
+    {
+      "text": "Script deletes the old db-migrate job",
+      "check": "grep 'kubectl delete job' in script"
+    },
+    {
+      "text": "Script re-applies k8s manifests",
+      "check": "grep 'kubectl apply' in script"
+    },
+    {
+      "text": "Script has a verification/result section with [OK] or [FAIL] checks",
+      "check": "grep '[OK]' or '=== Result' or 'Checklist' in script"
+    }
+  ]
+}

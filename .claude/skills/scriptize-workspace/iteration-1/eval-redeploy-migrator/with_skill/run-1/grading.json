@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "Script file exists",
+      "passed": true,
+      "evidence": "script.sh is non-empty"
+    },
+    {
+      "text": "set -euo pipefail present",
+      "passed": true,
+      "evidence": "grep confirmed"
+    },
+    {
+      "text": "[OK] marker in output",
+      "passed": true,
+      "evidence": "ok() helper called 4 times in Result section"
+    },
+    {
+      "text": "Result/checklist section",
+      "passed": true,
+      "evidence": "'=== Result ===' with 4 [OK]/[FAIL] checks"
+    },
+    {
+      "text": "Correct Dockerfile (Dockerfile.Migrator)",
+      "passed": true,
+      "evidence": "docker build -f docker/Dockerfile.Migrator"
+    },
+    {
+      "text": "OCI env args",
+      "passed": true,
+      "evidence": "sources scripts/export-oci-env.sh"
+    },
+    {
+      "text": "minikube image load",
+      "passed": true,
+      "evidence": "minikube image load gaku-migrator:latest"
+    },
+    {
+      "text": "kubectl delete job",
+      "passed": true,
+      "evidence": "kubectl delete job db-migrate -n gaku --ignore-not-found"
+    },
+    {
+      "text": "kubectl apply (re-apply manifests)",
+      "passed": true,
+      "evidence": "kubectl apply -k infra/k8s/local/"
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0
+  }
+}

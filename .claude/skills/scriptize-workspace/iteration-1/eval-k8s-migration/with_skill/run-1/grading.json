@@ -1,0 +1,45 @@
+{
+  "expectations": [
+    {
+      "text": "Script file exists",
+      "passed": true,
+      "evidence": "script.sh is non-empty"
+    },
+    {
+      "text": "set -euo pipefail present",
+      "passed": true,
+      "evidence": "grep confirmed"
+    },
+    {
+      "text": "[OK] marker in output",
+      "passed": true,
+      "evidence": "ok() helper used"
+    },
+    {
+      "text": "Result/checklist section",
+      "passed": true,
+      "evidence": "'=== Result ===' section present"
+    },
+    {
+      "text": "kubectl delete job db-migrate",
+      "passed": true,
+      "evidence": "step 1 deletes job with --ignore-not-found"
+    },
+    {
+      "text": "kubectl apply (re-apply manifests)",
+      "passed": true,
+      "evidence": "kubectl apply -k infra/k8s/local/ used"
+    },
+    {
+      "text": "Wait for job completion",
+      "passed": true,
+      "evidence": "kubectl wait --for=condition=complete with 120s timeout"
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  }
+}

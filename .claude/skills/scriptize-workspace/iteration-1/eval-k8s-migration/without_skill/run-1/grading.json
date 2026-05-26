@@ -1,0 +1,45 @@
+{
+  "expectations": [
+    {
+      "text": "Script file exists",
+      "passed": true,
+      "evidence": "script.sh is non-empty"
+    },
+    {
+      "text": "set -euo pipefail present",
+      "passed": true,
+      "evidence": "grep confirmed"
+    },
+    {
+      "text": "[OK] marker in output",
+      "passed": true,
+      "evidence": "[OK] text in final echo"
+    },
+    {
+      "text": "Result/checklist section",
+      "passed": false,
+      "evidence": "No '=== Result ===' section; uses inline conditional echo rather than structured checklist"
+    },
+    {
+      "text": "kubectl delete job db-migrate",
+      "passed": true,
+      "evidence": "conditional delete with existence check"
+    },
+    {
+      "text": "kubectl apply (re-apply manifests)",
+      "passed": true,
+      "evidence": "kubectl apply -f job.yaml (applies job file directly, not full kustomize)"
+    },
+    {
+      "text": "Wait for job completion",
+      "passed": true,
+      "evidence": "kubectl wait --for=condition=complete with 120s timeout"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 1,
+    "total": 7,
+    "pass_rate": 0.86
+  }
+}

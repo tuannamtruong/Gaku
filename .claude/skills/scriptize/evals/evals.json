@@ -1,0 +1,23 @@
+{
+  "skill_name": "scriptize",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write me a script that rebuilds the gaku-api Docker image and reloads it into minikube, then restarts the deployment.",
+      "expected_output": "A bash script at scripts/redeploy-api.sh that: builds the Docker image using the correct Dockerfile and OCI build args, loads it into minikube, does a kubectl rollout restart, and ends with a verification checklist showing whether the deployment is running.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Make a script to re-run the EF Core database migrations in the k8s cluster. The db-migrate job needs to be deleted and re-created each time.",
+      "expected_output": "A bash script at scripts/run-k8s-migration.sh that deletes the existing db-migrate job, re-applies it via kubectl, waits for completion, and then prints a checklist confirming the job completed successfully.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "I keep doing this manually: docker build the migrator image, minikube image load it, delete the old db-migrate job, then kubectl apply the k8s folder. Can you scriptize this whole flow?",
+      "expected_output": "A bash script at scripts/redeploy-migrator.sh that covers the full flow: build gaku-migrator image with OCI args, minikube image load, delete the old job, kubectl apply -k, wait for job completion, and a verification section showing the job pod status.",
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,413 @@
+{
+  "metadata": {
+    "skill_name": "scriptize",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-26T08:56:01Z",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 65.0,
+        "tokens": 20983,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Script file exists",
+          "passed": true,
+          "evidence": "script.sh is non-empty"
+        },
+        {
+          "text": "set -euo pipefail present",
+          "passed": true,
+          "evidence": "grep confirmed"
+        },
+        {
+          "text": "[OK] marker in output",
+          "passed": true,
+          "evidence": "ok() helper used"
+        },
+        {
+          "text": "Result/checklist section",
+          "passed": true,
+          "evidence": "'=== Result ===' section present"
+        },
+        {
+          "text": "kubectl delete job db-migrate",
+          "passed": true,
+          "evidence": "step 1 deletes job with --ignore-not-found"
+        },
+        {
+          "text": "kubectl apply (re-apply manifests)",
+          "passed": true,
+          "evidence": "kubectl apply -k infra/k8s/local/ used"
+        },
+        {
+          "text": "Wait for job completion",
+          "passed": true,
+          "evidence": "kubectl wait --for=condition=complete with 120s timeout"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 72.3,
+        "tokens": 24367,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Script file exists",
+          "passed": true,
+          "evidence": "script.sh is non-empty"
+        },
+        {
+          "text": "set -euo pipefail present",
+          "passed": true,
+          "evidence": "grep confirmed"
+        },
+        {
+          "text": "[OK] marker in output",
+          "passed": true,
+          "evidence": "ok() helper used throughout"
+        },
+        {
+          "text": "Result/checklist section",
+          "passed": true,
+          "evidence": "'=== Result ===' present"
+        },
+        {
+          "text": "Correct Dockerfile (Dockerfile.Gaku.Api)",
+          "passed": true,
+          "evidence": "docker build -f docker/Dockerfile.Gaku.Api"
+        },
+        {
+          "text": "OCI env args (export-oci-env.sh or GIT_COMMIT)",
+          "passed": true,
+          "evidence": "sources scripts/export-oci-env.sh"
+        },
+        {
+          "text": "minikube image load",
+          "passed": true,
+          "evidence": "minikube image load gaku-api:latest"
+        },
+        {
+          "text": "kubectl rollout restart/status",
+          "passed": true,
+          "evidence": "rollout restart + rollout status with timeout"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 67.0,
+        "tokens": 22895,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Script file exists",
+          "passed": true,
+          "evidence": "script.sh is non-empty"
+        },
+        {
+          "text": "set -euo pipefail present",
+          "passed": true,
+          "evidence": "grep confirmed"
+        },
+        {
+          "text": "[OK] marker in output",
+          "passed": true,
+          "evidence": "ok() helper called 4 times in Result section"
+        },
+        {
+          "text": "Result/checklist section",
+          "passed": true,
+          "evidence": "'=== Result ===' with 4 [OK]/[FAIL] checks"
+        },
+        {
+          "text": "Correct Dockerfile (Dockerfile.Migrator)",
+          "passed": true,
+          "evidence": "docker build -f docker/Dockerfile.Migrator"
+        },
+        {
+          "text": "OCI env args",
+          "passed": true,
+          "evidence": "sources scripts/export-oci-env.sh"
+        },
+        {
+          "text": "minikube image load",
+          "passed": true,
+          "evidence": "minikube image load gaku-migrator:latest"
+        },
+        {
+          "text": "kubectl delete job",
+          "passed": true,
+          "evidence": "kubectl delete job db-migrate -n gaku --ignore-not-found"
+        },
+        {
+          "text": "kubectl apply (re-apply manifests)",
+          "passed": true,
+          "evidence": "kubectl apply -k infra/k8s/local/"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.86,
+        "passed": 6,
+        "failed": 1,
+        "total": 7,
+        "time_seconds": 46.2,
+        "tokens": 17794,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Script file exists",
+          "passed": true,
+          "evidence": "script.sh is non-empty"
+        },
+        {
+          "text": "set -euo pipefail present",
+          "passed": true,
+          "evidence": "grep confirmed"
+        },
+        {
+          "text": "[OK] marker in output",
+          "passed": true,
+          "evidence": "[OK] text in final echo"
+        },
+        {
+          "text": "Result/checklist section",
+          "passed": false,
+          "evidence": "No '=== Result ===' section; uses inline conditional echo rather than structured checklist"
+        },
+        {
+          "text": "kubectl delete job db-migrate",
+          "passed": true,
+          "evidence": "conditional delete with existence check"
+        },
+        {
+          "text": "kubectl apply (re-apply manifests)",
+          "passed": true,
+          "evidence": "kubectl apply -f job.yaml (applies job file directly, not full kustomize)"
+        },
+        {
+          "text": "Wait for job completion",
+          "passed": true,
+          "evidence": "kubectl wait --for=condition=complete with 120s timeout"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 67.2,
+        "tokens": 18476,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Script file exists",
+          "passed": true,
+          "evidence": "script.sh is non-empty"
+        },
+        {
+          "text": "set -euo pipefail present",
+          "passed": true,
+          "evidence": "grep confirmed"
+        },
+        {
+          "text": "[OK] marker in output",
+          "passed": true,
+          "evidence": "ok() helper used"
+        },
+        {
+          "text": "Result/checklist section",
+          "passed": true,
+          "evidence": "'=== Result ===' present"
+        },
+        {
+          "text": "Correct Dockerfile (Dockerfile.Gaku.Api)",
+          "passed": true,
+          "evidence": "docker build -f docker/Dockerfile.Gaku.Api"
+        },
+        {
+          "text": "OCI env args",
+          "passed": true,
+          "evidence": "manually exports GIT_COMMIT and BUILD_TIMESTAMP via git/date"
+        },
+        {
+          "text": "minikube image load",
+          "passed": true,
+          "evidence": "minikube image load present"
+        },
+        {
+          "text": "kubectl rollout restart/status",
+          "passed": true,
+          "evidence": "rollout restart + rollout status present"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.78,
+        "passed": 7,
+        "failed": 2,
+        "total": 9,
+        "time_seconds": 46.1,
+        "tokens": 19245,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Script file exists",
+          "passed": true,
+          "evidence": "script.sh is non-empty"
+        },
+        {
+          "text": "set -euo pipefail present",
+          "passed": true,
+          "evidence": "grep confirmed"
+        },
+        {
+          "text": "[OK] marker in output",
+          "passed": true,
+          "evidence": "[OK] text in final conditional echo"
+        },
+        {
+          "text": "Result/checklist section",
+          "passed": false,
+          "evidence": "No structured '=== Result ===' checklist; success/failure is inline in the wait command only"
+        },
+        {
+          "text": "Correct Dockerfile (Dockerfile.Migrator)",
+          "passed": true,
+          "evidence": "docker build --file docker/Dockerfile.Migrator"
+        },
+        {
+          "text": "OCI env args",
+          "passed": false,
+          "evidence": "docker build does NOT pass --build-arg GIT_COMMIT or BUILD_TIMESTAMP; OCI labels in Dockerfile would get default values"
+        },
+        {
+          "text": "minikube image load",
+          "passed": true,
+          "evidence": "minikube image load present"
+        },
+        {
+          "text": "kubectl delete job",
+          "passed": true,
+          "evidence": "kubectl delete job with --ignore-not-found"
+        },
+        {
+          "text": "kubectl apply (re-apply manifests)",
+          "passed": true,
+          "evidence": "kubectl apply -k infra/k8s/local present"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 68.1,
+        "stddev": 3.7723,
+        "min": 65.0,
+        "max": 72.3
+      },
+      "tokens": {
+        "mean": 22748.3333,
+        "stddev": 1696.7608,
+        "min": 20983,
+        "max": 24367
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.88,
+        "stddev": 0.1114,
+        "min": 0.78,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 53.1667,
+        "stddev": 12.1533,
+        "min": 46.1,
+        "max": 67.2
+      },
+      "tokens": {
+        "mean": 18505.0,
+        "stddev": 725.9346,
+        "min": 17794,
+        "max": 19245
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.12",
+      "time_seconds": "+14.9",
+      "tokens": "+4243"
+    }
+  },
+  "notes": []
+}
