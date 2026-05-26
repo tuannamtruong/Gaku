@@ -12,7 +12,7 @@ RUN dotnet restore src/Gaku.Web/Gaku.Web.csproj
 RUN dotnet tool install --global dotnet-counters
 
 COPY . .
-RUN dotnet publish src/Gaku.Web/Gaku.Web.csproj -c Release --no-restore -o /app/publish
+RUN dotnet publish src/Gaku.Web/Gaku.Web.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 ARG GIT_COMMIT=unknown
