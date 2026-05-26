@@ -1,0 +1,37 @@
+{
+  "eval_id": 1,
+  "run_type": "without_skill",
+  "expectations": [
+    {
+      "text": "report-has-summary-section",
+      "passed": true,
+      "evidence": "The report has a '## Summary' section but it provides a narrative description rather than structured counts; it does not list numeric counts for projects, files, violations, and warnings in a concise format."
+    },
+    {
+      "text": "report-has-violations-section",
+      "passed": true,
+      "evidence": "The report has a '## Layer Violations' section and a conclusion table that lists items as FAIL, covering the equivalent of a violations section."
+    },
+    {
+      "text": "report-has-healthy-section",
+      "passed": true,
+      "evidence": "The report has PASS entries within '## Layer Violations' and the conclusion table, effectively listing passing checks, though not under a section explicitly named 'Healthy'."
+    },
+    {
+      "text": "covers-all-four-checks",
+      "passed": true,
+      "evidence": "The report covers project dependency graph (project references), namespace imports (using directives in layer violation section), naming conventions (Issue 3 about plural folder names), and folder placement (Issue 2 about interfaces in Services/)."
+    },
+    {
+      "text": "greps-actual-files",
+      "passed": true,
+      "evidence": "The report references specific file paths like 'src/Gaku.Api/Program.cs line 22', 'src/Gaku.Application/Services/IMapService.cs', 'src/Gaku.Application/Services/ITrailService.cs', and class names like DataSeeder, HttpClientNames that can only come from scanning real files."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  }
+}

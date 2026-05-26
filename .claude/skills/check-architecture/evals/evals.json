@@ -1,0 +1,95 @@
+{
+  "skill_name": "check-architecture",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Check the architecture of the Gaku solution. Are there any violations?",
+      "expected_output": "A structured report covering all 4 checks (project references, namespace imports, naming conventions, folder placement) with clear VIOLATIONS and WARNINGS sections.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "report-has-summary-section",
+          "description": "Report includes a Summary section with counts for projects, files, violations, and warnings",
+          "type": "contains",
+          "value": "Summary"
+        },
+        {
+          "name": "report-has-violations-section",
+          "description": "Report includes a Violations section (even if empty)",
+          "type": "contains",
+          "value": "Violations"
+        },
+        {
+          "name": "report-has-healthy-section",
+          "description": "Report includes a Healthy section listing passing checks",
+          "type": "contains",
+          "value": "Healthy"
+        },
+        {
+          "name": "covers-all-four-checks",
+          "description": "Report mentions all 4 check categories: project references, namespace imports, naming conventions, folder placement",
+          "type": "llm_judge",
+          "value": "The report covers all four check categories: (1) project-level references/csproj edges, (2) namespace using imports, (3) naming conventions, and (4) folder placement."
+        },
+        {
+          "name": "greps-actual-files",
+          "description": "The agent ran actual shell commands to inspect the files rather than guessing",
+          "type": "llm_judge",
+          "value": "The agent ran grep, find, or cat commands to inspect real source files rather than relying on prior knowledge."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Does any Application layer code import Infrastructure types? Also check if Domain references Application anywhere.",
+      "expected_output": "A targeted report on namespace import rules for the Application and Domain layers, scanning .cs files and reporting violations or clean status.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "checks-application-for-infrastructure",
+          "description": "Explicitly checks whether Application files import Gaku.Infrastructure",
+          "type": "llm_judge",
+          "value": "The agent specifically checked whether files in Gaku.Application import or reference Gaku.Infrastructure namespaces."
+        },
+        {
+          "name": "checks-domain-for-application",
+          "description": "Explicitly checks whether Domain files import Gaku.Application",
+          "type": "llm_judge",
+          "value": "The agent specifically checked whether files in Gaku.Domain import or reference Gaku.Application namespaces."
+        },
+        {
+          "name": "reports-clean-or-violations",
+          "description": "Clearly states whether violations were found or the layers are clean",
+          "type": "llm_judge",
+          "value": "The response clearly states for each check either that no violations were found or lists specific files that violate the rule."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I want to add a TrailValidator class to the Gaku solution. It will validate business rules on Trail entities before they are persisted. Where should it go, and do any of the existing classes violate naming or folder conventions?",
+      "expected_output": "Guidance on where TrailValidator belongs (Application or Domain), plus a scan of existing naming/folder conventions to confirm they're being followed.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "recommends-correct-layer",
+          "description": "Recommends placing TrailValidator in Domain or Application (not Infrastructure or Api/Web)",
+          "type": "llm_judge",
+          "value": "The response recommends placing TrailValidator in either Gaku.Domain or Gaku.Application — not in Infrastructure, Api, or Web."
+        },
+        {
+          "name": "scans-existing-naming",
+          "description": "Scans actual files to verify naming convention compliance",
+          "type": "llm_judge",
+          "value": "The agent ran commands to scan existing class/interface names and verify naming conventions, rather than just explaining rules abstractly."
+        },
+        {
+          "name": "singular-naming-mentioned",
+          "description": "Mentions that the class should follow singular naming",
+          "type": "contains",
+          "value": "TrailValidator"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "eval_id": 3,
+  "run_type": "with_skill",
+  "expectations": [
+    {
+      "text": "recommends-correct-layer",
+      "passed": true,
+      "evidence": "The report recommends placing TrailValidator in 'Gaku.Application/Services/' with interface in 'Gaku.Application/Interfaces/', correctly identifying it as Application layer logic, not Infrastructure, Api, or Web."
+    },
+    {
+      "text": "scans-existing-naming",
+      "passed": true,
+      "evidence": "The report references specific existing files by name from scanning: IMapService.cs, ITrailService.cs, OpenStreetMapService.cs with line 161, and HttpClientNames class, proving actual file scanning occurred."
+    },
+    {
+      "text": "singular-naming-mentioned",
+      "passed": true,
+      "evidence": "The Healthy section explicitly states 'all entity, DTO, value-object, and enum names are singular' and the Warnings section flags HttpClientNames as a possible plural-name deviation, demonstrating singular naming was considered for TrailValidator."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  }
+}

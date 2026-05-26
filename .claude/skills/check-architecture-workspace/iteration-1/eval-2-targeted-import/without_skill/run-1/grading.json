@@ -1,0 +1,27 @@
+{
+  "eval_id": 2,
+  "run_type": "without_skill",
+  "expectations": [
+    {
+      "text": "checks-application-for-infrastructure",
+      "passed": true,
+      "evidence": "Section 1 explicitly checks whether Application layer imports Infrastructure types, reviews all 14 source files, and confirms no 'Gaku.Infrastructure' namespace references exist, verified also at the .csproj level."
+    },
+    {
+      "text": "checks-domain-for-application",
+      "passed": true,
+      "evidence": "Section 2 explicitly checks whether Domain references Application, reviews all 6 source files, and confirms Domain files only import within their own sub-namespaces, with zero ProjectReference entries in the .csproj."
+    },
+    {
+      "text": "reports-clean-or-violations",
+      "passed": true,
+      "evidence": "Both sections conclude with 'PASS \u2014 No violations' and the conclusion explicitly states 'The clean architecture dependency rule is fully respected' with no violations found."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  }
+}

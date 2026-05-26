@@ -1,0 +1,19 @@
+{
+  "eval_id": 3,
+  "eval_name": "placement-and-naming-advice",
+  "prompt": "I want to add a TrailValidator class to the Gaku solution. It will validate business rules on Trail entities before they are persisted. Where should it go, and do any of the existing classes violate naming or folder conventions?",
+  "assertions": [
+    {
+      "name": "recommends-correct-layer",
+      "description": "Recommends placing TrailValidator in Domain or Application (not Infrastructure or Api/Web)"
+    },
+    {
+      "name": "scans-existing-naming",
+      "description": "Scans actual files to verify naming convention compliance"
+    },
+    {
+      "name": "singular-naming-mentioned",
+      "description": "Mentions that the class should follow singular naming (TrailValidator is already singular)"
+    }
+  ]
+}

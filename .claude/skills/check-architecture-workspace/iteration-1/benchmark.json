@@ -1,0 +1,283 @@
+{
+  "metadata": {
+    "skill_name": "check-architecture",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-26T08:09:41Z",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 187.5,
+        "tokens": 40091,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "report-has-summary-section",
+          "passed": true,
+          "evidence": "The report opens with a '### Summary' section listing projects checked (5), files scanned (41), VIOLATIONS (3), and WARNINGS (2)."
+        },
+        {
+          "text": "report-has-violations-section",
+          "passed": true,
+          "evidence": "The report contains a '### Violations (must fix)' section listing three specific CHECK-4 violations with file paths."
+        },
+        {
+          "text": "report-has-healthy-section",
+          "passed": true,
+          "evidence": "The report contains a '### Healthy (passing checks)' section listing passing checks for project references, namespace imports, and naming conventions."
+        },
+        {
+          "text": "covers-all-four-checks",
+          "passed": true,
+          "evidence": "The report explicitly covers: project references (dependency graph), namespace imports (using statements), naming conventions (interface prefix, singular names), and folder placement (CHECK-4 violations about Interfaces/ vs Services/)."
+        },
+        {
+          "text": "greps-actual-files",
+          "passed": true,
+          "evidence": "The report references specific real file paths such as 'src/Gaku.Application/Services/IMapService.cs', 'src/Gaku.Application/Services/ITrailService.cs', and specific class names like ITrailRepository, IUnitOfWork, MapService, TrailService that could only come from scanning actual files."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 89.7,
+        "tokens": 28956,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "checks-application-for-infrastructure",
+          "passed": true,
+          "evidence": "The report explicitly states it scanned all 14 source files under Gaku.Application and found no 'using Gaku.Infrastructure' statements, also confirming at the .csproj level that Application has no ProjectReference to Infrastructure."
+        },
+        {
+          "text": "checks-domain-for-application",
+          "passed": true,
+          "evidence": "The report explicitly states it scanned all 6 source files under Gaku.Domain and found no 'using Gaku.Application' statements, also confirming Gaku.Domain.csproj has zero ProjectReference entries."
+        },
+        {
+          "text": "reports-clean-or-violations",
+          "passed": true,
+          "evidence": "The report clearly states 'VIOLATIONS: 0' and 'WARNINGS: 0' in the summary, and concludes 'All targeted import checks passed' with explicit PASS results for both checks."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 134.5,
+        "tokens": 35625,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "recommends-correct-layer",
+          "passed": true,
+          "evidence": "The report recommends placing TrailValidator in 'Gaku.Application/Services/' with interface in 'Gaku.Application/Interfaces/', correctly identifying it as Application layer logic, not Infrastructure, Api, or Web."
+        },
+        {
+          "text": "scans-existing-naming",
+          "passed": true,
+          "evidence": "The report references specific existing files by name from scanning: IMapService.cs, ITrailService.cs, OpenStreetMapService.cs with line 161, and HttpClientNames class, proving actual file scanning occurred."
+        },
+        {
+          "text": "singular-naming-mentioned",
+          "passed": true,
+          "evidence": "The Healthy section explicitly states 'all entity, DTO, value-object, and enum names are singular' and the Warnings section flags HttpClientNames as a possible plural-name deviation, demonstrating singular naming was considered for TrailValidator."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 227.3,
+        "tokens": 53791,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "report-has-summary-section",
+          "passed": true,
+          "evidence": "The report has a '## Summary' section but it provides a narrative description rather than structured counts; it does not list numeric counts for projects, files, violations, and warnings in a concise format."
+        },
+        {
+          "text": "report-has-violations-section",
+          "passed": true,
+          "evidence": "The report has a '## Layer Violations' section and a conclusion table that lists items as FAIL, covering the equivalent of a violations section."
+        },
+        {
+          "text": "report-has-healthy-section",
+          "passed": true,
+          "evidence": "The report has PASS entries within '## Layer Violations' and the conclusion table, effectively listing passing checks, though not under a section explicitly named 'Healthy'."
+        },
+        {
+          "text": "covers-all-four-checks",
+          "passed": true,
+          "evidence": "The report covers project dependency graph (project references), namespace imports (using directives in layer violation section), naming conventions (Issue 3 about plural folder names), and folder placement (Issue 2 about interfaces in Services/)."
+        },
+        {
+          "text": "greps-actual-files",
+          "passed": true,
+          "evidence": "The report references specific file paths like 'src/Gaku.Api/Program.cs line 22', 'src/Gaku.Application/Services/IMapService.cs', 'src/Gaku.Application/Services/ITrailService.cs', and class names like DataSeeder, HttpClientNames that can only come from scanning real files."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 78.4,
+        "tokens": 25624,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "checks-application-for-infrastructure",
+          "passed": true,
+          "evidence": "Section 1 explicitly checks whether Application layer imports Infrastructure types, reviews all 14 source files, and confirms no 'Gaku.Infrastructure' namespace references exist, verified also at the .csproj level."
+        },
+        {
+          "text": "checks-domain-for-application",
+          "passed": true,
+          "evidence": "Section 2 explicitly checks whether Domain references Application, reviews all 6 source files, and confirms Domain files only import within their own sub-namespaces, with zero ProjectReference entries in the .csproj."
+        },
+        {
+          "text": "reports-clean-or-violations",
+          "passed": true,
+          "evidence": "Both sections conclude with 'PASS \u2014 No violations' and the conclusion explicitly states 'The clean architecture dependency rule is fully respected' with no violations found."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 144.3,
+        "tokens": 50761,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "recommends-correct-layer",
+          "passed": true,
+          "evidence": "The report recommends Domain layer (Option A) as primary recommendation and Application layer (Option B) as fallback, both of which are correct; it explicitly rules out Infrastructure, Api, or Web."
+        },
+        {
+          "text": "scans-existing-naming",
+          "passed": true,
+          "evidence": "The report references specific existing files by name: ITrailService.cs, IMapService.cs, ServiceCollectionExtensions.cs, and specific class/record names CreateTrailRequest and UpdateTrailRequest, indicating actual file scanning."
+        },
+        {
+          "text": "singular-naming-mentioned",
+          "passed": true,
+          "evidence": "The report implicitly confirms TrailValidator follows singular naming by recommending the class name 'TrailValidator' (singular) and does not flag it as a naming violation; the convention audit section discusses naming conventions and finds no issue with the proposed name."
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 137.2333,
+        "stddev": 48.9573,
+        "min": 89.7,
+        "max": 187.5
+      },
+      "tokens": {
+        "mean": 34890.6667,
+        "stddev": 5603.7033,
+        "min": 28956,
+        "max": 40091
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 150.0,
+        "stddev": 74.6135,
+        "min": 78.4,
+        "max": 227.3
+      },
+      "tokens": {
+        "mean": 43392.0,
+        "stddev": 15461.9401,
+        "min": 25624,
+        "max": 53791
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.00",
+      "time_seconds": "-12.8",
+      "tokens": "-8501"
+    }
+  },
+  "notes": []
+}

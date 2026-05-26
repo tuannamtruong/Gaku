@@ -1,0 +1,27 @@
+{
+  "eval_id": 1,
+  "eval_name": "full-audit",
+  "prompt": "Check the architecture of the Gaku solution. Are there any violations?",
+  "assertions": [
+    {
+      "name": "report-has-summary-section",
+      "description": "Report includes a Summary section with counts for projects, files, violations, and warnings"
+    },
+    {
+      "name": "report-has-violations-section",
+      "description": "Report includes a Violations section (even if empty)"
+    },
+    {
+      "name": "report-has-healthy-section",
+      "description": "Report includes a Healthy section listing passing checks"
+    },
+    {
+      "name": "covers-all-four-checks",
+      "description": "Report mentions all 4 check categories: project references, namespace imports, naming conventions, folder placement"
+    },
+    {
+      "name": "greps-actual-files",
+      "description": "The agent ran actual shell commands to inspect the files rather than guessing"
+    }
+  ]
+}

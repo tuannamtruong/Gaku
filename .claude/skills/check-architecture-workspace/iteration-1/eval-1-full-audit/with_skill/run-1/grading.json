@@ -1,0 +1,37 @@
+{
+  "eval_id": 1,
+  "run_type": "with_skill",
+  "expectations": [
+    {
+      "text": "report-has-summary-section",
+      "passed": true,
+      "evidence": "The report opens with a '### Summary' section listing projects checked (5), files scanned (41), VIOLATIONS (3), and WARNINGS (2)."
+    },
+    {
+      "text": "report-has-violations-section",
+      "passed": true,
+      "evidence": "The report contains a '### Violations (must fix)' section listing three specific CHECK-4 violations with file paths."
+    },
+    {
+      "text": "report-has-healthy-section",
+      "passed": true,
+      "evidence": "The report contains a '### Healthy (passing checks)' section listing passing checks for project references, namespace imports, and naming conventions."
+    },
+    {
+      "text": "covers-all-four-checks",
+      "passed": true,
+      "evidence": "The report explicitly covers: project references (dependency graph), namespace imports (using statements), naming conventions (interface prefix, singular names), and folder placement (CHECK-4 violations about Interfaces/ vs Services/)."
+    },
+    {
+      "text": "greps-actual-files",
+      "passed": true,
+      "evidence": "The report references specific real file paths such as 'src/Gaku.Application/Services/IMapService.cs', 'src/Gaku.Application/Services/ITrailService.cs', and specific class names like ITrailRepository, IUnitOfWork, MapService, TrailService that could only come from scanning actual files."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  }
+}

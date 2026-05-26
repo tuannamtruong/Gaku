@@ -1,0 +1,27 @@
+{
+  "eval_id": 3,
+  "run_type": "without_skill",
+  "expectations": [
+    {
+      "text": "recommends-correct-layer",
+      "passed": true,
+      "evidence": "The report recommends Domain layer (Option A) as primary recommendation and Application layer (Option B) as fallback, both of which are correct; it explicitly rules out Infrastructure, Api, or Web."
+    },
+    {
+      "text": "scans-existing-naming",
+      "passed": true,
+      "evidence": "The report references specific existing files by name: ITrailService.cs, IMapService.cs, ServiceCollectionExtensions.cs, and specific class/record names CreateTrailRequest and UpdateTrailRequest, indicating actual file scanning."
+    },
+    {
+      "text": "singular-naming-mentioned",
+      "passed": true,
+      "evidence": "The report implicitly confirms TrailValidator follows singular naming by recommending the class name 'TrailValidator' (singular) and does not flag it as a naming violation; the convention audit section discusses naming conventions and finds no issue with the proposed name."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  }
+}

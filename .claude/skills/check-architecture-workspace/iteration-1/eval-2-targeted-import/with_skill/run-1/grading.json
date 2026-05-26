@@ -1,0 +1,27 @@
+{
+  "eval_id": 2,
+  "run_type": "with_skill",
+  "expectations": [
+    {
+      "text": "checks-application-for-infrastructure",
+      "passed": true,
+      "evidence": "The report explicitly states it scanned all 14 source files under Gaku.Application and found no 'using Gaku.Infrastructure' statements, also confirming at the .csproj level that Application has no ProjectReference to Infrastructure."
+    },
+    {
+      "text": "checks-domain-for-application",
+      "passed": true,
+      "evidence": "The report explicitly states it scanned all 6 source files under Gaku.Domain and found no 'using Gaku.Application' statements, also confirming Gaku.Domain.csproj has zero ProjectReference entries."
+    },
+    {
+      "text": "reports-clean-or-violations",
+      "passed": true,
+      "evidence": "The report clearly states 'VIOLATIONS: 0' and 'WARNINGS: 0' in the summary, and concludes 'All targeted import checks passed' with explicit PASS results for both checks."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  }
+}

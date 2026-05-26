@@ -1,0 +1,19 @@
+{
+  "eval_id": 2,
+  "eval_name": "targeted-import-check",
+  "prompt": "Does any Application layer code import Infrastructure types? Also check if Domain references Application anywhere.",
+  "assertions": [
+    {
+      "name": "checks-application-for-infrastructure",
+      "description": "Explicitly checks whether Application files import Gaku.Infrastructure"
+    },
+    {
+      "name": "checks-domain-for-application",
+      "description": "Explicitly checks whether Domain files import Gaku.Application"
+    },
+    {
+      "name": "reports-clean-or-violations",
+      "description": "Clearly states whether violations were found or the layers are clean"
+    }
+  ]
+}
