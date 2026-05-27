@@ -131,7 +131,7 @@ with curl using the same network path.
 
 ---
 
-## Current Suspicion — .NET `SocketsHttpHandler` connection pool behaviour
+## Fourth Suspicion — .NET `SocketsHttpHandler` connection pool behaviour
 
 ### Hypothesis
 
@@ -179,7 +179,7 @@ Watch for:
 
 ---
 
-## Fourth Suspicion — Blazor interactive circuit not starting
+## Final Suspicion — Blazor interactive circuit not starting
 
 ### Hypothesis
 
@@ -225,7 +225,7 @@ Pod filesystem:
 
 ```dockerfile
 # Before (broken):
-RUN dotnet publish src/Gaku.Web/Gaku.Web.csproj -c Release --no-restore -o /app/publish
+RUN dotnet publish src/Gaku.Web/Gaku.Web.csproj -c Release -o /app/publish --no-restore
 
 # After (fixed):
 RUN dotnet publish src/Gaku.Web/Gaku.Web.csproj -c Release -o /app/publish
@@ -239,15 +239,27 @@ and `blazor.server.js`.
 
 ### How to reproduce
 
+The Dockerfile has already been fixed (no `--no-restore`), so reproduction requires
+temporarily reverting the publish command before building.
+
+
 ```bash
-# Build with --no-restore (broken):
-docker build -f docker/Dockerfile.Gaku.Web . --target build -t broken-build
-docker run --rm --entrypoint sh broken-build -c "ls /app/publish/wwwroot/"
+# Temporarily add --no-restore back into docker/Dockerfile.Gaku.Web
+RUN dotnet publish src/Gaku.Web/Gaku.Web.csproj -c Release -o /app/publish --no-restore
+
+# Build only the build stage (stops before the runtime COPY)
+docker build -f docker/Dockerfile.Gaku.Web . --target build -t actually-broken-build
+
+# Inspect the publish output
+docker run --rm --entrypoint sh actually-broken-build -c "ls /app/publish/wwwroot/"
 # Output: app.css  app.css.br  app.css.gz  js/   ← no _framework
 
-# Build without --no-restore (fixed):
-# (remove --no-restore from Dockerfile, rebuild)
-docker run --rm --entrypoint sh gaku-web:latest -c "ls /app/wwwroot/"
+# Remove the --no-restore in docker/Dockerfile.Gaku.Web
+RUN dotnet publish src/Gaku.Web/Gaku.Web.csproj -c Release -o /app/publish
+
+# Build the fixed version
+docker build -f docker/Dockerfile.Gaku.Web . --target build -t fixed-build
+docker run --rm --entrypoint sh fixed-build -c "ls /app/publish/wwwroot/"
 # Output: _framework  app.css  app.css.br  app.css.gz  js/   ← correct
 ```
 
