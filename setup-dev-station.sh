@@ -1,5 +1,4 @@
 #!/bin/bash
-make local_up ;
-
 cursor . ; 
+make local_up ;
 claude . ;
