@@ -9,10 +9,10 @@ ASP.NET application for hiking across Europe.
 See [docs/software-architecture.md](docs/software-architecture.md) for more architectural details and diagrams.
 
 ### Clean Architecture Overview
-   
+
 ```
 Gaku.Domain                             business rules and data shapes
-  ▲   
+  ▲
   ├── Gaku.Application ◄─────┐          business workflows and capability contracts
   │     ▲                    │
   │     │                    │
@@ -136,13 +136,15 @@ All `.env` files are gitignored and must be created manually. Three files exist 
 
 Used by: local `docker compose` and EF Core CLI tools.
 
-| Variable                               | Responsibility                                                                                     |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `POSTGRES_DB`                          | Database name for the PostgreSQL container                                                         |
-| `POSTGRES_USER`                        | PostgreSQL login role                                                                              |
-| `POSTGRES_PASSWORD`                    | PostgreSQL login password                                                                          |
-| `ConnectionStrings__DefaultConnection` | Full ADO.NET connection string for the ASP.NET Core apps and EF Core migrations                    |
-| `HOST_SYSTEM_REPO`                     | Absolute path to the repo on the host machine (used when bind-mounting the source into containers) |
+| Variable                               | Responsibility                                                                                                 |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `POSTGRES_DB`                          | Database name for the PostgreSQL container                                                                     |
+| `POSTGRES_USER`                        | PostgreSQL login role                                                                                          |
+| `POSTGRES_PASSWORD`                    | PostgreSQL login password                                                                                      |
+| `ConnectionStrings__DefaultConnection` | Full ADO.NET connection string for the ASP.NET Core apps and EF Core migrations                                |
+| `HOST_SYSTEM_REPO`                     | Absolute path to the repo on the host machine (used when bind-mounting the source into containers)             |
+| `DOCKERHUB_USERNAME`                   | DockerHub account name used by `make docker_login` / `make docker_push`                                        |
+| `DOCKERHUB_TOKEN`                      | DockerHub personal access token (Read/Write/Delete) — generate at hub.docker.com > Account Settings > Security |
 
 ### `infra/k8s/local/.env.k8s`
 
