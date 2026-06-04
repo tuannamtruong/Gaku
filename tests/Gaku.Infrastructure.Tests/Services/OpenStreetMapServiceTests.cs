@@ -6,6 +6,7 @@ using Gaku.Infrastructure.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using RichardSzalay.MockHttp;
+using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -82,5 +83,49 @@ public class OpenStreetMapServiceTests
         var results = await sut.SearchLocationsAsync("Broken");
 
         results.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetTrailsInBoundsAsync_UsesDotDecimalSeparator_UnderGermanLocale()
+    {
+        string? capturedBody = null;
+        var handler = new CapturingHttpHandler(req =>
+        {
+            capturedBody = req.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"elements":[]}""", System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        var factory = Substitute.For<IHttpClientFactory>();
+        factory.CreateClient(HttpClientNames.Overpass)
+            .Returns(new HttpClient(handler) { BaseAddress = new Uri("https://overpass-api.de") });
+
+        var sut = new OpenStreetMapService(factory, NullLogger<OpenStreetMapService>.Instance);
+        var bounds = new BoundingBox(45.39375, 6.79375, 48.20625, 9.60625);
+
+        var originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+            await sut.GetTrailsInBoundsAsync(bounds);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+
+        capturedBody.Should().NotBeNull();
+        capturedBody.Should().Contain("45.39375", "bbox must use dot as decimal separator regardless of OS locale");
+        capturedBody.Should().NotContain("45,39375", "comma decimal separator breaks the Overpass query");
+    }
+
+    private sealed class CapturingHttpHandler(Func<HttpRequestMessage, HttpResponseMessage> respond)
+        : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(respond(request));
     }
 }

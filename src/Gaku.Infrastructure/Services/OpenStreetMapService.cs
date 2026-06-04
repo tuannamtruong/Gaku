@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -43,7 +44,8 @@ public class OpenStreetMapService(
         BoundingBox bounds, CancellationToken cancellationToken = default)
     {
         var client = httpClientFactory.CreateClient(HttpClientNames.Overpass);
-        var bbox = $"{bounds.MinLatitude},{bounds.MinLongitude},{bounds.MaxLatitude},{bounds.MaxLongitude}";
+        var bbox = string.Create(CultureInfo.InvariantCulture,
+            $"{bounds.MinLatitude},{bounds.MinLongitude},{bounds.MaxLatitude},{bounds.MaxLongitude}");
         var query = $"""
             [out:json][timeout:25];
             (
