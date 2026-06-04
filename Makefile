@@ -1,6 +1,7 @@
 include .env
 include infra/k8s/k8s.mk
 include jenkins/jenkins.mk
+include docker/docker.mk
 export
 
 pg_up:
