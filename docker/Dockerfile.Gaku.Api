@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
@@ -8,10 +9,12 @@ COPY src/Gaku.Api/Gaku.Api.csproj src/Gaku.Api/
 COPY src/Gaku.Domain/Gaku.Domain.csproj src/Gaku.Domain/
 COPY src/Gaku.Application/Gaku.Application.csproj src/Gaku.Application/
 COPY src/Gaku.Infrastructure/Gaku.Infrastructure.csproj src/Gaku.Infrastructure/
-RUN dotnet restore src/Gaku.Api/Gaku.Api.csproj
+RUN --mount=type=cache,target=/root/.nuget/packages \
+    dotnet restore src/Gaku.Api/Gaku.Api.csproj
 
 COPY . .
-RUN dotnet publish src/Gaku.Api/Gaku.Api.csproj -c Release --no-restore -o /app/publish
+RUN --mount=type=cache,target=/root/.nuget/packages \
+    dotnet publish src/Gaku.Api/Gaku.Api.csproj -c Release --no-restore -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 ARG GIT_COMMIT=unknown
