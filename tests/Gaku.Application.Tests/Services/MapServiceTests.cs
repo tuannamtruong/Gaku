@@ -73,4 +73,37 @@ public class MapServiceTests
         results[0].DisplayName.Should().Contain("Zermatt");
         results[0].Country.Should().Be("Switzerland");
     }
+
+    [Theory]
+    [InlineData(7)]
+    [InlineData(9)]
+    public async Task GetMapInfoAsync_BelowMinZoom_DoesNotQueryOverpass(int zoom)
+    {
+        var center = new Coordinates(46.8, 8.2);
+        var bounds = new BoundingBox(46.0, 7.4, 47.6, 9.0);
+        _osmService.GetMapInfoAsync(Arg.Any<Coordinates>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(new MapInfo(center, zoom, "https://tile.url", bounds));
+
+        var result = await _sut.GetMapInfoAsync(46.8, 8.2, zoom);
+
+        result.NearbyTrails.Should().BeEmpty();
+        await _osmService.DidNotReceive().GetTrailsInBoundsAsync(Arg.Any<BoundingBox>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(10)]
+    [InlineData(13)]
+    public async Task GetMapInfoAsync_AtOrAboveMinZoom_QueriesOverpass(int zoom)
+    {
+        var center = new Coordinates(46.8, 8.2);
+        var bounds = new BoundingBox(46.7, 8.1, 46.9, 8.3);
+        _osmService.GetMapInfoAsync(Arg.Any<Coordinates>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(new MapInfo(center, zoom, "https://tile.url", bounds));
+        _osmService.GetTrailsInBoundsAsync(Arg.Any<BoundingBox>(), Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        await _sut.GetMapInfoAsync(46.8, 8.2, zoom);
+
+        await _osmService.Received(1).GetTrailsInBoundsAsync(bounds, Arg.Any<CancellationToken>());
+    }
 }

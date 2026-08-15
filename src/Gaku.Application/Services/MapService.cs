@@ -11,7 +11,10 @@ public class MapService(IOpenStreetMapService osmService) : IMapService
     {
         var center = new Coordinates(latitude, longitude);
         var mapInfo = await osmService.GetMapInfoAsync(center, zoom, cancellationToken);
-        var trails = await osmService.GetTrailsInBoundsAsync(mapInfo.Bounds, cancellationToken);
+        const int minZoomForTrails = 10;
+        var trails = zoom >= minZoomForTrails
+            ? await osmService.GetTrailsInBoundsAsync(mapInfo.Bounds, cancellationToken)
+            : Array.Empty<OsmTrailData>();
 
         return new MapInfoDto(
             new CoordinatesDto(mapInfo.Center.Latitude, mapInfo.Center.Longitude),
