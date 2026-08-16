@@ -33,8 +33,10 @@ jobs:
             "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git" \
             wiki
 
+      # Invoked through bash rather than as ./script, so a lost executable bit
+      # cannot break the publish.
       - name: Build wiki tree
-        run: ./scripts/publish-wiki.sh wiki
+        run: bash scripts/publish-wiki.sh wiki
 
       - name: Commit and push
         working-directory: wiki
