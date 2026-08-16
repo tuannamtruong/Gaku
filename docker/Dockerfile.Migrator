@@ -1,15 +1,9 @@
 # syntax=docker/dockerfile:1
-FROM mcr.microsoft.com/dotnet/sdk:10.0
-ARG GIT_COMMIT=unknown
-ARG BUILD_NUMBER=local
-ARG BUILD_TIMESTAMP=unknown
-LABEL org.opencontainers.image.revision="${GIT_COMMIT}" \
-      org.opencontainers.image.version="${BUILD_NUMBER}" \
-      org.opencontainers.image.created="${BUILD_TIMESTAMP}"
+# --- Stage 1: build the self-contained EF Core migrations bundle ---
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-RUN --mount=type=cache,target=/root/.nuget/packages \
-    dotnet tool install --global dotnet-ef --version 10.0.7
+RUN dotnet tool install --global dotnet-ef --version 10.0.7
 ENV PATH="$PATH:/root/.dotnet/tools"
 
 COPY global.json .
@@ -19,11 +13,36 @@ COPY src/Gaku.Api/Gaku.Api.csproj src/Gaku.Api/
 COPY src/Gaku.Domain/Gaku.Domain.csproj src/Gaku.Domain/
 COPY src/Gaku.Application/Gaku.Application.csproj src/Gaku.Application/
 COPY src/Gaku.Infrastructure/Gaku.Infrastructure.csproj src/Gaku.Infrastructure/
-RUN --mount=type=cache,target=/root/.nuget/packages \
+RUN --mount=type=cache,target=/root/.local/share/NuGet/http-cache \
     dotnet restore src/Gaku.Api/Gaku.Api.csproj
 
 COPY . .
 
-ENTRYPOINT ["dotnet", "ef", "database", "update", \
-  "--project", "src/Gaku.Infrastructure", \
-  "--startup-project", "src/Gaku.Api"]
+# Design-time only: EF constructs DbContext to read the model.
+# Npgsql rejects a null connection string. A fake is used. No connection is opened during the build.
+# It never reaches runtime.
+# Migration is compiled into a standalone executable.
+ENV ConnectionStrings__DefaultConnection="Host=design-time;Database=gaku;Username=gaku;Password=gaku"
+RUN --mount=type=cache,target=/root/.local/share/NuGet/http-cache \
+    dotnet ef migrations bundle \
+      --project src/Gaku.Infrastructure \
+      --startup-project src/Gaku.Api \
+      --configuration Release \
+      --self-contained --target-runtime linux-x64 \
+      --output /app/migrate --force
+
+
+# --- Stage 2: build the runtime image ---
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0 AS runtime
+ARG GIT_COMMIT=unknown
+ARG BUILD_NUMBER=local
+ARG BUILD_TIMESTAMP=unknown
+LABEL org.opencontainers.image.revision="${GIT_COMMIT}" \
+      org.opencontainers.image.version="${BUILD_NUMBER}" \
+      org.opencontainers.image.created="${BUILD_TIMESTAMP}"
+WORKDIR /app
+COPY --from=build /app/migrate /app/migrate
+
+# sh -c because exec-form ENTRYPOINT does not expand variables
+# The connection string is passed as an env var at runtime.
+ENTRYPOINT ["/bin/sh", "-c", "exec /app/migrate --connection \"$ConnectionStrings__DefaultConnection\""]
