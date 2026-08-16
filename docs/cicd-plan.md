@@ -162,7 +162,7 @@ services:
 **/TestResults/
 ```
 
-**Validation:** `docker compose up --build` → `curl http://localhost:8080/health` (api), open `http://localhost:8081` (web).
+**Validation:** `docker compose up --build` → `curl http://localhost:8080/api/health` (api), open `http://localhost:8081` (web).
 
 ---
 
@@ -337,7 +337,7 @@ spec:
         - configMapRef: { name: gaku-config }
         - secretRef:    { name: gaku-secret }
         readinessProbe:
-          httpGet: { path: /health, port: 8080 }
+          httpGet: { path: /api/health, port: 8080 }
           initialDelaySeconds: 10
 ```
 
@@ -503,12 +503,12 @@ Gaku/
 ### Phase 0 (Jenkins test automation)
 1. `docker compose -f jenkins/local/docker-compose.jenkins.yml up -d` → Jenkins at `http://localhost:8090`
 2. Create pipeline job pointing to `Jenkinsfile`, branch `master`
-3. Push a change to `src/Gaku.Core/` → Build + Test: Core stages run; Application and Infrastructure stages skipped
+3. Push a change to `src/Gaku.Domain/` → Build + Test: Domain stages run; Application and Infrastructure stages skipped
 4. Push a change to `src/Gaku.Application/` → Build + Test: Application runs; others skipped
 5. JUnit trend graph appears in the job dashboard after first test run
 
 ### Stage 1 (local Docker + K8s)
-6. `docker compose up --build` → `curl http://localhost:8080/health` returns 200; web opens at `http://localhost:8081`
+6. `docker compose up --build` → `curl http://localhost:8080/api/health` returns 200; web opens at `http://localhost:8081`
 7. Jenkins pipeline on `master` → all stages green including Docker Build and K8s Deploy
 8. `minikube start && eval $(minikube docker-env)` → builds go into minikube cache
 9. `kubectl get pods -n gaku` → all pods Running

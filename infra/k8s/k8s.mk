@@ -58,7 +58,7 @@ k8s_test_layer3:
 	@API_RC=1; WEB_RC=1; DB_RC=1; \
 	kubectl delete pod curl-api curl-web curl-pg -n gaku --ignore-not-found >/dev/null 2>&1; \
 	kubectl run curl-api --rm -i --restart=Never --image=curlimages/curl -n gaku \
-	  -- curl -sf http://gaku-api.gaku.svc.cluster.local:8080/health >/dev/null 2>&1 \
+	  -- curl -sf http://gaku-api.gaku.svc.cluster.local:8080/api/health >/dev/null 2>&1 \
 	  && API_RC=0 || true; \
 	kubectl run curl-web --rm -i --restart=Never --image=curlimages/curl -n gaku \
 	  -- curl -sf http://gaku-web.gaku.svc.cluster.local:8080/health >/dev/null 2>&1 \
