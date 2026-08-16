@@ -1,0 +1,50 @@
+name: Publish wiki
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "docs/**"
+      - "scripts/publish-wiki.sh"
+      - ".github/workflows/publish-wiki.yml"
+  workflow_dispatch:
+
+# Serialise publishes so two pushes cannot race on the wiki repo.
+concurrency:
+  group: publish-wiki
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # The wiki is a separate git repository. It does not exist until the first
+      # page has been created through the GitHub UI, and this clone is the step
+      # that fails if it has not been.
+      - name: Check out wiki
+        run: |
+          git clone \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git" \
+            wiki
+
+      - name: Build wiki tree
+        run: ./scripts/publish-wiki.sh wiki
+
+      - name: Commit and push
+        working-directory: wiki
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          if git diff --cached --quiet; then
+            echo "Wiki is already up to date."
+            exit 0
+          fi
+          git commit -m "Publish docs from ${GITHUB_SHA::7}"
+          git push

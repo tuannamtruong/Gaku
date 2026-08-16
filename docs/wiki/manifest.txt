@@ -1,0 +1,19 @@
+# Wiki publish manifest — read by scripts/publish-wiki.sh
+#
+# One entry per line:   <source path from repo root> | <wiki page name>
+#
+# The page name becomes the filename and the page title. Hyphens render as
+# spaces, so `Architecture-Overview` publishes as "Architecture Overview" at
+# /wiki/Architecture-Overview. Keep names flat — the wiki has no folders.
+#
+# A missing source file fails the publish. An empty one is skipped with a
+# warning, so a placeholder doc can sit in the manifest until it is written.
+
+docs/solution-architecture.md      | System-Context
+docs/software-architecture.md      | Architecture-Overview
+docs/class-diagram.md              | Class-Diagrams
+docs/database.md                   | Database-Schema
+docs/osm-integration.md            | OSM-Integration
+docs/cicd-workflow-local-first.md  | CICD-Workflow
+docs/cicd-plan.md                  | CICD-Roadmap
+docs/infrastructure.md             | Infrastructure

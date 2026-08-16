@@ -1,4 +1,4 @@
-# Gaku — Hiking in Europe
+# Gaku
 
 ASP.NET application for hiking across Europe.
 
@@ -194,5 +194,5 @@ docker compose down
 
 ## CICD + Infrastructure
 
-> For CI/CD setup (Jenkins, pipeline, Smee) see [docs/cicd-workflow.md](docs/cicd-workflow.md).
+> For CI/CD setup (Jenkins, pipeline, Smee) see [docs/cicd-workflow-local-first.md](docs/cicd-workflow-local-first.md).
 > For Infrastructure setup (Kubernetes, Minikube, Terraform) setup see [docs/infrastructure.md](docs/infrastructure.md).
