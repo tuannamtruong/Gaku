@@ -1,6 +1,6 @@
 # Local-First CI/CD Workflow
 
-## Overview
+## 1. Overview
 
 ```mermaid
 flowchart TD
@@ -32,7 +32,7 @@ flowchart TD
     JUnit --> Cleanup
 ```
 
-## Container Roles
+## 2. Container Roles
 
 | Container         | Image                                 | Purpose                                                                            |
 | ----------------- | ------------------------------------- | ---------------------------------------------------------------------------------- |
@@ -40,7 +40,7 @@ flowchart TD
 | `smee`            | `node:lts-alpine`                     | Runs `smee-relay.js` — SSE client that forwards GitHub webhook payloads to Jenkins |
 | `gaku-ci-<build>` | built from `docker/Dockerfile.ci`     | Ephemeral per-build container — compiles and tests .NET code                       |
 
-## Stage Detail
+## 3. Stage Detail
 
 ```mermaid
 sequenceDiagram
@@ -65,11 +65,11 @@ sequenceDiagram
 
 ---
 
-## Local CI Setup for Smee & Jenkins
+## 4. Local CI Setup for Smee & Jenkins
 
 Pipeline job config: Git push → `https://github.com/tuannamtruong/Gaku` → Webhook to Smee → Relay to Jenkins → Filter by branch `*/master` → script path `Jenkinsfile`.
 
-### 1. Smee Channel
+### 4.1 Smee Channel
 
 Go to [smee.io](https://smee.io) and get a new channel.
 Save `SMEE_URL` in `jenkins/local/.env`
@@ -78,7 +78,7 @@ Save `SMEE_URL` in `jenkins/local/.env`
   SMEE_URL=https://smee.io/<your-channel-id>
 ```
 
-### 2. GitHub Webhook
+### 4.2 GitHub Webhook
 
 Register the Smee URL as a webhook in the GitHub repo
 GitHub repo → Settings → Webhooks → Add webhook
@@ -89,7 +89,7 @@ GitHub repo → Settings → Webhooks → Add webhook
 | Content type | `application/json`       |
 | Events       | push event               |
 
-### 3. Jenkins
+### 4.3 Jenkins
 
 Start Jenkins and the Smee relay:
 
@@ -105,7 +105,7 @@ docker exec gaku-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 
 Open `http://localhost:8090`, log in, and install plugins: Pipeline, Git, GitHub, JUnit, Timestamper.
 
-### 4. Pipeline Job Creation
+### 4.4 Pipeline Job Creation
 
 Fetch crumb and save the session cookie
 
@@ -126,7 +126,7 @@ curl -X POST "http://localhost:8090/createItem?name=gaku" \
 --data @job-config.xml
 ```
 
-### 5. Verification
+### 4.5 Verification
 
 | Check                 | Command / Action                                                                      |
 | --------------------- | ------------------------------------------------------------------------------------- |
@@ -135,7 +135,7 @@ curl -X POST "http://localhost:8090/createItem?name=gaku" \
 | Webhook delivery      | Push a commit; GitHub repo → Settings → Webhooks → Recent Deliveries → `200` response |
 | Pipeline triggered    | Jenkins dashboard shows a new build for the pipeline job                              |
 
-### 6. Filemap
+### 4.6 Filemap
 
 ```
 jenkins/local/
@@ -153,9 +153,9 @@ Jenkinsfile            builds CI image, runs test containers, publishes JUnit re
 
 ---
 
-## Local CD Setup for minikube + K8s
+## 5. Local CD Setup for minikube + K8s
 
-### 1. Minikube
+### 5.1 Minikube
 
 Minikube install
 https://minikube.sigs.k8s.io/docs/start/
@@ -167,7 +167,7 @@ Start cluster and enable ingress controller
   minikube addons enable ingress
 ```
 
-### 2. Local image build process
+### 5.2 Local image build process
 
 Point Docker CLI at minikube's daemon
 
@@ -185,7 +185,7 @@ Build the projects with minikube context
 
 Apply and validate layer by layer.
 
-### 3. Layer 1 - k8s resources
+### 5.3 Layer 1 - k8s resources
 
 ```
   make k8s_apply
@@ -195,7 +195,7 @@ Apply and validate layer by layer.
   make k8s_test_layer1
 ```
 
-### 4. Layer 2 - Pods
+### 5.4 Layer 2 - Pods
 
 ```
   kubectl rollout status statefulset/postgres -n gaku --timeout=120s
@@ -208,19 +208,19 @@ Apply and validate layer by layer.
   make k8s_test_layer2
 ```
 
-### 5. Layer 3 - test if the API/WEB/DB pods are reachable from inside the cluster via its internal DNS name
+### 5.5 Layer 3 - test if the API/WEB/DB pods are reachable from inside the cluster via its internal DNS name
 
 ```
   make k8s_test_layer3
 ```
 
-### 6. Layer 4 - test in-cluster TCP routing to postgres
+### 5.6 Layer 4 - test in-cluster TCP routing to postgres
 
 ```
   make k8s_test_layer4
 ```
 
-### 7. Layer 5 - test Ingress External Routing
+### 5.7 Layer 5 - test Ingress External Routing
 
 ```
   make k8s_test_layer5
