@@ -8,7 +8,7 @@ The plan implements CI/CD in **two stages**:
 - **Stage 1 (local):** Jenkins test automation → Docker → Kubernetes on the local machine
 - **Stage 2 (cloud):** AWS + Terraform to mirror the same pipeline in production
 
-**Current status:** Phase 0 (Jenkins CI via Docker) is **complete and running**. All subsequent phases are planned but not yet implemented.
+**Current status:** Stage 1 is **complete and running** — Phases 0–3 (Jenkins CI, Docker images, full pipeline, local Kubernetes). In Stage 2, Phase 5 (Terraform bootstrap) is **written and validated but not applied**; Phases 6–8 are still planned.
 
 ---
 
@@ -402,11 +402,40 @@ echo "$(minikube ip) gaku.local" | sudo tee -a /etc/hosts
 
 Once Stage 1 is working locally, mirror it to AWS using Terraform. The local K8s manifests reuse as-is — only image sources and secret backends change.
 
-### Phase 5: Terraform Bootstrap
+### Phase 5: Terraform Bootstrap ✅ IMPLEMENTED (not yet applied)
+
+Creates the remote state backend every later module writes to. Run once manually before any other Terraform.
+
+**Files created:**
 ```
-infra/terraform/bootstrap/main.tf
+infra/terraform/
+  terraform.mk                 make targets, included from the root Makefile
+  bootstrap/
+    versions.tf                required_version >= 1.10, aws ~> 6.0, no backend block
+    variables.tf               
+    main.tf                    S3 state bucket + DynamoDB lock table
+    outputs.tf                 bucket, ARN, table, region, ready-to-paste backend block
+    README.md                  
+    .terraform.lock.hcl        
 ```
-Creates S3 bucket (versioned) + DynamoDB table for remote state lock. Run once manually before any other Terraform.
+
+**What it provisions:** a globally unique, versioned and encrypted S3 bucket named `gaku-tfstate-<account-id>-<region>`. It is public access blocked, ACLs disabled, a TLS-only bucket policy, and lifecycle rules expiring noncurrent versions after 90 days. Plus a `gaku-tflock` DynamoDB table on on-demand billing.
+
+**Key design decisions:**
+- **Local state** the bucket holding remote state cannot hold the state describing itself, so this module has no `backend` block. `.gitignore` keeps `*.tfstate` out of git; the README documents `terraform import` for recovery
+- **`prevent_destroy` on both** the bucket and the lock table — losing the state bucket strands every resource Terraform built
+- **S3 native locking is the forward path** — Terraform 1.11 deprecated the backend's `dynamodb_table` parameter in favour of `use_lockfile`, and 1.14 warns on every `init` when it is used. The table is still created (`create_dynamodb_lock_table = true`) so existing backends keep working, but the emitted `backend_config` output uses `use_lockfile`
+
+**Commands:**
+```bash
+make tf_bootstrap_init      # download the AWS provider
+make tf_bootstrap_plan      # read-only; expect 8 resources to add
+make tf_bootstrap_apply     # creates real, billable resources
+make tf_bootstrap_test      # [OK]/[FAIL] checklist over the live bucket and table
+make tf_backend_config      # prints the backend block for Phase 6 modules
+```
+
+**Verified so far:** `terraform fmt`, `init`, `validate`, and a `plan` against aws account in `eu-central-1`. Clean, 8 to add, no deprecation warnings. Not applied; see [infra/terraform/bootstrap/README.md](../infra/terraform/bootstrap/README.md).
 
 ### Phase 6: Terraform Modules (apply in this order)
 
@@ -515,7 +544,7 @@ Gaku/
 10. `curl http://gaku.local/health` → 200 via minikube ingress
 
 ### Stage 2 (cloud)
-11. `terraform apply` in `bootstrap/` → S3 bucket + DynamoDB table created
+11. `make tf_bootstrap_apply` → S3 bucket + DynamoDB table created; `make tf_bootstrap_test` reports all `[OK]`
 12. `terraform apply` in `environments/staging/` → VPC, ECR, RDS, EKS, Jenkins EC2 created
 13. `docker push <ecr-url>/gaku-api:latest` succeeds
 14. `kubectl get nodes` (EKS context) → nodes Ready

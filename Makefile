@@ -1,5 +1,6 @@
 include .env
 include infra/k8s/k8s.mk
+include infra/terraform/terraform.mk
 include jenkins/jenkins.mk
 include docker/docker.mk
 export
