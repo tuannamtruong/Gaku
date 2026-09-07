@@ -17,9 +17,8 @@ secrets.json
 .env.*
 
 ## Terraform
-# The bootstrap module keeps local state - it is the thing that creates the
-# remote backend. .terraform.lock.hcl is deliberately NOT ignored.
 .terraform/
+infra/terraform/modules/*/.terraform.lock.hcl
 *.tfstate
 *.tfstate.*
 *.tfplan
