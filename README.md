@@ -172,20 +172,17 @@ has no public address. `make jenkins_up` starts it. The pipeline lives in `Jenki
 
 ## 7. Documentation
 
-Long-form documentation lives in `docs/` and publishes to the
-[GitHub wiki](../../wiki) automatically — `docs/` is the source of truth, the wiki is the rendered
-copy. Edit the files here and open a PR; never edit wiki pages in the browser, since the next
-publish overwrites them.
+Docs for this project are in `docs/`.
 
 | Page | Source |
 | --- | --- |
-| [System Context](../../wiki/System-Context) | `docs/solution-architecture.md` |
-| [Architecture Overview](../../wiki/Architecture-Overview) | `docs/software-architecture.md` |
+| [Solution architecture](../../wiki/System-Context) | `docs/solution-architecture.md` |
+| [Software architecture](../../wiki/Architecture-Overview) | `docs/software-architecture.md` |
 | [Class Diagrams](../../wiki/Class-Diagrams) | `docs/class-diagram.md` |
 | [Database Schema](../../wiki/Database-Schema) | `docs/database.md` |
 | [OSM Integration](../../wiki/OSM-Integration) | `docs/osm-integration.md` |
 | [CICD Workflow](../../wiki/CICD-Workflow) | `docs/cicd-workflow-local-first.md` |
 | [CICD Roadmap](../../wiki/CICD-Roadmap) | `docs/cicd-plan.md` |
 
-Publishing mechanics, including how to add a page, are in
-[§2 Adding a page](docs/wiki/README.md#2-adding-a-page).
+The docs are published to [GitHub wiki](../../wiki) automatically. 
+To work the wiki: [§2 Adding a page](docs/wiki/README.md#2-adding-a-page).
