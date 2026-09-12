@@ -1,0 +1,42 @@
+#!/bin/bash
+set -euxo pipefail
+
+# Rendered by modules/jenkins-controller. Output lands in /var/log/cloud-init-output.log.
+
+dnf update -y
+dnf install -y java-21-amazon-corretto-headless git docker tar unzip
+
+# --- Docker -----------------------------------------------------------------
+systemctl enable --now docker
+
+# --- Jenkins ----------------------------------------------------------------
+wget -O /etc/yum.repos.d/jenkins.repo \
+  "https://pkg.jenkins.io/redhat-${jenkins_version}/jenkins.repo"
+rpm --import "https://pkg.jenkins.io/redhat-${jenkins_version}/jenkins.io-2023.key"
+dnf install -y jenkins
+
+# The pipeline builds images on this host, so the jenkins user needs the socket.
+usermod -aG docker jenkins
+
+# --- kubectl ----------------------------------------------------------------
+KUBECTL_VERSION="$(curl -sL https://dl.k8s.io/release/stable.txt)"
+curl -sLo /usr/local/bin/kubectl \
+  "https://dl.k8s.io/release/$${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+chmod 0755 /usr/local/bin/kubectl
+
+# --- kubeconfig -------------------------------------------------------------
+%{ if eks_cluster_name != null ~}
+install -d -o jenkins -g jenkins -m 0700 /var/lib/jenkins/.kube
+runuser -u jenkins -- aws eks update-kubeconfig \
+  --name "${eks_cluster_name}" \
+  --region "${region}" \
+  --kubeconfig /var/lib/jenkins/.kube/config
+%{ endif ~}
+
+# --- Start ------------------------------------------------------------------
+systemctl enable --now jenkins
+
+# Group membership is only picked up by a fresh process tree.
+systemctl restart jenkins
+
+echo "Unlock with: cat /var/lib/jenkins/secrets/initialAdminPassword"
