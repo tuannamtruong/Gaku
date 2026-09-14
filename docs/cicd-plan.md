@@ -8,7 +8,9 @@ The plan implements CI/CD in **two stages**:
 - **Stage 1 (local):** Jenkins test automation → Docker → Kubernetes on the local machine
 - **Stage 2 (cloud):** AWS + Terraform to mirror the same pipeline in production
 
-**Current status:** Stage 1 is **complete and running** — Phases 0–3 (Jenkins CI, Docker images, full pipeline, local Kubernetes). In Stage 2, Phase 5 (Terraform bootstrap) is **written and validated but not applied**; Phases 6–8 are still planned.
+**Current status:** Phases 0–6 are **written**: the Stage 1 local pipeline (Jenkins CI, Docker images, full pipeline, local Kubernetes) and the Stage 2 Terraform (bootstrap, five modules, two environments). Phases 7–8 are not written yet.
+
+Phase status here tracks whether the code exists, not whether it has been applied to an account — apply state lives in the state files, not in this document.
 
 ---
 
@@ -402,7 +404,7 @@ echo "$(minikube ip) gaku.local" | sudo tee -a /etc/hosts
 
 Once Stage 1 is working locally, mirror it to AWS using Terraform. The local K8s manifests reuse as-is — only image sources and secret backends change.
 
-### Phase 5: Terraform Bootstrap ✅ IMPLEMENTED (not yet applied)
+### Phase 5: Terraform Bootstrap ✅
 
 Creates the remote state backend every later module writes to. Run once manually before any other Terraform.
 
@@ -413,53 +415,85 @@ infra/terraform/
   bootstrap/
     versions.tf                required_version >= 1.10, aws ~> 6.0, no backend block
     variables.tf               
-    main.tf                    S3 state bucket + DynamoDB lock table
-    outputs.tf                 bucket, ARN, table, region, ready-to-paste backend block
+    main.tf                    S3 state bucket
+    outputs.tf                 bucket, ARN, region, ready-to-paste backend block
     README.md                  
     .terraform.lock.hcl        
 ```
 
-**What it provisions:** a globally unique, versioned and encrypted S3 bucket named `gaku-tfstate-<account-id>-<region>`. It is public access blocked, ACLs disabled, a TLS-only bucket policy, and lifecycle rules expiring noncurrent versions after 90 days. Plus a `gaku-tflock` DynamoDB table on on-demand billing.
+**What it provisions:** seven resources, all of them the one bucket and its settings — a globally unique, versioned, AES256-encrypted S3 bucket named `gaku-tfstate-<account-id>-<region>`, with public access blocked, ACLs disabled (`BucketOwnerEnforced`), a TLS-only bucket policy, and lifecycle rules that expire noncurrent versions after 90 days and abort incomplete multipart uploads after 7. Locking is S3-native, so there is no DynamoDB table.
 
 **Key design decisions:**
-- **Local state** the bucket holding remote state cannot hold the state describing itself, so this module has no `backend` block. `.gitignore` keeps `*.tfstate` out of git; the README documents `terraform import` for recovery
-- **`prevent_destroy` on both** the bucket and the lock table — losing the state bucket strands every resource Terraform built
-- **S3 native locking is the forward path** — Terraform 1.11 deprecated the backend's `dynamodb_table` parameter in favour of `use_lockfile`, and 1.14 warns on every `init` when it is used. The table is still created (`create_dynamodb_lock_table = true`) so existing backends keep working, but the emitted `backend_config` output uses `use_lockfile`
+- **Local state** — the bucket holding remote state cannot hold the state describing itself, so this module has no `backend` block. The root `.gitignore` keeps `*.tfstate` out of git; the README documents `terraform import` for recovery
+- **S3 native locking, no lock table** — Terraform 1.11 deprecated the backend's `dynamodb_table` parameter in favour of `use_lockfile`, and 1.14 warns on every `init` when it is used. Nothing here creates a DynamoDB table, and the emitted `backend_config` output sets `use_lockfile = true`, which both environments consume verbatim
+- **`prevent_destroy` is present but commented out** in `main.tf` — losing the state bucket strands every resource Terraform built, so the block belongs there, but while the bucket is still being torn down and rebuilt the guard is more obstacle than protection. Uncomment it once the bucket holds state worth keeping; until then a stray `terraform destroy` in this directory is not blocked. `bootstrap/README.md` documents the delete-the-block-then-destroy sequence
 
 **Commands:**
 ```bash
 make tf_bootstrap_init      # download the AWS provider
-make tf_bootstrap_plan      # read-only; expect 8 resources to add
+make tf_bootstrap_plan      # read-only; 7 resources to add on a fresh account
 make tf_bootstrap_apply     # creates real, billable resources
-make tf_bootstrap_test      # [OK]/[FAIL] checklist over the live bucket and table
+make tf_bootstrap_test      # [OK]/[FAIL] checklist over the live bucket
 make tf_backend_config      # prints the backend block for Phase 6 modules
 ```
 
-**Verified so far:** `terraform fmt`, `init`, `validate`, and a `plan` against aws account in `eu-central-1`. Clean, 8 to add, no deprecation warnings. Not applied; see [infra/terraform/bootstrap/README.md](../infra/terraform/bootstrap/README.md).
+**State of the code:** `fmt`, `init` and `validate` are clean, and a `plan` against a real account in `eu-central-1` reports 7 to add with no deprecation warnings. See [infra/terraform/bootstrap/README.md](../infra/terraform/bootstrap/README.md).
 
-### Phase 6: Terraform Modules (apply in this order)
+### Phase 6: Terraform Modules ✅
 
 | Order | Module | Creates |
 |---|---|---|
-| 1 | `modules/ecr` | ECR repos for `gaku-api` and `gaku-web` |
-| 2 | `modules/vpc` | VPC, 3 public + 3 private subnets, NAT GW, IGW |
-| 3 | `modules/rds` | RDS PostgreSQL 16 + PostGIS extension, in private subnets |
-| 4 | `modules/eks` | EKS cluster + managed node group (t3.medium), OIDC provider |
-| 5 | `modules/jenkins` | EC2 t3.medium, IAM role (ECR push + EKS access), Jenkins via user_data |
+| 1 | `modules/ecr` | ECR repos for `gaku-api`, `gaku-web`, `gaku-migrator` + lifecycle policies |
+| 2 | `modules/vpc` | VPC, 3 public + 3 private subnets, NAT GW, IGW, S3 gateway endpoint |
+| 3 | `modules/rds` | RDS PostgreSQL 16 in private subnets, parameter group, Secrets Manager entry |
+| 4 | `modules/eks` | EKS cluster + managed node group (t3.medium), core addons + `eks-pod-identity-agent` |
+| 5 | `modules/jenkins-controller` | EC2 t3.medium, IAM role (ECR push + EKS access), Jenkins via user_data |
 
 ```
 infra/terraform/
-  bootstrap/
+  bootstrap/                   Phase 5
   modules/
-    ecr/          ← aws_ecr_repository × 2
-    vpc/          ← VPC + subnets + NAT gateway
-    rds/          ← aws_db_instance postgres:16, PostGIS parameter group
-    eks/          ← aws_eks_cluster + managed node group + OIDC
-    jenkins/      ← EC2 + IAM role + security group (port 8080)
+    ecr/                 create-or-lookup toggle, so one registry is shared across environments
+    vpc/                 VPC + subnets + NAT (single or per-AZ) + S3 endpoint + optional flow logs
+    rds/                 aws_db_instance postgres:16, random_password → Secrets Manager
+    eks/                 aws_eks_cluster (authentication_mode = API) + node group + addons
+    jenkins-controller/  EC2 + instance profile + security group (8080) + EIP + user_data template
   environments/
-    staging/      ← instantiates all modules, smaller instance sizes
-    production/   ← instantiates all modules, production sizes
+    staging/             all five modules, small sizes, owns the ECR repositories
+    production/          all five modules, HA sizes, reads staging's repositories
 ```
+
+**Key design decisions:**
+- **The registry is shared, not duplicated** — staging creates the ECR repositories and production looks them up, so an image tested in staging is promoted by digest rather than rebuilt. The cost is ordering: production cannot plan until staging exists
+- **Access entries, not `aws-auth`** — the cluster runs `authentication_mode = "API"`. The Jenkins role is granted cluster-admin by an `aws_eks_access_entry` declared in the *environment root* rather than inside the EKS module, because the Jenkins role ARN is unknown at plan time and the module keys its access entries with `for_each`. There is no dependency cycle to avoid here — Jenkins depends on EKS and not the reverse; the constraint is purely that `for_each` keys must be known at plan time
+- **Partial backend config** — each environment declares only the state `key`; bucket and region are injected at `init` from the Phase 5 outputs, keeping the account ID out of source control
+- **One Jenkins controller** — `enable_jenkins` is true in staging, false in production. Phase 8's approval gate implies a single controller deploying to both, so production takes the staging role ARN via `external_deploy_role_arns`
+- **Pod Identity, not IRSA** — workloads that need AWS permissions will get them from an `aws_eks_pod_identity_association` binding a service account to an IAM role, so the role stays cluster-agnostic and staging and production can share one instead of each needing a trust policy naming its own OIDC issuer. Phase 6 ships only the half that belongs to the cluster: the `eks-pod-identity-agent` addon that vends the credentials on the node. The associations themselves land in Phase 7, with the controllers that need them. No `aws_iam_openid_connect_provider` is registered anywhere — nothing came to depend on it, so it was removed rather than left as a second path to the same thing
+- **PostGIS needs no Terraform** — the `InitialCreate` migration already carries the extension annotation and the RDS master user has `rds_superuser`. The parameter group forces TLS and logs slow queries instead
+- **`for_each` keys must be plan-time known** — the same constraint that moves the access entry to the environment root shapes two more places: `allowed_security_group_ids` is a map keyed by label rather than a list of ids, and the Jenkins EKS policy is gated on a static bool rather than a null check against an unknown ARN
+
+**Commands** (every `tf_env_*` target takes `ENV=staging` or `ENV=production`):
+```bash
+make tf_validate_all              # every module + environment, no AWS calls — safe anytime
+make tf_env_init  ENV=staging     # backend wired from the bootstrap outputs
+make tf_env_plan  ENV=staging
+make tf_env_apply ENV=staging     # creates real, billable resources
+make tf_env_kubeconfig ENV=staging
+make tf_env_destroy ENV=staging
+```
+
+**State of the code:** `make tf_validate_all` reports `[OK]` for all five modules, the bootstrap, and both environments, and `terraform fmt -recursive -check` is clean. `make tf_env_plan ENV=staging` against a real account produces 59 resources to add, no errors.
+
+Production cannot be planned until staging exists. `modules/ecr` looks the repositories up instead of creating them there, and the data source is a hard error while they are absent:
+
+```
+Error: reading ECR Repository (gaku-api): couldn't find resource
+  with module.ecr.data.aws_ecr_repository.existing["gaku-api"]
+```
+
+See [docs/infra-aws.md](infra-aws.md) for apply order (§3), the environment split (§5), and cost (§8).
+
+> **Cost warning:** these environments bill on existence, not traffic — roughly $230/month for staging and $350/month for production at list prices, dominated by the EKS control plane and NAT gateways. Neither scales down when idle.
 
 ### Phase 7: K8s Cloud Overlays (Kustomize)
 ```
@@ -469,6 +503,12 @@ infra/k8s/
     staging/         ← kustomization.yaml: ECR image refs, replica=1
     production/      ← kustomization.yaml: ECR image refs, replica=2, HPA
 ```
+
+Terraform work that lands with this phase: an IAM role plus an `aws_eks_pod_identity_association`
+for each controller that needs AWS permissions — the AWS Load Balancer Controller, the external
+secrets operator reading `gaku-<env>/database`, and the cluster autoscaler. The
+`eks-pod-identity-agent` addon that serves them is already in `modules/eks`. The Gaku deployments
+themselves need no association; their only AWS dependency is RDS, reached over the VPC.
 
 ### Phase 8: Jenkinsfile Extended Cloud Stages
 Add to the existing `Jenkinsfile` behind `when { branch 'master' }`:
@@ -519,7 +559,7 @@ Gaku/
         │   ├── vpc/
         │   ├── rds/
         │   ├── eks/
-        │   └── jenkins/
+        │   └── jenkins-controller/
         └── environments/
             ├── staging/
             └── production/
@@ -545,7 +585,7 @@ Gaku/
 
 ### Stage 2 (cloud)
 11. `make tf_bootstrap_apply` → S3 bucket + DynamoDB table created; `make tf_bootstrap_test` reports all `[OK]`
-12. `terraform apply` in `environments/staging/` → VPC, ECR, RDS, EKS, Jenkins EC2 created
+12. `make tf_env_apply ENV=staging` → VPC, ECR, RDS, EKS, Jenkins EC2 created; then `ENV=production` (staging must come first — it owns the ECR repositories)
 13. `docker push <ecr-url>/gaku-api:latest` succeeds
 14. `kubectl get nodes` (EKS context) → nodes Ready
 15. Jenkins pipeline on `master` → all stages green, staging ALB responds
