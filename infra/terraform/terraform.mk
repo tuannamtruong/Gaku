@@ -1,11 +1,40 @@
 TF_BOOTSTRAP := infra/terraform/bootstrap
+TF_ENV_DIR   := infra/terraform/environments/$(ENV)
+TF_MODULES   := ecr vpc rds eks jenkins-controller
+
+# Read a Terraform output value from the bootstrap directory, allow only safe characters, and print it.
+#
+# 'terraform output -raw' prints its "No outputs found" warning on stdout when
+# the bootstrap state is empty
+TF_READ_BOOTSTRAP_OUTPUT = tf_out() { \
+	  V=$$(cd $(TF_BOOTSTRAP) && terraform output -raw "$$1" 2>/dev/null); \
+	  case "$$V" in ''|*[!A-Za-z0-9._-]*) return 1;; esac; \
+	  printf '%s' "$$V"; \
+	}
 
 tf_fmt:
 	terraform fmt -recursive infra/terraform
 
+# Syntax check all module and environment without talking to remote backend.
+tf_validate_all:
+	@RC=0; \
+	for d in $(addprefix infra/terraform/modules/,$(TF_MODULES)) \
+	         infra/terraform/bootstrap \
+	         infra/terraform/environments/staging \
+	         infra/terraform/environments/production; do \
+	  printf '%-48s' "$$d"; \
+	  if (cd $$d && terraform init -backend=false -input=false >/dev/null 2>&1 \
+	      && terraform validate >/dev/null 2>&1); then \
+	    echo "[OK]"; \
+	  else \
+	    echo "[FAIL]"; RC=1; \
+	    (cd $$d && terraform validate 2>&1 | sed 's/^/    /'); \
+	  fi; \
+	done; \
+	exit $$RC
 
 # -------------------------------------------------------------------------------------------------
-# Bootstrap Makefile
+# Bootstrap commands
 # -------------------------------------------------------------------------------------------------
 tf_bootstrap_init:
 	cd $(TF_BOOTSTRAP) && terraform init -input=false
@@ -22,18 +51,18 @@ tf_bootstrap_apply:
 tf_bootstrap_output:
 	cd $(TF_BOOTSTRAP) && terraform output
 
-# Prints the backend block downstream root modules should use.
+# Prints the Terraform backend block
 tf_backend_config:
 	@cd $(TF_BOOTSTRAP) && terraform output -raw backend_config
 
 tf_bootstrap_test:
 	@echo "=== Gaku Terraform Bootstrap Report ==="
-	@BUCKET=$$(cd $(TF_BOOTSTRAP) && terraform output -raw state_bucket 2>/dev/null); \
-	REGION=$$(cd $(TF_BOOTSTRAP) && terraform output -raw region 2>/dev/null); \
-	TABLE=$$(cd $(TF_BOOTSTRAP) && terraform output -raw lock_table 2>/dev/null); \
-	if [ -z "$$BUCKET" ]; then \
-	  echo "[FAIL] No state_bucket output - run 'make tf_bootstrap_apply' first"; exit 1; \
-	fi; \
+	@$(TF_READ_BOOTSTRAP_OUTPUT); \
+	BUCKET=$$(tf_out state_bucket) || { \
+	  echo "[FAIL] No state_bucket output - run 'make tf_bootstrap_apply' first"; exit 1; }; \
+	REGION=$$(tf_out region) || { \
+	  echo "[FAIL] No region output - run 'make tf_bootstrap_apply' first"; exit 1; }; \
+	TABLE=$$(tf_out lock_table || true); \
 	echo "  Bucket: $$BUCKET"; \
 	echo "  Region: $$REGION"; \
 	echo "  Table : $${TABLE:-(none - S3 native locking)}"; \
@@ -72,3 +101,49 @@ tf_bootstrap_test:
 	    && echo "[OK]   Lock table hash key LockID" \
 	    || echo "[FAIL] Lock table hash key is '$$THASH' (expected LockID)"; \
 	fi
+
+# ---------------------------------------------------------------------------
+# Environment commands
+# ---------------------------------------------------------------------------
+
+# guard target:
+# - env parameter is in the command
+# - env folder for this parameter is also exist
+_tf_require_env:
+	@if [ -z "$(ENV)" ]; then \
+	  echo "ENV is required, e.g. make tf_env_plan ENV=staging"; exit 1; fi
+	@if [ ! -d "$(TF_ENV_DIR)" ]; then \
+	  echo "No such environment: $(TF_ENV_DIR)"; exit 1; fi
+
+# Bucket and region come from the bootstrap outputs, so the account id stays
+# out of source control. Requires 'make tf_bootstrap_apply' to have run.
+tf_env_init: _tf_require_env
+	@$(TF_READ_BOOTSTRAP_OUTPUT); \
+	BUCKET=$$(tf_out state_bucket) || { \
+	  echo "[FAIL] Bootstrap not applied - run 'make tf_bootstrap_apply' first"; exit 1; }; \
+	REGION=$$(tf_out region) || { \
+	  echo "[FAIL] Bootstrap not applied - run 'make tf_bootstrap_apply' first"; exit 1; }; \
+	echo "Backend: s3://$$BUCKET ($$REGION)"; \
+	cd $(TF_ENV_DIR) && terraform init -input=false -reconfigure \
+	  -backend-config="bucket=$$BUCKET" \
+	  -backend-config="region=$$REGION"
+
+tf_env_plan: _tf_require_env
+	cd $(TF_ENV_DIR) && terraform plan -input=false
+
+tf_env_apply: _tf_require_env
+	cd $(TF_ENV_DIR) && terraform apply -input=false
+
+tf_env_destroy: _tf_require_env
+	cd $(TF_ENV_DIR) && terraform destroy -input=false
+
+tf_env_output: _tf_require_env
+	cd $(TF_ENV_DIR) && terraform output
+
+# Points kubectl at an environment's cluster.
+# 	kubeconfig_command: EKS output
+tf_env_kubeconfig: _tf_require_env
+	@CMD=$$(cd $(TF_ENV_DIR) && terraform output -raw kubeconfig_command 2>/dev/null); \
+	case "$$CMD" in "aws "*) ;; *) \
+	  echo "[FAIL] No cluster yet - apply this environment first"; exit 1;; esac; \
+	echo "$$CMD"; eval "$$CMD"
