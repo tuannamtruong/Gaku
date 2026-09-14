@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored, so
+# operator-specific values never reach the repository.
+
+cluster_public_access_cidrs = ["203.0.113.10/32"]
+
+# From the staging stack: terraform output -raw jenkins_role_arn
+# Grants that controller cluster-admin here so the Phase 8 production deploy
+# stage can run kubectl against this cluster.
+external_deploy_role_arns = ["arn:aws:iam::111122223333:role/gaku-staging-jenkins"]
