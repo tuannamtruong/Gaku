@@ -195,4 +195,5 @@ docker compose down
 ## CICD + Infrastructure
 
 > For CI/CD setup (Jenkins, pipeline, Smee) see [docs/cicd-workflow-local-first.md](docs/cicd-workflow-local-first.md).
-> For Infrastructure setup (Kubernetes, Minikube, Terraform) setup see [docs/infrastructure.md](docs/infrastructure.md).
+> For local infrastructure (Kubernetes, Minikube) see [docs/infra-local.md](docs/infra-local.md).
+> For AWS infrastructure (Terraform, AWS resources) see [docs/infra-aws.md](docs/infra-aws.md).
