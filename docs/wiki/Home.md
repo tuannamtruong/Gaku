@@ -16,7 +16,8 @@ the quick start live in the [README](https://github.com/tuannamtruong/Gaku#readm
 | Find the type that does a particular job | [Class Diagrams](Class-Diagrams) |
 | Work on entities, migrations, or spatial queries | [Database Schema](Database-Schema) |
 | Change how trails are fetched from OpenStreetMap | [OSM Integration](OSM-Integration) |
-| Deploy to the local cluster, or debug one | [Infrastructure](Infrastructure) |
+| Deploy to the local cluster, or debug one | [Infrastructure — Local](Infrastructure-Local) |
+| Provision or tear down the AWS estate | [Infrastructure — AWS](Infrastructure-AWS) |
 | Run, debug, or extend the pipeline | [CICD Workflow](CICD-Workflow) |
 | Know what ships next | [CICD Roadmap](CICD-Roadmap) |
 

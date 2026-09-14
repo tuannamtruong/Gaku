@@ -12,7 +12,8 @@
 
 **Operations**
 
-- [Infrastructure](Infrastructure)
+- [Infrastructure — Local](Infrastructure-Local)
+- [Infrastructure — AWS](Infrastructure-AWS)
 - [CICD Workflow](CICD-Workflow)
 - [CICD Roadmap](CICD-Roadmap)
 
