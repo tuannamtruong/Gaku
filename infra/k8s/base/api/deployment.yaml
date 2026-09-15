@@ -14,19 +14,26 @@ spec:
         app: gaku-api
     spec:
       containers:
-      - name: gaku-api
-        image: gaku-api:latest
-        imagePullPolicy: Never
-        ports:
-        - containerPort: 8080
-        envFrom:
-        - configMapRef:
-            name: gaku-config
-        - secretRef:
-            name: gaku-secret
-        readinessProbe:
-          httpGet:
-            path: /api/health
-            port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 5
+        - name: gaku-api
+          image: gaku-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: gaku-config
+            - secretRef:
+                name: gaku-secret
+          resources:
+            # no CPU throttling: latency cost is more problematic than the risk of one Pod consuming excessive CPU.
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5

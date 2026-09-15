@@ -21,7 +21,7 @@ spec:
       containers:
         - name: gaku-web
           image: gaku-web:latest
-          imagePullPolicy: Never
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           envFrom:
@@ -29,6 +29,12 @@ spec:
                 name: gaku-config
             - secretRef:
                 name: gaku-secret
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
           readinessProbe:
             tcpSocket:
               port: 8080
