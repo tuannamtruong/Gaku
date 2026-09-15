@@ -36,7 +36,14 @@ spec:
             limits:
               memory: 512Mi
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /health
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 20
