@@ -1,4 +1,5 @@
-K8S_FOLDER=infra/k8s/local/
+K8S_FOLDER=infra/k8s/overlays/local/
+K8S_OVERLAYS=infra/k8s/overlays
 
 minikube_up:
 	minikube start

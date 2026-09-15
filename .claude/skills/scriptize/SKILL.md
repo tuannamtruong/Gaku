@@ -50,7 +50,7 @@ Read what's needed to ground the script in the project's actual setup:
 
 - `Makefile`, `infra/k8s/k8s.mk`, `jenkins/jenkins.mk` — existing targets you can model from
 - `docker-compose.yml` and `docker/Dockerfile.*` — image names, build args, compose service names
-- `infra/k8s/local/` — k8s manifests (deployments, jobs, statefulsets, namespaces)
+- `infra/k8s/base/` — shared k8s manifests (deployments, jobs, namespaces); `infra/k8s/overlays/{local,staging,production}/` — per-environment overlays
 - `scripts/export-oci-env.sh` — OCI build-arg exports (GIT_COMMIT, BUILD_TIMESTAMP)
 
 Only read the files that are relevant to the requested process.
@@ -142,7 +142,7 @@ Re-run the db-migrate Job (jobs are immutable — delete then re-apply):
 
 ```bash
 kubectl delete job db-migrate -n gaku --ignore-not-found
-kubectl apply -k infra/k8s/local/
+kubectl apply -k infra/k8s/overlays/local/
 kubectl wait --for=condition=complete job/db-migrate -n gaku --timeout=120s
 ```
 

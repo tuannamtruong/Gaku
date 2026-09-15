@@ -65,7 +65,8 @@ src/
   Gaku.Web/             Blazor pages and Leaflet interop
 tests/                  one test project per layer except Api
 docker/                 one Dockerfile per deployable + docker.mk
-infra/k8s/local/        Kustomize manifests for the minikube cluster
+infra/k8s/base/         Kustomize manifests shared by every environment
+infra/k8s/overlays/     per-environment overlays: local (minikube), staging, production
 jenkins/local/          Jenkins controller + Smee relay, via compose
 scripts/                redeploy and benchmark helpers
 docs/                   source of truth for the GitHub wiki
@@ -154,7 +155,7 @@ make docker_build                   # api, web, migrator
 make docker_push IMAGE_TAG=1.2.3    # needs DOCKERHUB_USERNAME + DOCKERHUB_TOKEN in .env
 ```
 
-The local Kubernetes target is minikube, configured through Kustomize. `infra/k8s/local/.env.k8s`
+The local Kubernetes target is minikube, configured through Kustomize. `infra/k8s/overlays/local/.env.k8s`
 generates the `gaku-secret` secret and must be created by hand, like the root `.env`:
 
 ```bash
@@ -181,6 +182,8 @@ Docs for this project are in `docs/`.
 | [Class Diagrams](../../wiki/Class-Diagrams) | `docs/class-diagram.md` |
 | [Database Schema](../../wiki/Database-Schema) | `docs/database.md` |
 | [OSM Integration](../../wiki/OSM-Integration) | `docs/osm-integration.md` |
+| [Infrastructure — Local](../../wiki/Infrastructure-Local) | `docs/infra-local.md` |
+| [Infrastructure — AWS](../../wiki/Infrastructure-AWS) | `docs/infra-aws.md` |
 | [CICD Workflow](../../wiki/CICD-Workflow) | `docs/cicd-workflow-local-first.md` |
 | [CICD Roadmap](../../wiki/CICD-Roadmap) | `docs/cicd-plan.md` |
 

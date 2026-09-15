@@ -175,7 +175,7 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
 The RDS module generates a 32-character master password with `random_password` and writes it,
 along with a ready-made Npgsql connection string, to a Secrets Manager entry named
-`gaku-<env>/database`. The JSON keys match `infra/k8s/local/.env.k8s` exactly:
+`gaku-<env>/database`. The JSON keys match `infra/k8s/overlays/local/.env.k8s` exactly:
 
 ```
 POSTGRES_DB  POSTGRES_USER  POSTGRES_PASSWORD  ConnectionStrings__DefaultConnection
