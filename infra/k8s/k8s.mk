@@ -5,6 +5,7 @@ minikube_up:
 	minikube start
 
 k8s_apply:
+	kubectl delete job db-migrate -n gaku --ignore-not-found
 	kubectl apply -k $(K8S_FOLDER)
 
 k8s_postgres:
