@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+
+resources:
+- ../../base
+
+components:
+  - ../../components/alb-ingress
+
+# The pipeline will set the tag using the build number before applying:
+images:
+- name: gaku-api
+  newName: 100731996173.dkr.ecr.eu-central-1.amazonaws.com/gaku-api
+  newTag: latest
+- name: gaku-migrator
+  newName: 100731996173.dkr.ecr.eu-central-1.amazonaws.com/gaku-migrator
+  newTag: latest
+- name: gaku-web
+  newName: 100731996173.dkr.ecr.eu-central-1.amazonaws.com/gaku-web
+  newTag: latest
+
+patches:
+# For alb-ingress component
+- target:
+    kind: Ingress
+  patch: |-
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: not-used-the-target-selector-above-does-the-matching
+      annotations:
+        alb.ingress.kubernetes.io/group.name: gaku-staging
