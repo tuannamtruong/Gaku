@@ -65,8 +65,7 @@ http://gaku.local.
 
 ## 4. Verification
 
-`make k8s_test` runs five layers, each printing a checklist, and works outward from "do the objects
-exist" to "does traffic reach the app through the ingress":
+`make k8s_test` runs all five layers:
 
 | Target | Purpose |
 | --- | --- |

@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+# Component for an ALB for gaku-api and gaku-web
+# The overlay must set group.name to merge the ingresses into one ALB
+#
+#   components:
+#     - ../../components/alb-ingress
+#   patches:
+#     - target:
+#         kind: Ingress
+#       patch: |-
+#         ... alb.ingress.kubernetes.io/group.name: gaku-<env>
+resources:
+  - ingress-api.yaml
+  - ingress-web.yaml

@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gaku-web
+  namespace: gaku
+  # group.name is set in environment kustomization
+  annotations:
+    alb.ingress.kubernetes.io/group.order: "20"
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+    alb.ingress.kubernetes.io/success-codes: "200"
+    # Blazor app (web pod) requires stateful session.
+    alb.ingress.kubernetes.io/target-group-attributes: "stickiness.enabled=true,stickiness.type=lb_cookie,stickiness.lb_cookie.duration_seconds=86400,deregistration_delay.timeout_seconds=30"
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gaku-web
+                port:
+                  number: 8080
