@@ -4,6 +4,7 @@ kind: Kustomization
 
 resources:
 - ../../base
+- external-secret.yaml
 
 components:
   - ../../components/alb-ingress
