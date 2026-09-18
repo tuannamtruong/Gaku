@@ -13,8 +13,7 @@ variable "project" {
 variable "state_bucket_name" {
   description = <<-EOT
     Explicit name for the state bucket. Leave empty to derive
-    "<project>-tfstate-<account-id>-<region>", which is globally unique without
-    hardcoding the account into source control.
+    "<project>-tfstate-<account-id>-<region>".
   EOT
   type        = string
   default     = ""

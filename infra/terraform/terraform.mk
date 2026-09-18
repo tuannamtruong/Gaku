@@ -1,6 +1,6 @@
 TF_BOOTSTRAP := infra/terraform/bootstrap
 TF_ENV_DIR   := infra/terraform/environments/$(ENV)
-TF_MODULES   := ecr vpc rds eks jenkins-controller
+TF_MODULES   := ecr vpc rds eks jenkins-controller in-cluster-controller-identity
 
 # Read a Terraform output value from the bootstrap directory, allow only safe characters, and print it.
 #
@@ -22,7 +22,7 @@ tf_validate_all:
 	         infra/terraform/bootstrap \
 	         infra/terraform/environments/staging \
 	         infra/terraform/environments/production; do \
-	  printf '%-48s' "$$d"; \
+	  printf '%-56s' "$$d"; \
 	  if (cd $$d && terraform init -backend=false -input=false >/dev/null 2>&1 \
 	      && terraform validate >/dev/null 2>&1); then \
 	    echo "[OK]"; \
