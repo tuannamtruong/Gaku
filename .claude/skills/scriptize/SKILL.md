@@ -48,7 +48,7 @@ If the user gave you a description, extract:
 
 Read what's needed to ground the script in the project's actual setup:
 
-- `Makefile`, `infra/k8s/k8s.mk`, `jenkins/jenkins.mk` — existing targets you can model from
+- `Makefile`, `infra/k8s/k8s.mk`, `infra/jenkins/jenkins.mk` — existing targets you can model from
 - `docker-compose.yml` and `docker/Dockerfile.*` — image names, build args, compose service names
 - `infra/k8s/base/` — shared k8s manifests (deployments, jobs, namespaces); `infra/k8s/overlays/{local,staging,production}/` — per-environment overlays
 - `scripts/export-oci-env.sh` — OCI build-arg exports (GIT_COMMIT, BUILD_TIMESTAMP)

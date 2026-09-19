@@ -22,10 +22,11 @@ Phase status here tracks whether the code exists, not whether it has been applie
 
 **Files (all created and in use):**
 ```
-Jenkinsfile                    declarative pipeline at repo root
+Jenkinsfile.local              declarative pipeline at repo root, run by the local controller
+Jenkinsfile.aws                the cloud pipeline, run by the EC2 controller
 docker/
   Dockerfile.ci                multi-stage: stage build (restore + compile), stage test (unused by pipeline — build stage image is used directly)
-jenkins/local/
+infra/jenkins/local/
   Dockerfile                   extends jenkins/jenkins:lts-jdk21 — installs Docker CLI
   docker-compose.yml           two services: gaku-jenkins + smee relay sidecar
   smee-relay.js                pure Node.js SSE→HTTP relay; no npm packages required
@@ -42,11 +43,11 @@ jenkins/local/
 
 **Setup steps (manual, once):**
 1. Get a Smee channel: visit `https://smee.io/new`, copy the URL
-2. `echo "SMEE_URL=https://smee.io/<your-id>" > jenkins/local/.env`
-3. `cd jenkins/local && docker compose up -d`
+2. `echo "SMEE_URL=https://smee.io/<your-id>" > infra/jenkins/local/.env`
+3. `cd infra/jenkins/local && docker compose up -d`
 4. Open `http://localhost:8090`, unlock with `docker exec gaku-jenkins cat /var/jenkins_home/secrets/initialAdminPassword`
 5. Install plugins: **Pipeline**, **Git**, **GitHub**, **JUnit**, **Timestamper**
-6. Create Pipeline job → SCM → Git → `https://github.com/tuannamtruong/Gaku` → branch `*/master` → script path `Jenkinsfile`
+6. Create Pipeline job → SCM → Git → `https://github.com/tuannamtruong/Gaku` → branch `*/master` → script path `Jenkinsfile.local`
 7. Add Smee URL as a GitHub webhook: Settings → Webhooks → Content-Type `application/json` → push events only
 
 **Verification:**
@@ -174,12 +175,13 @@ Jenkins runs as a Docker container on the local machine with access to the Docke
 
 **Files to create:**
 ```
-jenkins/local/
-  docker-compose.jenkins.yml   ← spin up Jenkins locally
-Jenkinsfile                    ← pipeline definition at repo root
+infra/jenkins/local/
+  docker-compose.yml           ← spin up Jenkins locally
+Jenkinsfile.local              ← pipeline definition at repo root
 ```
 
-**`jenkins/local/docker-compose.jenkins.yml`:**
+**`infra/jenkins/local/docker-compose.yml`** (as planned — the committed file adds the Smee
+sidecar, kubectl/minikube binaries and the kubeconfig mount):
 ```yaml
 services:
   jenkins:
@@ -193,7 +195,8 @@ volumes:
   jenkins_home:
 ```
 
-**`Jenkinsfile`** — declarative pipeline:
+**`Jenkinsfile.local`** — declarative pipeline, as sketched during planning. The committed file
+builds and tests inside the CI image rather than on the agent; read it for the current shape:
 ```groovy
 pipeline {
   agent any
@@ -236,10 +239,10 @@ pipeline {
 - Feature branches → Build + Test only
 
 **Setup steps (manual, once):**
-1. `docker compose -f jenkins/local/docker-compose.jenkins.yml up -d`
+1. `docker compose -f infra/jenkins/local/docker-compose.yml up -d`
 2. Open `http://localhost:8090`, unlock with initial admin password
 3. Install plugins: Pipeline, Git, Docker Pipeline, JUnit, Kubernetes CLI
-4. Create pipeline job pointing to repo `Jenkinsfile`
+4. Create pipeline job pointing to repo `Jenkinsfile.local`
 
 ---
 

@@ -1,3 +1,5 @@
+// Pipeline for the local env Jenkins controller in infra/jenkins/local.
+
 pipeline {
     agent any
 

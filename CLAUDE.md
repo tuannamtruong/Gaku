@@ -157,9 +157,9 @@ Used by: `kubectl apply -k infra/k8s/overlays/local/` — Kustomize reads this t
 | `POSTGRES_PASSWORD`                    | PostgreSQL login password inside the cluster                   |
 | `ConnectionStrings__DefaultConnection` | ADO.NET connection string used by the API and db-migrator pods |
 
-### `jenkins/local/.env`
+### `infra/jenkins/local/.env`
 
-Used by: `jenkins/local/docker-compose.yml` to configure the Smee relay sidecar.
+Used by: `infra/jenkins/local/docker-compose.yml` to configure the Smee relay sidecar.
 
 | Variable   | Responsibility                                                                        |
 | ---------- | ------------------------------------------------------------------------------------- |

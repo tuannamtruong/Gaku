@@ -65,9 +65,9 @@ src/
   Gaku.Web/             Blazor pages and Leaflet interop
 tests/                  one test project per layer except Api
 docker/                 one Dockerfile per deployable + docker.mk
+infra/jenkins/local/    Jenkins controller + Smee relay, via compose
 infra/k8s/base/         Kustomize manifests shared by every environment
 infra/k8s/overlays/     per-environment overlays: local (minikube), staging, production
-jenkins/local/          Jenkins controller + Smee relay, via compose
 scripts/                redeploy and benchmark helpers
 docs/                   source of truth for the GitHub wiki
 ```
@@ -169,7 +169,7 @@ objects exist" to "does `gaku.local/api/health` answer through the ingress" and 
 at each layer.
 
 CI runs on a local Jenkins instance fed by a Smee relay, so GitHub webhooks reach a controller that
-has no public address. `make jenkins_up` starts it. The pipeline lives in `Jenkinsfile`.
+has no public address. `make jenkins_up` starts it. The pipeline lives in `Jenkinsfile.local`; the EC2 controller runs `Jenkinsfile.aws`.
 
 ## 7. Documentation
 

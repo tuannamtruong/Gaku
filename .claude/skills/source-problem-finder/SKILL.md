@@ -306,8 +306,9 @@ fallback); DNS resolution inside pod differs from node; ingress path rules misro
 1. Identify the failing stage:
    - `mcp__jenkins__jenkins_get_pipeline_stages` — which stage failed
    - `mcp__jenkins__jenkins_get_console_log` — full console output
-2. Read `jenkins/Jenkinsfile` for what that stage executes
-3. Check associated Makefile targets: `Makefile`, `infra/k8s/k8s.mk`, `jenkins/jenkins.mk`
+2. Read the pipeline for what that stage executes — `Jenkinsfile.local` for the local
+   controller (`infra/jenkins/local`), `Jenkinsfile.aws` for the EC2 controller
+3. Check associated Makefile targets: `Makefile`, `infra/k8s/k8s.mk`, `infra/jenkins/jenkins.mk`
 4. Common causes: docker build failure, kubectl targeting wrong namespace, image name mismatch, test failure
 
 #### .NET build / MSBuild failures

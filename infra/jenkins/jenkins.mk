@@ -1,4 +1,4 @@
-JENKINS_FOLDER := ./jenkins/local
+JENKINS_FOLDER := ./infra/jenkins/local
 
 jenkins_up:
 	cd $(JENKINS_FOLDER) && docker compose up -d

@@ -36,7 +36,7 @@ flowchart TD
 
 | Container         | Image                                 | Purpose                                                                            |
 | ----------------- | ------------------------------------- | ---------------------------------------------------------------------------------- |
-| `gaku-jenkins`    | built from `jenkins/local/Dockerfile` | Jenkins server — hosts UI, schedules jobs, runs pipeline                           |
+| `gaku-jenkins`    | built from `infra/jenkins/local/Dockerfile` | Jenkins server — hosts UI, schedules jobs, runs pipeline                           |
 | `smee`            | `node:lts-alpine`                     | Runs `smee-relay.js` — SSE client that forwards GitHub webhook payloads to Jenkins |
 | `gaku-ci-<build>` | built from `docker/Dockerfile.ci`     | Ephemeral per-build container — compiles and tests .NET code                       |
 
@@ -67,12 +67,12 @@ sequenceDiagram
 
 ## 4. Local CI Setup for Smee & Jenkins
 
-Pipeline job config: Git push → `https://github.com/tuannamtruong/Gaku` → Webhook to Smee → Relay to Jenkins → Filter by branch `*/master` → script path `Jenkinsfile`.
+Pipeline job config: Git push → `https://github.com/tuannamtruong/Gaku` → Webhook to Smee → Relay to Jenkins → Filter by branch `*/master` → script path `Jenkinsfile.local`.
 
 ### 4.1 Smee Channel
 
 Go to [smee.io](https://smee.io) and get a new channel.
-Save `SMEE_URL` in `jenkins/local/.env`
+Save `SMEE_URL` in `infra/jenkins/local/.env`
 
 ```
   SMEE_URL=https://smee.io/<your-channel-id>
@@ -94,7 +94,7 @@ GitHub repo → Settings → Webhooks → Add webhook
 Start Jenkins and the Smee relay:
 
 ```bash
-cd jenkins/local && docker compose up -d
+cd infra/jenkins/local && docker compose up -d
 ```
 
 Retrieve the initial admin password under
@@ -138,7 +138,7 @@ curl -X POST "http://localhost:8090/createItem?name=gaku" \
 ### 4.6 Filemap
 
 ```
-jenkins/local/
+infra/jenkins/local/
   Dockerfile           custom Jenkins image
   docker-compose.yml   jenkins + smee
   smee-relay.js        pure Node.js SSE client; converts Smee payloads to JSON for Jenkins
@@ -148,7 +148,7 @@ jenkins/local/
 docker/
   Dockerfile.ci
 
-Jenkinsfile            builds CI image, runs test containers, publishes JUnit results, removes image
+Jenkinsfile.local      builds CI image, runs test containers, publishes JUnit results, removes image
 ```
 
 ---

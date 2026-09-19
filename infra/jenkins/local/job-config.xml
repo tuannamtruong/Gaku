@@ -30,7 +30,7 @@
       <submoduleCfg class="empty-list"/>
       <extensions/>
     </scm>
-    <scriptPath>Jenkinsfile</scriptPath>
+    <scriptPath>Jenkinsfile.local</scriptPath>
     <lightweight>true</lightweight>
   </definition>
   <disabled>false</disabled>
