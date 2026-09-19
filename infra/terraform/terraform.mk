@@ -103,7 +103,7 @@ tf_bootstrap_test:
 	fi
 
 # ---------------------------------------------------------------------------
-# Environment commands
+# Environment-specific commands
 # ---------------------------------------------------------------------------
 
 # guard target:
@@ -115,18 +115,8 @@ _tf_require_env:
 	@if [ ! -d "$(TF_ENV_DIR)" ]; then \
 	  echo "No such environment: $(TF_ENV_DIR)"; exit 1; fi
 
-# Bucket and region come from the bootstrap outputs, so the account id stays
-# out of source control. Requires 'make tf_bootstrap_apply' to have run.
 tf_env_init: _tf_require_env
-	@$(TF_READ_BOOTSTRAP_OUTPUT); \
-	BUCKET=$$(tf_out state_bucket) || { \
-	  echo "[FAIL] Bootstrap not applied - run 'make tf_bootstrap_apply' first"; exit 1; }; \
-	REGION=$$(tf_out region) || { \
-	  echo "[FAIL] Bootstrap not applied - run 'make tf_bootstrap_apply' first"; exit 1; }; \
-	echo "Backend: s3://$$BUCKET ($$REGION)"; \
-	cd $(TF_ENV_DIR) && terraform init -input=false -reconfigure \
-	  -backend-config="bucket=$$BUCKET" \
-	  -backend-config="region=$$REGION"
+	cd $(TF_ENV_DIR) && terraform init -input=false -reconfigure
 
 tf_env_plan: _tf_require_env
 	cd $(TF_ENV_DIR) && terraform plan -input=false
