@@ -149,6 +149,7 @@ docker/
   Dockerfile.ci
 
 Jenkinsfile.local      builds CI image, runs test containers, publishes JUnit results, removes image
+Jenkinsfile.aws        the same, then pushes to ECR and rolls staging — run by the EC2 controller
 ```
 
 ---

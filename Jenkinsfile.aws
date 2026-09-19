@@ -1,0 +1,216 @@
+// Pipeline for the Jenkins controller in AWS (infra/terraform/modules/jenkins-controller).
+
+// Runs all unit tests off passed project.
+//  layerLabel: label for the library/target
+//  projectPatht: path to the csproject
+def dotnetTest(String layerLabel, String projectPath) {
+    sh """
+        docker run --name ${env.CONTAINER}-${layerLabel} \\
+            --entrypoint dotnet \\
+            ${env.CI_IMAGE} \\
+            test ${projectPath} \\
+                -c Release --no-build \\
+                --logger "junit;LogFilePath=/TestResults/${layerLabel}/junit.xml" \\
+                --results-directory /TestResults/${layerLabel}
+    """
+}
+
+// Get JUnit test results by layerLabel inside the CI container into the workspace.
+// Pass the result to Jenkins build record.
+//  layerLabel: label for the library/target
+def collectTestResults(String layerLabel) {
+    sh """
+        mkdir -p ${env.TEST_RESULTS}/${layerLabel}
+        docker cp ${env.CONTAINER}-${layerLabel}:/TestResults/${layerLabel}/junit.xml \\
+            ${env.TEST_RESULTS}/${layerLabel}/junit.xml || true
+        docker rm -f ${env.CONTAINER}-${layerLabel} || true
+    """
+    junit allowEmptyResults: true,
+          testResults: "${env.TEST_RESULTS}/${layerLabel}/junit.xml"
+}
+
+pipeline {
+    agent any
+
+    triggers {
+        githubPush()
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 30, unit: 'MINUTES')
+        disableConcurrentBuilds()
+        timestamps()
+    }
+
+    environment {
+        AWS_REGION    = "eu-central-1"
+        ECR_REGISTRY  = "100731996173.dkr.ecr.eu-central-1.amazonaws.com"
+        CLUSTER       = "gaku-staging"
+        NAMESPACE     = "gaku"
+
+        CI_IMAGE      = "gaku-ci:${env.BUILD_NUMBER}"
+        CONTAINER     = "gaku-ci-${env.BUILD_NUMBER}"
+        TEST_RESULTS  = "TestResults"
+        API_IMAGE     = "gaku-api"
+        WEB_IMAGE     = "gaku-web"
+        MIGRATOR_IMAGE = "gaku-migrator"
+        IMAGE_TAG     = "${env.BUILD_NUMBER}"
+    }
+
+    stages {
+
+        stage('Environment Info') {
+            steps {
+                sh """
+                    echo "WORKSPACE    = ${env.WORKSPACE}"
+                    echo "BUILD_NUMBER = ${env.BUILD_NUMBER}"
+                    uname -a
+                    docker version --format 'Docker {{.Server.Version}}'
+                    aws --version
+                    aws sts get-caller-identity
+                """
+            }
+        }
+
+        stage('Restore & Build') {
+            steps {
+                sh """
+                    docker build \\
+                        --target ci \\
+                        --tag ${env.CI_IMAGE} \\
+                        --file docker/Dockerfile \\
+                        .
+                """
+            }
+        }
+
+        stage('Test — Domain') {
+            steps { dotnetTest('domain', 'tests/Gaku.Domain.Tests/Gaku.Domain.Tests.csproj') }
+            post { always { collectTestResults('domain') } }
+        }
+
+        stage('Test — Application') {
+            steps { dotnetTest('application', 'tests/Gaku.Application.Tests/Gaku.Application.Tests.csproj') }
+            post { always { collectTestResults('application') } }
+        }
+
+        stage('Test — Infrastructure') {
+            steps { dotnetTest('infrastructure', 'tests/Gaku.Infrastructure.Tests/Gaku.Infrastructure.Tests.csproj') }
+            post { always { collectTestResults('infrastructure') } }
+        }
+
+        stage('Test — Web') {
+            steps { dotnetTest('web', 'tests/Gaku.Web.Tests/Gaku.Web.Tests.csproj') }
+            post { always { collectTestResults('web') } }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh """
+                    GIT_SHA=\$(git rev-parse HEAD)
+                    BUILD_TS=\$(date -u +%Y-%m-%dT%H:%M:%SZ)
+                    for target in api web migrator; do
+                      case \$target in
+                        api)      IMAGE=${env.API_IMAGE} ;;
+                        web)      IMAGE=${env.WEB_IMAGE} ;;
+                        migrator) IMAGE=${env.MIGRATOR_IMAGE} ;;
+                      esac
+                      docker build \\
+                        --build-arg GIT_COMMIT=\${GIT_SHA} \\
+                        --build-arg BUILD_NUMBER=${env.IMAGE_TAG} \\
+                        --build-arg BUILD_TIMESTAMP=\${BUILD_TS} \\
+                        -f docker/Dockerfile --target \$target \\
+                        -t \${IMAGE}:${env.IMAGE_TAG} -t \${IMAGE}:latest .
+                    done
+                """
+            }
+        }
+
+        // The login password is a 12-hour token containing instance profile through IMDS.
+        // The ECR repositories are MUTABLE.
+        stage('Push to ECR') {
+            steps {
+                sh """
+                    aws ecr get-login-password --region ${env.AWS_REGION} \\
+                      | docker login --username AWS --password-stdin ${env.ECR_REGISTRY}
+
+                    for IMAGE in ${env.API_IMAGE} ${env.WEB_IMAGE} ${env.MIGRATOR_IMAGE}; do
+                      for TAG in ${env.IMAGE_TAG} latest; do
+                        docker tag  \${IMAGE}:\${TAG} ${env.ECR_REGISTRY}/\${IMAGE}:\${TAG}
+                        docker push ${env.ECR_REGISTRY}/\${IMAGE}:\${TAG}
+                      done
+                    done
+                """
+            }
+        }
+
+        stage('Migrate Staging Database') {
+            when { expression { env.BRANCH_NAME == null || env.BRANCH_NAME == 'master' } }
+            steps {
+                sh """
+                    aws eks update-kubeconfig --name ${env.CLUSTER} --region ${env.AWS_REGION}
+
+                    kubectl delete job db-migrate -n ${env.NAMESPACE} --ignore-not-found
+                    kubectl apply -k infra/k8s/overlays/staging/migrate
+                    kubectl wait --for=condition=complete job/db-migrate \\
+                        -n ${env.NAMESPACE} --timeout=300s
+                """
+            }
+            post {
+                failure {
+                    sh "kubectl logs job/db-migrate -n ${env.NAMESPACE} --tail=100 || true"
+                }
+            }
+        }
+
+        stage('Deploy to Staging') {
+            when { expression { env.BRANCH_NAME == null || env.BRANCH_NAME == 'master' } }
+            steps {
+                sh """
+                    kubectl set image deployment/gaku-api \\
+                        gaku-api=${env.ECR_REGISTRY}/${env.API_IMAGE}:${env.IMAGE_TAG} -n ${env.NAMESPACE}
+                    kubectl set image deployment/gaku-web \\
+                        gaku-web=${env.ECR_REGISTRY}/${env.WEB_IMAGE}:${env.IMAGE_TAG} -n ${env.NAMESPACE}
+                    kubectl rollout status deployment/gaku-api -n ${env.NAMESPACE} --timeout=300s
+                    kubectl rollout status deployment/gaku-web -n ${env.NAMESPACE} --timeout=300s
+                """
+                sh """
+                    GIT_SHA=\$(git rev-parse HEAD)
+                    BUILD_TS=\$(date -u +%Y-%m-%dT%H:%M:%SZ)
+                    for d in gaku-api gaku-web; do
+                      kubectl annotate deployment/\${d} -n ${env.NAMESPACE} --overwrite \\
+                        org.opencontainers.image.revision=\${GIT_SHA} \\
+                        org.opencontainers.image.version=${env.IMAGE_TAG} \\
+                        org.opencontainers.image.created=\${BUILD_TS}
+                    done
+                """
+            }
+        }
+
+        stage('Smoke Test') {
+            when { expression { env.BRANCH_NAME == null || env.BRANCH_NAME == 'master' } }
+            steps {
+                sh """
+                    ADDR=\$(kubectl get ingress gaku-web -n ${env.NAMESPACE} \\
+                        -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+                    if [ -z "\$ADDR" ]; then
+                      echo "no ALB hostname - is the load balancer controller installed?"
+                      exit 1
+                    fi
+                    curl -sf --max-time 10 "http://\$ADDR/api/health" > /dev/null
+                    curl -s  --max-time 10 "http://\$ADDR/api/echo"
+                """
+            }
+        }
+    }
+
+    post {
+        always {
+            sh "docker rmi --no-prune ${env.CI_IMAGE} || true"
+        }
+        failure {
+            echo 'Build, push or deploy failed. Check the Test Results tab and the stage log.'
+        }
+    }
+}

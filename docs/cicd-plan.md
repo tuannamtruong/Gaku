@@ -8,7 +8,8 @@ The plan implements CI/CD in **two stages**:
 - **Stage 1 (local):** Jenkins test automation → Docker → Kubernetes on the local machine
 - **Stage 2 (cloud):** AWS + Terraform to mirror the same pipeline in production
 
-**Current status:** Phases 0–6 are **written**: the Stage 1 local pipeline (Jenkins CI, Docker images, full pipeline, local Kubernetes) and the Stage 2 Terraform (bootstrap, five modules, two environments). Phases 7–8 are not written yet.
+**Current status:** Phases 0–7 are **written**: the Stage 1 local pipeline (Jenkins CI, Docker images, full pipeline, local Kubernetes), the Stage 2 Terraform (bootstrap, six modules, two environments) and the Kustomize base and cloud overlays. Phase 8 (log forwarding) is not written. Phase 9 (Jenkins cloud stages) is written as
+`Jenkinsfile.aws` up to the smoke test, but has never been run against a real controller.
 
 Phase status here tracks whether the code exists, not whether it has been applied to an account — apply state lives in the state files, not in this document.
 
