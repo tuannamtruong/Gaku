@@ -12,11 +12,11 @@ terraform {
     }
   }
 
-  # Partial configuration: bucket and region come from the bootstrap outputs at
-  # init time, so the account id never lands in source control.
-  #   make tf_env_init ENV=staging
+  # Created by infra/terraform/bootstrap; see its backend_config output.
   backend "s3" {
+    bucket       = "gaku-tfstate-100731996173-eu-central-1"
     key          = "environments/staging/terraform.tfstate"
+    region       = "eu-central-1"
     encrypt      = true
     use_lockfile = true
   }

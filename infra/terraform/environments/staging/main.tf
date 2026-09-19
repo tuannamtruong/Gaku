@@ -55,6 +55,13 @@ module "rds" {
   skip_final_snapshot     = true
 }
 
+module "in_cluster_controller_identity" {
+  source = "../../modules/in-cluster-controller-identity"
+
+  iam_name_prefix = local.name
+  cluster_name    = module.eks.cluster_name
+}
+
 module "jenkins" {
   count  = var.enable_jenkins ? 1 : 0
   source = "../../modules/jenkins-controller"

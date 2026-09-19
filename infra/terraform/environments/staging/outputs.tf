@@ -42,3 +42,15 @@ output "nat_public_ips" {
   description = "Egress addresses seen by Nominatim and Overpass."
   value       = module.vpc.nat_public_ips
 }
+
+output "controller_role_arns" {
+  description = "Pod Identity roles for the in-cluster controllers."
+  value = {
+    load_balancer_controller = module.in_cluster_controller_identity.load_balancer_controller_role_arn
+  }
+}
+
+output "controller_service_accounts" {
+  description = "Namespace/name of the Kubernetes ServiceAccount associated with each enabled controller's AWS IAM role through EKS Pod Identity. The controller's pods must use the specified ServiceAccount to receive AWS credentials."
+  value       = module.in_cluster_controller_identity.controller_service_accounts
+}
