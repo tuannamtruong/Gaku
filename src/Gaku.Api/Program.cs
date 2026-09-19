@@ -38,6 +38,15 @@ app.UseCors();
 app.UseHttpsRedirection();
 
 app.MapGet("/api/health", () => Results.Ok());
+app.MapGet("/api/echo", (HttpContext ctx) => Results.Ok(new
+{
+    Pod = Environment.MachineName,
+    PodIp = Environment.GetEnvironmentVariable("POD_IP"),
+    Node = Environment.GetEnvironmentVariable("NODE_NAME"),
+    ClientIp = ctx.Connection.RemoteIpAddress?.ToString(),
+    Utc = DateTime.UtcNow
+}));
+
 app.MapTrailEndpoints();
 app.MapMapEndpoints();
 

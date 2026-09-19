@@ -29,6 +29,16 @@ spec:
                 name: gaku-config
             - secretRef:
                 name: gaku-secret
+          # Diagnose variables. They are to be read by "echo" endpoint, which give pod's network-related data.
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           resources:
             # no CPU throttling: latency cost is more problematic than the risk of one Pod consuming excessive CPU.
             requests:
