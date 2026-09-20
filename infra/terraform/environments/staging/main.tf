@@ -70,7 +70,8 @@ module "jenkins" {
   vpc_id    = module.vpc.vpc_id
   subnet_id = module.vpc.public_subnet_ids[0]
 
-  instance_type     = "t3.medium"
+  # largest free-tier x86_64 instance
+  instance_type     = "m7i-flex.large"
   allowed_web_cidrs = var.jenkins_allowed_cidrs
 
   ecr_repository_arns = module.ecr.repository_arns
