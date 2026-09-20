@@ -39,6 +39,10 @@ COPY src/Gaku.Infrastructure/Gaku.Infrastructure.csproj               src/Gaku.I
 COPY src/Gaku.Api/Gaku.Api.csproj                                     src/Gaku.Api/
 COPY src/Gaku.Web/Gaku.Web.csproj                                     src/Gaku.Web/
 
+# The Web SDK only includes the Blazor web assets package when .razor files are created during restore. 
+# Without it, static assets (_framework/blazor.web.js) is missing.
+COPY src/Gaku.Web/*.razor                                             src/Gaku.Web/
+
 # Restore entry-point projects.
 RUN --mount=type=cache,target=$NUGET_HTTP_CACHE_PATH \
     dotnet restore src/Gaku.Api/Gaku.Api.csproj \
