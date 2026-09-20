@@ -90,14 +90,15 @@ Web `8081`.
 
 | Component | Pass criterion | Status | Last tested | Commit |
 | --- | --- | --- | --- | --- |
-| `docker/Dockerfile` target `api` | Image builds from a clean context | Not tested | — | — |
-| `docker/Dockerfile` target `web` | Image builds from a clean context | Not tested | — | — |
-| `docker/Dockerfile` target `migrator` | Image builds from a clean context | Not tested | — | — |
-| `postgres` service | Container starts and `pg_isready` healthcheck goes healthy | Not tested | — | — |
-| `db-migrator` service | Migrations apply to an empty volume, container exits `0` | Not tested | — | — |
-| `gaku-api` service | `GET http://localhost:8080/api/health` returns `200` | Not tested | — | — |
-| `gaku-web` service | `http://localhost:8081` renders the map page, no console errors | Not tested | — | — |
-| Full stack | `docker compose up --build -d` reaches all-healthy from a clean `docker compose down -v` | Not tested | — | — |
+| `docker/Dockerfile` target `api` | Image builds from a clean context | Pass | 2026-09-20 | 4a2294e |
+| `docker/Dockerfile` target `web` | Image builds from a clean context | Pass | 2026-09-20 | 4a2294e |
+| `docker/Dockerfile` target `migrator` | Image builds from a clean context | Pass | 2026-09-20 | 4a2294e |
+| `postgres` service | Container starts and `pg_isready` healthcheck goes healthy | Pass | 2026-09-20 | 4a2294e |
+| `db-migrator` service | Migrations apply to an empty volume, container exits `0` | Pass | 2026-09-20 | 4a2294e |
+| `gaku-api` service | `GET http://localhost:8080/api/health` returns `200` | Pass | 2026-09-20 | 4a2294e |
+| `gaku-web` service | `http://localhost:8081` renders the map page, no console errors | Pass | 2026-09-20 | 4a2294e |
+| Full stack | `docker compose up --build -d` reaches green state| Pass | 2026-09-20 | 4a2294e |
+
 
 ### 2.2 Kubernetes
 
