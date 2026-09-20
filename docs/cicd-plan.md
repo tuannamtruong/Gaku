@@ -26,7 +26,7 @@ Phase status here tracks whether the code exists, not whether it has been applie
 Jenkinsfile.local              declarative pipeline at repo root, run by the local controller
 Jenkinsfile.aws                the cloud pipeline, run by the EC2 controller
 docker/
-  Dockerfile.ci                multi-stage: stage build (restore + compile), stage test (unused by pipeline — build stage image is used directly)
+  Dockerfile                   
 infra/jenkins/local/
   Dockerfile                   extends jenkins/jenkins:lts-jdk21 — installs Docker CLI
   docker-compose.yml           two services: gaku-jenkins + smee relay sidecar
@@ -77,7 +77,9 @@ docker/
 docker-compose.yml   ← extend existing (add gaku-api + gaku-web + db-migrator)
 ```
 
-**`docker/Dockerfile.Gaku.Api`** — multi-stage build:
+**`docker/Dockerfile.Gaku.Api`** — multi-stage build, as sketched during planning. The three
+files below were later merged into one `docker/Dockerfile` so the shared libraries compile once
+for all images; read that file for the current shape.
 ```dockerfile
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
@@ -128,7 +130,8 @@ services:
   db-migrator:
     build:
       context: .
-      dockerfile: docker/Dockerfile.Migrator
+      dockerfile: docker/Dockerfile
+      target: migrator
     environment:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=gaku;Username=gaku;Password=gaku_password"
     depends_on:
@@ -138,7 +141,8 @@ services:
   gaku-api:
     build:
       context: .
-      dockerfile: docker/Dockerfile.Gaku.Api
+      dockerfile: docker/Dockerfile
+      target: api
     ports: ["8080:8080"]
     environment:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=gaku;Username=gaku;Password=gaku_password"
@@ -148,7 +152,8 @@ services:
   gaku-web:
     build:
       context: .
-      dockerfile: docker/Dockerfile.Gaku.Web
+      dockerfile: docker/Dockerfile
+      target: web
     ports: ["8081:8080"]
     environment:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=gaku;Username=gaku;Password=gaku_password"
@@ -218,8 +223,8 @@ pipeline {
     }
     stage('Docker Build') {
       steps {
-        sh "docker build -f docker/Dockerfile.Gaku.Api -t ${API_IMAGE}:${IMAGE_TAG} ."
-        sh "docker build -f docker/Dockerfile.Gaku.Web -t ${WEB_IMAGE}:${IMAGE_TAG} ."
+        sh "docker build -f docker/Dockerfile --target api -t ${API_IMAGE}:${IMAGE_TAG} ."
+        sh "docker build -f docker/Dockerfile --target web -t ${WEB_IMAGE}:${IMAGE_TAG} ."
       }
     }
     stage('Deploy to Local K8s') {

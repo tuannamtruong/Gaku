@@ -80,7 +80,7 @@ func main() {
 
 	log(fmt.Sprintf("Step 2: Building Docker image '%s:latest' (Gaku.Web + Infrastructure + Application + Domain)", image))
 	must(run("docker", "build",
-		"-f", "docker/Dockerfile.Gaku.Web",
+		"-f", "docker/Dockerfile", "--target", "web",
 		"--build-arg", "GIT_COMMIT="+gitCommit,
 		"--build-arg", "BUILD_TIMESTAMP="+buildTimestamp,
 		"-t", image+":latest",

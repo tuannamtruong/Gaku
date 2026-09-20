@@ -38,7 +38,7 @@ flowchart TD
 | ----------------- | ------------------------------------- | ---------------------------------------------------------------------------------- |
 | `gaku-jenkins`    | built from `infra/jenkins/local/Dockerfile` | Jenkins server — hosts UI, schedules jobs, runs pipeline                           |
 | `smee`            | `node:lts-alpine`                     | Runs `smee-relay.js` — SSE client that forwards GitHub webhook payloads to Jenkins |
-| `gaku-ci-<build>` | built from `docker/Dockerfile.ci`     | Ephemeral per-build container — compiles and tests .NET code                       |
+| `gaku-ci-<build>` | `docker/Dockerfile` target `ci`       | Ephemeral per-build container — compiles and tests .NET code                       |
 
 ## 3. Stage Detail
 
@@ -146,10 +146,9 @@ infra/jenkins/local/
   .env
 
 docker/
-  Dockerfile.ci
+  Dockerfile           
 
 Jenkinsfile.local      builds CI image, runs test containers, publishes JUnit results, removes image
-Jenkinsfile.aws        the same, then pushes to ECR and rolls staging — run by the EC2 controller
 ```
 
 ---
@@ -179,9 +178,9 @@ Point Docker CLI at minikube's daemon
 Build the projects with minikube context
 
 ```
-  docker build -f docker/Dockerfile.Gaku.Api      -t gaku-api:latest      .
-  docker build -f docker/Dockerfile.Gaku.Web      -t gaku-web:latest      .
-  docker build -f docker/Dockerfile.Migrator      -t gaku-migrator:latest .
+  docker build -f docker/Dockerfile --target api      -t gaku-api:latest      .
+  docker build -f docker/Dockerfile --target web      -t gaku-web:latest      .
+  docker build -f docker/Dockerfile --target migrator -t gaku-migrator:latest .
 ```
 
 Apply and validate layer by layer.

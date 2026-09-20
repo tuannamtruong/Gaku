@@ -64,7 +64,7 @@ src/
   Gaku.Api/             Minimal API endpoints
   Gaku.Web/             Blazor pages and Leaflet interop
 tests/                  one test project per layer except Api
-docker/                 one Dockerfile per deployable + docker.mk
+docker/                 one Dockerfile, a build target per deployable + docker.mk
 infra/jenkins/local/    Jenkins controller + Smee relay, via compose
 infra/k8s/base/         Kustomize manifests shared by every environment
 infra/k8s/overlays/     per-environment overlays: local (minikube), staging, production

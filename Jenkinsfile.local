@@ -1,4 +1,12 @@
 // Pipeline for the local env Jenkins controller in infra/jenkins/local.
+// 
+// Build Libary project (Domain, Application, Infrastructure) and all the test projects into a CI image 
+//
+// Run all unit tests
+// Dockerize API and WEB app
+// Load images into minikube
+// Deploy into k8s
+// Clean up the CI image
 
 pipeline {
     agent any
@@ -41,9 +49,9 @@ pipeline {
             steps {
                 sh """
                     docker build \\
-                        --target build \\
+                        --target ci \\
                         --tag ${env.CI_IMAGE} \\
-                        --file docker/Dockerfile.ci \\
+                        --file docker/Dockerfile \\
                         .
                 """
             }
@@ -162,13 +170,13 @@ pipeline {
                         --build-arg GIT_COMMIT=\${GIT_SHA} \\
                         --build-arg BUILD_NUMBER=${env.IMAGE_TAG} \\
                         --build-arg BUILD_TIMESTAMP=\${BUILD_TS} \\
-                        -f docker/Dockerfile.Gaku.Api \\
+                        -f docker/Dockerfile --target api \\
                         -t ${env.API_IMAGE}:${env.IMAGE_TAG} -t ${env.API_IMAGE}:latest .
                     docker build \\
                         --build-arg GIT_COMMIT=\${GIT_SHA} \\
                         --build-arg BUILD_NUMBER=${env.IMAGE_TAG} \\
                         --build-arg BUILD_TIMESTAMP=\${BUILD_TS} \\
-                        -f docker/Dockerfile.Gaku.Web \\
+                        -f docker/Dockerfile --target web \\
                         -t ${env.WEB_IMAGE}:${env.IMAGE_TAG} -t ${env.WEB_IMAGE}:latest .
                 """
             }

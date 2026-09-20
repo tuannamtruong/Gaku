@@ -9,21 +9,21 @@ _docker_build_args = \
 docker_build_api:
 	docker build $(_docker_build_args) \
 	    --network=host \
-	    -f docker/Dockerfile.Gaku.Api \
+	    -f docker/Dockerfile --target api \
 	    -t gaku-api:$(IMAGE_TAG) -t gaku-api:latest \
 	    .
 
 docker_build_web:
 	docker build $(_docker_build_args) \
 	    --network=host \
-	    -f docker/Dockerfile.Gaku.Web \
+	    -f docker/Dockerfile --target web \
 	    -t gaku-web:$(IMAGE_TAG) -t gaku-web:latest \
 	    .
 
 docker_build_migrator:
 	docker build $(_docker_build_args) \
 	    --network=host \
-	    -f docker/Dockerfile.Migrator \
+	    -f docker/Dockerfile --target migrator \
 	    -t gaku-migrator:$(IMAGE_TAG) -t gaku-migrator:latest \
 	    .
 

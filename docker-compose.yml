@@ -20,7 +20,8 @@ services:
     image: gaku-migrator
     build:
       context: .
-      dockerfile: docker/Dockerfile.Migrator
+      dockerfile: docker/Dockerfile
+      target: migrator
       args:
         GIT_COMMIT: ${GIT_COMMIT:-unknown}
         BUILD_NUMBER: ${BUILD_NUMBER:-local}
@@ -35,7 +36,8 @@ services:
     image: gaku-api
     build:
       context: .
-      dockerfile: docker/Dockerfile.Gaku.Api
+      dockerfile: docker/Dockerfile
+      target: api
       args:
         GIT_COMMIT: ${GIT_COMMIT:-unknown}
         BUILD_NUMBER: ${BUILD_NUMBER:-local}
@@ -51,7 +53,8 @@ services:
     image: gaku-web
     build:
       context: .
-      dockerfile: docker/Dockerfile.Gaku.Web
+      dockerfile: docker/Dockerfile
+      target: web
       args:
         GIT_COMMIT: ${GIT_COMMIT:-unknown}
         BUILD_NUMBER: ${BUILD_NUMBER:-local}

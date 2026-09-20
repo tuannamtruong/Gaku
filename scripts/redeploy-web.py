@@ -36,7 +36,7 @@ log(f"  GIT_COMMIT={git_commit[:12]}  BUILD_TIMESTAMP={build_timestamp}")
 
 log(f"Step 2: Building Docker image '{IMAGE}:latest' (Gaku.Web + Infrastructure + Application + Domain)")
 run("docker", "build",
-    "-f", "docker/Dockerfile.Gaku.Web",
+    "-f", "docker/Dockerfile", "--target", "web",
     "--build-arg", f"GIT_COMMIT={git_commit}",
     "--build-arg", f"BUILD_TIMESTAMP={build_timestamp}",
     "-t", f"{IMAGE}:latest",

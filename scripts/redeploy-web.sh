@@ -30,7 +30,7 @@ source scripts/export-oci-env.sh
 
 log "Step 2: Building Docker image '${IMAGE}:latest' (Gaku.Web + Infrastructure + Application + Domain)"
 run docker build \
-  -f docker/Dockerfile.Gaku.Web \
+  -f docker/Dockerfile --target web \
   --build-arg GIT_COMMIT="$GIT_COMMIT" \
   --build-arg BUILD_TIMESTAMP="$BUILD_TIMESTAMP" \
   -t "${IMAGE}:latest" \
