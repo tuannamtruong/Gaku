@@ -226,9 +226,9 @@ kubectl logs <pod-name> -n gaku --previous  # Last log lines before the crash
 #### Docker build failure
 
 ```bash
-docker build -f docker/Dockerfile.Gaku.Api . 2>&1 | tail -60
-docker build -f docker/Dockerfile.Gaku.Web . 2>&1 | tail -60
-docker build -f docker/Dockerfile.Migrator  . 2>&1 | tail -60
+docker build -f docker/Dockerfile --target api . 2>&1 | tail -60
+docker build -f docker/Dockerfile --target web . 2>&1 | tail -60
+docker build -f docker/Dockerfile --target migrator . 2>&1 | tail -60
 ```
 
 1. Find the failing `RUN` step in the build output
@@ -254,7 +254,7 @@ curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/<failing-path>
 **Step 2 — Docker image directly (no k8s)**
 
 ```bash
-docker build -f docker/Dockerfile.Gaku.Web . -t gaku-web-test
+docker build -f docker/Dockerfile --target web . -t gaku-web-test
 docker run --rm -p 8082:8080 gaku-web-test &
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8082/<failing-path>
 ```
