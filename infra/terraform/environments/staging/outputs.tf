@@ -38,6 +38,16 @@ output "jenkins_role_arn" {
   value       = one(module.jenkins[*].iam_role_arn)
 }
 
+output "jenkins_instance_id" {
+  description = "Controller instance, for aws ssm start-session."
+  value       = one(module.jenkins[*].instance_id)
+}
+
+output "jenkins_unlock_command" {
+  description = "Retrieves the initial admin password without opening SSH."
+  value       = one(module.jenkins[*].unlock_command)
+}
+
 output "nat_public_ips" {
   description = "Egress addresses seen by Nominatim and Overpass."
   value       = module.vpc.nat_public_ips
