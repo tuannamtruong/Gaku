@@ -10,9 +10,9 @@ flowchart TD
     SmeeClient["Smee client\nsidecar container"]
     Jenkins["Jenkins"]
     Build["Restore & Build\nCompile all projects"]
-    TD["Test — Domain"]
-    TA["Test — Application"]
-    TI["Test — Infrastructure"]
+    TD["Test - Domain"]
+    TA["Test - Application"]
+    TI["Test - Infrastructure"]
     Copy["Collect test results"]
     JUnit["Publish JUnit report"]
     Cleanup["Remove build artifacts"]
@@ -36,9 +36,9 @@ flowchart TD
 
 | Container         | Image                                 | Purpose                                                                            |
 | ----------------- | ------------------------------------- | ---------------------------------------------------------------------------------- |
-| `gaku-jenkins`    | built from `infra/jenkins/local/Dockerfile` | Jenkins server — hosts UI, schedules jobs, runs pipeline                           |
-| `smee`            | `node:lts-alpine`                     | Runs `smee-relay.js` — SSE client that forwards GitHub webhook payloads to Jenkins |
-| `gaku-ci-<build>` | `docker/Dockerfile` target `ci`       | Ephemeral per-build container — compiles and tests .NET code                       |
+| `gaku-jenkins`    | built from `infra/jenkins/local/Dockerfile` | Jenkins server - hosts UI, schedules jobs, runs pipeline                           |
+| `smee`            | `node:lts-alpine`                     | Runs `smee-relay.js` - SSE client that forwards GitHub webhook payloads to Jenkins |
+| `gaku-ci-<build>` | `docker/Dockerfile` target `ci`       | Ephemeral per-build container - compiles and tests .NET code                       |
 
 ## 3. Stage Detail
 
@@ -130,7 +130,7 @@ curl -X POST "http://localhost:8090/createItem?name=gaku" \
 
 | Check                 | Command / Action                                                                      |
 | --------------------- | ------------------------------------------------------------------------------------- |
-| Smee relay is running | `docker logs smee` — should show SSE connected                                        |
+| Smee relay is running | `docker logs smee` - should show SSE connected                                        |
 | Jenkins is reachable  | `curl -s -o /dev/null -w "%{http_code}" http://localhost:8090` → `200`                |
 | Webhook delivery      | Push a commit; GitHub repo → Settings → Webhooks → Recent Deliveries → `200` response |
 | Pipeline triggered    | Jenkins dashboard shows a new build for the pipeline job                              |

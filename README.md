@@ -68,6 +68,7 @@ docker/                 one Dockerfile, a build target per deployable + docker.m
 infra/jenkins/local/    Jenkins controller + Smee relay, via compose
 infra/k8s/base/         Kustomize manifests shared by every environment
 infra/k8s/overlays/     per-environment overlays: local (minikube), staging, production
+infra/terraform/        bootstrap, reusable modules, staging and production environments
 scripts/                redeploy and benchmark helpers
 docs/                   source of truth for the GitHub wiki
 ```
