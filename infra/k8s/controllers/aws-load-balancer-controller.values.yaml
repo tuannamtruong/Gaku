@@ -1,0 +1,6 @@
+# Must match the service account bound to the controller's Pod Identity.
+serviceAccount:
+  create: true
+  name: aws-load-balancer-controller
+
+region: eu-central-1
