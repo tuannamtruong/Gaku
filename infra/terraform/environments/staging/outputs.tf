@@ -3,6 +3,11 @@ output "cluster_name" {
   value       = module.eks.cluster_name
 }
 
+output "vpc_id" {
+  description = "VPC the cluster runs in. The load balancer controller needs it explicitly."
+  value       = module.vpc.vpc_id
+}
+
 output "kubeconfig_command" {
   description = "Points kubectl at this environment."
   value       = module.eks.kubeconfig_command

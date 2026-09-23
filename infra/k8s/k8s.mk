@@ -1,5 +1,43 @@
-K8S_FOLDER=infra/k8s/overlays/local/
 K8S_OVERLAYS=infra/k8s/overlays
+
+
+#############################################################################
+# AWS cluster commands
+#############################################################################
+
+# ---------------------------------------------------------------------------
+# AWS Load Balancer Controller
+# ---------------------------------------------------------------------------
+
+LBC_CHART_VERSION ?= 3.5.0
+LBC_VALUES        := infra/k8s/controllers/aws-load-balancer-controller.values.yaml
+LBC_NAMESPACE     := kube-system
+LBC_RELEASE       := aws-load-balancer-controller
+
+_lbc_require_env:
+	@if [ -z "$(ENV)" ]; then \
+	  echo "ENV is required, e.g. make lbc_install ENV=staging"; exit 1; fi
+
+# Installs or upgrades the controller in the cluster.
+# vpcId comes from Terraform: without it the controller asks IMDS for the VPC, which pods cannot reach because of IMDS hop limit.
+lbc_install: _lbc_require_env
+	helm repo add eks https://aws.github.io/eks-charts
+	helm repo update eks
+	VPC_ID=$$(cd $(TF_ENV_DIR) && terraform output -raw vpc_id); \
+	helm upgrade --install $(LBC_RELEASE) eks/$(LBC_RELEASE) \
+	  --namespace $(LBC_NAMESPACE) \
+	  --version $(LBC_CHART_VERSION) \
+	  --values $(LBC_VALUES) \
+	  --set clusterName=gaku-$(ENV) \
+	  --set vpcId=$$VPC_ID \
+	  --wait --timeout 5m
+	kubectl -n $(LBC_NAMESPACE) rollout status deploy/$(LBC_RELEASE) --timeout=300s
+
+#############################################################################
+# LOCAL cluster commands
+#############################################################################
+
+K8S_FOLDER=infra/k8s/overlays/local/
 
 minikube_up:
 	minikube start
