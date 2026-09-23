@@ -19,16 +19,15 @@ variable "enable_load_balancer_controller" {
 }
 
 variable "load_balancer_controller_namespace" {
-  description = "Namespace the controller runs in. The Helm chart defaults to kube-system."
+  description = "Namespace the AWS Load Balancer Controller runs in."
   type        = string
   default     = "kube-system"
 }
 
 variable "load_balancer_controller_service_account" {
   description = <<-EOT
-    Service account the controller runs as. Must match the name the Helm release
-    creates: Pod Identity binds the role to this exact name, and a pod running
-    under any other service account falls back to node credentials silently.
+    Service account the AWS Load Balancer Controller runs as.
+    Pod Identity binds the role to this name.
   EOT
   type        = string
   default     = "aws-load-balancer-controller"
