@@ -28,7 +28,7 @@ module "eks" {
   endpoint_public_access = true
   public_access_cidrs    = var.cluster_public_access_cidrs
 
-  node_instance_types = ["t3.medium"]
+  node_instance_types = ["m7i-flex.large"]
   node_desired_size   = 2
   node_min_size       = 1
   node_max_size       = 3
