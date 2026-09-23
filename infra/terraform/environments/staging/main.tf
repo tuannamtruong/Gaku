@@ -58,8 +58,9 @@ module "rds" {
 module "in_cluster_controller_identity" {
   source = "../../modules/in-cluster-controller-identity"
 
-  iam_name_prefix = local.name
-  cluster_name    = module.eks.cluster_name
+  iam_name_prefix              = local.name
+  cluster_name                 = module.eks.cluster_name
+  external_secrets_secret_arns = [module.rds.secret_arn]
 }
 
 module "jenkins" {
