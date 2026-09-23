@@ -54,3 +54,51 @@ resource "aws_eks_pod_identity_association" "load_balancer_controller" {
   service_account = var.load_balancer_controller_service_account
   role_arn        = aws_iam_role.load_balancer_controller[0].arn
 }
+
+# ---------------------------------------------------------------------------
+# External Secrets Operator
+# ---------------------------------------------------------------------------
+
+resource "aws_iam_role" "external_secrets" {
+  count = var.enable_external_secrets ? 1 : 0
+
+  name               = "${var.iam_name_prefix}-external-secrets"
+  description        = "Allows External Secrets Operator to read specified Secrets Manager secrets."
+  assume_role_policy = local.assume_role_policy
+
+  lifecycle {
+    precondition {
+      condition     = length(var.external_secrets_secret_arns) > 0
+      error_message = "external_secrets_secret_arns must list at least one secret when enable_external_secrets is true."
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "external_secrets" {
+  count = var.enable_external_secrets ? 1 : 0
+
+  name = "read-secrets"
+  role = aws_iam_role.external_secrets[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret",
+      ]
+      # Named ARNs, not a wildcard: the operator can read only the secrets listed here.
+      Resource = var.external_secrets_secret_arns
+    }]
+  })
+}
+
+resource "aws_eks_pod_identity_association" "external_secrets" {
+  count = var.enable_external_secrets ? 1 : 0
+
+  cluster_name    = var.cluster_name
+  namespace       = var.external_secrets_namespace
+  service_account = var.external_secrets_service_account
+  role_arn        = aws_iam_role.external_secrets[0].arn
+}

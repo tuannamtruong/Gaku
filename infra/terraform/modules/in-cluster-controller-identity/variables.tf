@@ -13,7 +13,7 @@ variable "cluster_name" {
 # ---------------------------------------------------------------------------
 
 variable "enable_load_balancer_controller" {
-  description = "Grant the AWS Load Balancer Controller its IAM role. Without it an Ingress gets no ALB."
+  description = "Whether to create the IAM role and Pod Identity association that let the AWS Load Balancer Controller create ALBs for Ingress objects."
   type        = bool
   default     = true
 }
@@ -25,8 +25,45 @@ variable "load_balancer_controller_namespace" {
 }
 
 variable "load_balancer_controller_service_account" {
-  description = "Service account the controller runs as."
+  description = <<-EOT
+    Service account the controller runs as. Must match the name the Helm release
+    creates: Pod Identity binds the role to this exact name, and a pod running
+    under any other service account falls back to node credentials silently.
+  EOT
   type        = string
   default     = "aws-load-balancer-controller"
 }
 
+# ---------------------------------------------------------------------------
+# External Secrets Operator
+# ---------------------------------------------------------------------------
+
+variable "enable_external_secrets" {
+  description = "Whether to create the IAM role and Pod Identity association that let the External Secrets Operator read the specified secrets."
+  type        = bool
+  default     = true
+}
+
+variable "external_secrets_secret_arns" {
+  description = <<-EOT
+    ARNs of Secrets Manager secrets the External Secrets Operator may read.
+    Required when enable_external_secrets is true; an IAM policy with an empty Resource list is invalid.
+  EOT
+  type        = list(string)
+  default     = []
+}
+
+variable "external_secrets_namespace" {
+  description = "Namespace the External Secrets Operator runs in."
+  type        = string
+  default     = "external-secrets"
+}
+
+variable "external_secrets_service_account" {
+  description = <<-EOT
+    Service account the External Secrets Operator runs as.
+    Pod Identity binds the role to this name.
+  EOT
+  type        = string
+  default     = "external-secrets"
+}
