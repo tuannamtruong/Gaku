@@ -30,11 +30,11 @@ EKS with RDS, images from ECR, traffic through an ALB.
 
 | Component | Pass criterion | Status | Last tested | Commit | Evidence |
 | --- | --- | --- | --- | --- | --- |
-| `module.vpc` | Applies clean; subnets, routing and NAT reachable as designed | Partial | 2026-09-20 | 82fcec6 | [record](archive/2026-09-20-jenkins-aws-ecr-push.md) — public subnets, route table and IGW carried the controller; private subnets and NAT unexercised |
-| `module.eks` | Cluster reachable with `kubectl`, nodes `Ready` | Not tested | — | — | — |
+| `module.vpc` | Applies clean; subnets, routing and NAT reachable as designed | Pass | 2026-09-24 | 954a965 | [record](archive/2026-09-24-alb-controller-staging.md) — nodes ran in the private subnets and pulled images through NAT; the ALB came up in the public subnets |
+| `module.eks` | Cluster reachable with `kubectl`, nodes `Ready` | Pass | 2026-09-24 | 954a965 | [record](archive/2026-09-24-alb-controller-staging.md) — 2 nodes `Ready` |
 | `module.rds` | Instance available, reachable from a cluster pod | Not tested | — | — | — |
 | `module.ecr` | Repositories exist and accept a push | Pass | 2026-09-20 | 82fcec6 | [record](archive/2026-09-20-jenkins-aws-ecr-push.md) — all three repositories accepted a push |
-| `module.in_cluster_controller_identity` | Controller service account assumes its IAM role | Not tested | — | — | — |
+| `module.in_cluster_controller_identity` | Controller service account assumes its IAM role | Pass | 2026-09-24 | 954a965 | [record](archive/2026-09-24-alb-controller-staging.md) — throwaway pod on the service account resolved the controller role, not the node role |
 | `module.jenkins` | Jenkins controller identity and access as designed | Partial | 2026-09-20 | 82fcec6 | [record](archive/2026-09-20-jenkins-aws-ecr-push.md) — instance profile and ECR policy proven; applied with `enable_eks_access = false`, so the EKS half is unexercised |
 | `aws_eks_access_entry.jenkins` + policy association | Jenkins can `kubectl` against the cluster | Not tested | — | — | — |
 | `terraform plan` on a clean tree | No drift after a successful apply | Not tested | — | — | — |
@@ -43,9 +43,9 @@ EKS with RDS, images from ECR, traffic through an ALB.
 
 | Component | Pass criterion | Status | Last tested | Commit | Evidence |
 | --- | --- | --- | --- | --- | --- |
-| `controllers/aws-load-balancer-controller.values.yaml` | Controller pods `Ready`, no IAM errors in the log | Not tested | — | — | — |
+| `controllers/aws-load-balancer-controller.values.yaml` | Controller pods `Ready`, no IAM errors in the log | Pass | 2026-09-24 | 954a965 | [record](archive/2026-09-24-alb-controller-staging.md) |
 | `overlays/staging/external-secret.yaml` | `gaku-secret` is materialised from the external store | Not tested | — | — | — |
-| `components/alb-ingress/ingress-api.yaml` | ALB provisioned, API reachable through it | Not tested | — | — | — |
+| `components/alb-ingress/ingress-api.yaml` | ALB provisioned, API reachable through it | Pass | 2026-09-24 | 954a965 | [record](archive/2026-09-24-alb-controller-staging.md) — internet-facing ALB `active`, targets healthy, `/api/echo` answered from both pods |
 | `components/alb-ingress/ingress-web.yaml` | Web reachable through the same ALB group | Not tested | — | — | — |
 | Image tag substitution | The overlay resolves to the ECR tag the build pushed | Not tested | — | — | — |
 | `overlays/staging/migrate` | Migration job completes against RDS | Not tested | — | — | — |
