@@ -33,6 +33,42 @@ lbc_install: _lbc_require_env
 	  --wait --timeout 5m
 	kubectl -n $(LBC_NAMESPACE) rollout status deploy/$(LBC_RELEASE) --timeout=300s
 
+# Validate the AWS Load Balancer Controller setup before Ingress is required. 
+# This checks the Helm release, controller readiness, IngressClass, Pod Identity agent, pod credentials, and IAM association.
+#
+# Each check returns a non-empty value on success and an empty value on failure.
+lbc_preingress_check: _lbc_require_env
+	@echo "=== AWS Load Balancer Controller Report (gaku-$(ENV)) ==="
+	@kubectl -n $(LBC_NAMESPACE) get deploy,pod -l app.kubernetes.io/name=$(LBC_RELEASE) 2>&1 | sed 's/^/  /'
+	@echo ""
+	@kube() { kubectl -n $(LBC_NAMESPACE) "$$@" 2>/dev/null; }; \
+	check() { [ -n "$$2" ] && printf '[OK]   %-16s %s\n' "$$1" "$$3" \
+	                       || { printf '[FAIL] %-16s %s\n' "$$1" "$$4"; FAILED=1; }; }; \
+	POD=$$(kube get pod -l app.kubernetes.io/name=$(LBC_RELEASE) -o jsonpath='{.items[0].metadata.name}'); \
+	HELM=$$(helm list -n $(LBC_NAMESPACE) --deployed -q --filter '^$(LBC_RELEASE)$$' 2>/dev/null); \
+	READY=$$(kube get deploy $(LBC_RELEASE) -o jsonpath='{.status.readyReplicas}' | grep -v '^0$$'); \
+	CLASS=$$(kubectl get ingressclass alb -o name 2>/dev/null); \
+	AGENT=$$(kube get ds eks-pod-identity-agent -o jsonpath='{.status.numberReady}' | grep -v '^0$$'); \
+	CREDS=$$(kube get pod "$$POD" -o jsonpath='{.spec.containers[0].env[*].name}' \
+	  | tr ' ' '\n' | grep AWS_CONTAINER_CREDENTIALS_FULL_URI); \
+	ASSOC=$$(aws eks list-pod-identity-associations --cluster-name gaku-$(ENV) \
+	  --query "associations[?serviceAccount=='$(LBC_RELEASE)'].serviceAccount" \
+	  --output text 2>/dev/null); \
+	echo "=== Checklist ==="; \
+	check "Helm release:"    "$$HELM"  "deployed, chart $(LBC_CHART_VERSION)" \
+	                                   "not deployed - run 'make lbc_install ENV=$(ENV)'"; \
+	check "Deployment:"      "$$READY" "$$READY ready" \
+	                                   "no ready replica"; \
+	check "IngressClass:"    "$$CLASS" "alb" \
+	                                   "alb missing - an Ingress naming it will be ignored"; \
+	check "Identity agent:"  "$$AGENT" "$$AGENT node(s)" \
+	                                   "eks-pod-identity-agent not ready"; \
+	check "Pod credentials:" "$$CREDS" "AWS_CONTAINER_CREDENTIALS_FULL_URI injected" \
+	                                   "not injected - restart the pod, or the service account does not match the association"; \
+	check "Association:"     "$$ASSOC" "$(LBC_NAMESPACE)/$(LBC_RELEASE) bound to its IAM role" \
+	                                   "none for service account $(LBC_RELEASE) - has staging been applied?"; \
+	[ -z "$$FAILED" ]
+
 #############################################################################
 # LOCAL cluster commands
 #############################################################################
