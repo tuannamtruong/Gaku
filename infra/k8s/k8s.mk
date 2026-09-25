@@ -33,6 +33,9 @@ lbc_install: _lbc_require_env
 	  --wait --timeout 5m
 	kubectl -n $(LBC_NAMESPACE) rollout status deploy/$(LBC_RELEASE) --timeout=300s
 
+lbc_uninstall: _lbc_require_env
+	helm uninstall $(LBC_RELEASE) --namespace $(LBC_NAMESPACE)
+
 # Validate the AWS Load Balancer Controller setup before Ingress is required. 
 # This checks the Helm release, controller readiness, IngressClass, Pod Identity agent, pod credentials, and IAM association.
 #
