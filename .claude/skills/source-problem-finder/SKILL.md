@@ -360,7 +360,7 @@ useful; "there might be an issue in the service layer" is not.
   Source: <kubectl logs gaku-api / docker build output / MSBuild output / etc.>
 
 ### Root Cause
-  File: <src/Gaku.X/Y/Z.cs line N> (or config: infra/k8s/overlays/local/... or migration: 20250101_AddX.cs)
+  File: <src/Gaku.X/Y/Z.cs line N> (or config: infra/k8s/local/... or migration: 20250101_AddX.cs)
 
   [One clear sentence: what is wrong and the mechanical reason it produces the observed symptom]
 

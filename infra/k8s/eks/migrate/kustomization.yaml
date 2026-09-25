@@ -6,7 +6,7 @@ kind: Kustomization
 # The Job expects the namespace and the gaku-secret to exist already
 
 resources:
-- ../../../base/db-migration
+- ../../base/db-migration
 
 images:
 - name: gaku-migrator

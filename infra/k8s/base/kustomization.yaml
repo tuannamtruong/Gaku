@@ -5,9 +5,9 @@ kind: Kustomization
 # come from, where the connection string comes from, how traffic gets in, and
 # whether Postgres runs in-cluster — belongs to the overlay.
 #
-#   local/               minikube: in-cluster Postgres, nginx ingress, images from the local daemon
-#   overlays/staging/    EKS: RDS, ALB ingress, images from ECR
-#   overlays/production/ the same, plus a second replica, an HPA and a PDB
+#   local/             minikube: in-cluster Postgres, nginx ingress, images from the local daemon
+#   eks/staging/       EKS: RDS, ALB ingress, images from ECR
+#   eks/production/    the same, plus a second replica, an HPA and a PDB
 resources:
   - namespace.yaml
   - configmap.yaml

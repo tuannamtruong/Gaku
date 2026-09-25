@@ -1,4 +1,5 @@
-K8S_OVERLAYS=infra/k8s/overlays
+# Every cloud environment lives under eks/; local/ is the only overlay outside it.
+EKS=infra/k8s/eks
 
 
 #############################################################################
@@ -10,7 +11,7 @@ K8S_OVERLAYS=infra/k8s/overlays
 # ---------------------------------------------------------------------------
 
 LBC_CHART_VERSION ?= 3.5.0
-LBC_VALUES        := infra/k8s/controllers/aws-load-balancer-controller.values.yaml
+LBC_VALUES        := $(EKS)/controllers/aws-load-balancer-controller.values.yaml
 LBC_NAMESPACE     := kube-system
 LBC_RELEASE       := aws-load-balancer-controller
 
@@ -76,7 +77,7 @@ lbc_preingress_check: _lbc_require_env
 # LOCAL cluster commands
 #############################################################################
 
-K8S_FOLDER=infra/k8s/overlays/local/
+K8S_FOLDER=infra/k8s/local/
 
 minikube_up:
 	minikube start

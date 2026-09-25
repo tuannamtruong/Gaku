@@ -146,9 +146,9 @@ Used by: local `docker compose` and EF Core CLI tools.
 | `DOCKERHUB_USERNAME`                   | DockerHub account name used by `make docker_login` / `make docker_push`                                        |
 | `DOCKERHUB_TOKEN`                      | DockerHub personal access token (Read/Write/Delete) — generate at hub.docker.com > Account Settings > Security |
 
-### `infra/k8s/overlays/local/.env.k8s`
+### `infra/k8s/local/.env.k8s`
 
-Used by: `kubectl apply -k infra/k8s/overlays/local/` — Kustomize reads this to generate the `gaku-secret` Kubernetes secret. Co-located with `kustomization.yaml`.
+Used by: `kubectl apply -k infra/k8s/local/` — Kustomize reads this to generate the `gaku-secret` Kubernetes secret. Co-located with `kustomization.yaml`.
 
 | Variable                               | Responsibility                                                 |
 | -------------------------------------- | -------------------------------------------------------------- |

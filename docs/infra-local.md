@@ -2,10 +2,10 @@
 
 Gaku runs on a single-node Kubernetes cluster and is deployed into a local minikube
 
-| `infra/k8s/overlays/local/*` | k8s overlay for local env. |
+| `infra/k8s/local/*` | k8s overlay for local env. |
 | --- | --- |
 | `infra/k8s/base/*` | Base k8s file for all env. |
-| `infra/k8s/overlays/local/kustomization.yaml` | Key config for local setup. |
+| `infra/k8s/local/kustomization.yaml` | Key config for local setup. |
 | `infra/k8s/k8s.mk` | Make targets. |
 
 
