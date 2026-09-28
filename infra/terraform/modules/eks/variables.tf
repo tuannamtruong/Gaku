@@ -81,3 +81,12 @@ variable "admin_principal_arns" {
   type        = list(string)
   default     = []
 }
+
+variable "cluster_autoscaler_discovery_tags" {
+  description = <<-EOT
+    Whether to tag the node group's Auto Scaling group so the cluster autoscaler
+    can discover it. The tags have no effect when the autoscaler is not installed.
+  EOT
+  type        = bool
+  default     = true
+}

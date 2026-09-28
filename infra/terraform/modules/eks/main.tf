@@ -35,11 +35,7 @@ resource "aws_eks_cluster" "this" {
   }
 
   access_config {
-    # API replaces the aws-auth ConfigMap. Access is granted by the access
-    # entries below rather than by editing a ConfigMap in the cluster.
     authentication_mode = "API"
-    # The identity running terraform apply keeps admin, otherwise the cluster
-    # would be unreachable until an access entry exists.
     bootstrap_cluster_creator_admin_permissions = true
   }
 
@@ -71,7 +67,6 @@ resource "aws_iam_role_policy_attachment" "node" {
   for_each = toset([
     "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
     "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
-    # Pulls the gaku-api / gaku-web images from the Phase 6 ECR repositories.
     "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
     # Enables Session Manager shell access to nodes without opening SSH.
     "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
@@ -102,7 +97,7 @@ resource "aws_eks_node_group" "this" {
   }
 
   lifecycle {
-    # drift expected
+    # Expected drift: the Cluster Autoscaler owns desired_size
     ignore_changes = [scaling_config[0].desired_size]
   }
 
@@ -111,6 +106,25 @@ resource "aws_eks_node_group" "this" {
   }
 
   depends_on = [aws_iam_role_policy_attachment.node]
+}
+
+# Managed node group's tags are not guaranteed to be applied to the EKS-created ASG.
+#  -> Add Cluster Autoscaler discovery tags directly to the ASG.
+resource "aws_autoscaling_group_tag" "cluster_autoscaler" {
+  for_each = var.cluster_autoscaler_discovery_tags ? {
+    "k8s.io/cluster-autoscaler/enabled" = "true"
+    # required for scale statement in modules/in-cluster-controller-identity
+    "k8s.io/cluster-autoscaler/${var.name}" = "owned"
+  } : {}
+
+  autoscaling_group_name = aws_eks_node_group.this.resources[0].autoscaling_groups[0].name
+
+  tag {
+    key   = each.key
+    value = each.value
+    # no tag on propagated instance.
+    propagate_at_launch = false
+  }
 }
 
 # ---------------------------------------------------------------------------
