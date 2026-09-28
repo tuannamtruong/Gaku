@@ -102,3 +102,70 @@ resource "aws_eks_pod_identity_association" "external_secrets" {
   service_account = var.external_secrets_service_account
   role_arn        = aws_iam_role.external_secrets[0].arn
 }
+
+# ---------------------------------------------------------------------------
+# Cluster Autoscaler
+# ---------------------------------------------------------------------------
+
+resource "aws_iam_role" "cluster_autoscaler" {
+  count = var.enable_cluster_autoscaler ? 1 : 0
+
+  name               = "${var.iam_name_prefix}-cluster-autoscaler"
+  description        = "Resizes the node group's Auto Scaling group for ${var.cluster_name}."
+  assume_role_policy = local.assume_role_policy
+}
+
+resource "aws_iam_role_policy" "cluster_autoscaler" {
+  count = var.enable_cluster_autoscaler ? 1 : 0
+
+  name = "autoscale-node-group"
+  role = aws_iam_role.cluster_autoscaler[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      # Discovery requires unscoped read-only access because the autoscaler lists resources across the account before filtering by its discovery tags.
+      {
+        Sid    = "Discover"
+        Effect = "Allow"
+        Action = [
+          "autoscaling:DescribeAutoScalingGroups",
+          "autoscaling:DescribeAutoScalingInstances",
+          "autoscaling:DescribeLaunchConfigurations",
+          "autoscaling:DescribeScalingActivities",
+          "autoscaling:DescribeTags",
+          "ec2:DescribeImages",
+          "ec2:DescribeInstanceTypes",
+          "ec2:DescribeLaunchTemplateVersions",
+          "ec2:GetInstanceTypesFromInstanceRequirements",
+          "eks:DescribeNodegroup",
+        ]
+        Resource = "*"
+      },
+      # Scaling is restricted to resources tagged with this cluster's ownership tag. The same tag is used for node-group discovery.
+      {
+        Sid    = "Scale"
+        Effect = "Allow"
+        Action = [
+          "autoscaling:SetDesiredCapacity",
+          "autoscaling:TerminateInstanceInAutoScalingGroup",
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "aws:ResourceTag/k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
+          }
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_eks_pod_identity_association" "cluster_autoscaler" {
+  count = var.enable_cluster_autoscaler ? 1 : 0
+
+  cluster_name    = var.cluster_name
+  namespace       = var.cluster_autoscaler_namespace
+  service_account = var.cluster_autoscaler_service_account
+  role_arn        = aws_iam_role.cluster_autoscaler[0].arn
+}
