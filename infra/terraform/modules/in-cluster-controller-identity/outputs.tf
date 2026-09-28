@@ -8,6 +8,11 @@ output "external_secrets_role_arn" {
   value       = one(aws_iam_role.external_secrets[*].arn)
 }
 
+output "cluster_autoscaler_role_arn" {
+  description = "Role the cluster autoscaler assumes. Null when disabled."
+  value       = one(aws_iam_role.cluster_autoscaler[*].arn)
+}
+
 output "controller_service_accounts" {
   description = "Namespace/name of the Kubernetes ServiceAccount associated with each enabled controller's AWS IAM role through EKS Pod Identity. The controller's pods must use the specified ServiceAccount to receive AWS credentials."
   value = merge(
@@ -16,6 +21,9 @@ output "controller_service_accounts" {
     } : {},
     var.enable_external_secrets ? {
       external-secrets = "${var.external_secrets_namespace}/${var.external_secrets_service_account}"
+    } : {},
+    var.enable_cluster_autoscaler ? {
+      cluster-autoscaler = "${var.cluster_autoscaler_namespace}/${var.cluster_autoscaler_service_account}"
     } : {},
   )
 }

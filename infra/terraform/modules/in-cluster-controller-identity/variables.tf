@@ -66,3 +66,28 @@ variable "external_secrets_service_account" {
   type        = string
   default     = "external-secrets"
 }
+
+# ---------------------------------------------------------------------------
+# Cluster Autoscaler
+# ---------------------------------------------------------------------------
+
+variable "enable_cluster_autoscaler" {
+  description = "Whether to create the IAM role and Pod Identity association that let the Cluster Autoscaler resize the node group's Auto Scaling group."
+  type        = bool
+  default     = true
+}
+
+variable "cluster_autoscaler_namespace" {
+  description = "Namespace the Cluster Autoscaler runs in."
+  type        = string
+  default     = "kube-system"
+}
+
+variable "cluster_autoscaler_service_account" {
+  description = <<-EOT
+    Service account the cluster autoscaler runs as.
+    Pod Identity binds the role to this name.
+  EOT
+  type        = string
+  default     = "cluster-autoscaler"
+}
