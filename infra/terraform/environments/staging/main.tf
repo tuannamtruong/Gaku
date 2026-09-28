@@ -29,9 +29,9 @@ module "eks" {
   public_access_cidrs    = var.cluster_public_access_cidrs
 
   node_instance_types = ["m7i-flex.large"]
-  node_desired_size   = 2
+  node_desired_size   = 1
   node_min_size       = 1
-  node_max_size       = 3
+  node_max_size       = 2
 
   admin_principal_arns = var.external_deploy_role_arns
 }
