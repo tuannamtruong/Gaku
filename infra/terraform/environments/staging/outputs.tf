@@ -63,6 +63,7 @@ output "controller_role_arns" {
   value = {
     load_balancer_controller = module.in_cluster_controller_identity.load_balancer_controller_role_arn
     external_secrets         = module.in_cluster_controller_identity.external_secrets_role_arn
+    cluster_autoscaler       = module.in_cluster_controller_identity.cluster_autoscaler_role_arn
   }
 }
 
