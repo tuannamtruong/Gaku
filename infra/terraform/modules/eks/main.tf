@@ -35,7 +35,7 @@ resource "aws_eks_cluster" "this" {
   }
 
   access_config {
-    authentication_mode = "API"
+    authentication_mode                         = "API"
     bootstrap_cluster_creator_admin_permissions = true
   }
 
@@ -132,7 +132,7 @@ resource "aws_autoscaling_group_tag" "cluster_autoscaler" {
 # ---------------------------------------------------------------------------
 
 resource "aws_eks_addon" "this" {
-  for_each = toset(["vpc-cni", "coredns", "kube-proxy", "eks-pod-identity-agent"])
+  for_each = toset(["vpc-cni", "coredns", "kube-proxy", "eks-pod-identity-agent", "metrics-server"])
 
   cluster_name  = aws_eks_cluster.this.name
   addon_name    = each.value
