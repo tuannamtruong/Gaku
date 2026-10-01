@@ -1,0 +1,10 @@
+# Service account name bound to the autoscaler's Pod Identity.
+rbac:
+  serviceAccount:
+    create: true
+    name: cluster-autoscaler
+
+# Chart default's name for the deployment is cluster-autoscaler-aws-cluster-autoscaler.
+fullnameOverride: cluster-autoscaler
+
+awsRegion: eu-central-1

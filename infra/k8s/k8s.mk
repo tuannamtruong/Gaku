@@ -73,6 +73,32 @@ lbc_preingress_check: _lbc_require_env
 	                                   "none for service account $(LBC_RELEASE) - has staging been applied?"; \
 	[ -z "$$FAILED" ]
 
+# ---------------------------------------------------------------------------
+# Cluster Autoscaler
+# ---------------------------------------------------------------------------
+
+# The chart's minor version must match the cluster_version in Terraform
+CA_CHART_VERSION ?= 9.53.0
+CA_VALUES        := $(EKS)/controllers/cluster-autoscaler.values.yaml
+CA_NAMESPACE     := kube-system
+CA_RELEASE       := cluster-autoscaler
+
+# Setup for the cluster autoscaler.
+ca_install: _lbc_require_env
+	helm repo add autoscaler https://kubernetes.github.io/autoscaler
+	helm repo update autoscaler
+	helm upgrade --install $(CA_RELEASE) autoscaler/cluster-autoscaler \
+	  --namespace $(CA_NAMESPACE) \
+	  --version $(CA_CHART_VERSION) \
+	  --values $(CA_VALUES) \
+	  --set autoDiscovery.clusterName=gaku-$(ENV) \
+	  --wait --timeout 5m
+	kubectl -n $(CA_NAMESPACE) rollout status deploy/$(CA_RELEASE) --timeout=300s
+
+ca_uninstall: _lbc_require_env
+	helm uninstall $(CA_RELEASE) --namespace $(CA_NAMESPACE)
+
+
 #############################################################################
 # LOCAL cluster commands
 #############################################################################
