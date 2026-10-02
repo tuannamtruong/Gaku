@@ -98,6 +98,36 @@ ca_install: _lbc_require_env
 ca_uninstall: _lbc_require_env
 	helm uninstall $(CA_RELEASE) --namespace $(CA_NAMESPACE)
 
+# ---------------------------------------------------------------------------
+# External Secrets Operator
+# ---------------------------------------------------------------------------
+
+# Namespace and service account must match external_secrets_namespace and
+# external_secrets_service_account in Terraform: the Pod Identity association binds to them.
+ESO_CHART_VERSION ?= 2.11.0
+ESO_NAMESPACE     := external-secrets
+ESO_RELEASE       := external-secrets
+
+eso_install: _lbc_require_env
+	helm repo add external-secrets https://charts.external-secrets.io
+	helm repo update external-secrets
+	helm upgrade --install $(ESO_RELEASE) external-secrets/external-secrets \
+	  --namespace $(ESO_NAMESPACE) --create-namespace \
+	  --version $(ESO_CHART_VERSION) \
+	  --set serviceAccount.name=$(ESO_RELEASE) \
+	  --wait --timeout 5m
+	kubectl -n $(ESO_NAMESPACE) rollout status deploy/$(ESO_RELEASE) --timeout=300s
+
+eso_uninstall: _lbc_require_env
+	helm uninstall $(ESO_RELEASE) --namespace $(ESO_NAMESPACE)
+
+# ---------------------------------------------------------------------------
+# All controllers
+# ---------------------------------------------------------------------------
+
+# LBC first: its webhook intercepts Service creation, so it must be ready before the other charts create theirs.
+controllers_install: lbc_install eso_install ca_install
+
 
 #############################################################################
 # LOCAL cluster commands
