@@ -55,6 +55,14 @@ tf_bootstrap_output:
 tf_backend_config:
 	@cd $(TF_BOOTSTRAP) && terraform output -raw backend_config
 
+# State key the version and encryption checks read. Any environment's state works.
+TF_STATE_KEY             ?= environments/staging/terraform.tfstate
+# Must match noncurrent_version_expiration_days in the bootstrap apply.
+TF_STATE_NONCURRENT_DAYS ?= 90
+
+# Read-only checks of the state bucket.
+# Each variable below (WRITTEN, VERSIONED, SSE, ...) is set only when its check passes.
+# check() prints [OK] for a set variable and [FAIL] for an empty one; any [FAIL] makes the target exit non-zero.
 tf_bootstrap_test:
 	@echo "=== Gaku Terraform Bootstrap Report ==="
 	@$(TF_READ_BOOTSTRAP_OUTPUT); \
@@ -62,45 +70,63 @@ tf_bootstrap_test:
 	  echo "[FAIL] No state_bucket output - run 'make tf_bootstrap_apply' first"; exit 1; }; \
 	REGION=$$(tf_out region) || { \
 	  echo "[FAIL] No region output - run 'make tf_bootstrap_apply' first"; exit 1; }; \
-	TABLE=$$(tf_out lock_table || true); \
+	KEY=$(TF_STATE_KEY); \
 	echo "  Bucket: $$BUCKET"; \
 	echo "  Region: $$REGION"; \
-	echo "  Table : $${TABLE:-(none - S3 native locking)}"; \
+	echo "  Key   : $$KEY"; \
 	echo ""; \
-	VERSIONING=$$(aws s3api get-bucket-versioning --bucket "$$BUCKET" \
-	  --query 'Status' --output text 2>/dev/null); \
-	ENCRYPTION=$$(aws s3api get-bucket-encryption --bucket "$$BUCKET" \
-	  --query 'ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm' \
-	  --output text 2>/dev/null); \
-	PUBLIC=$$(aws s3api get-public-access-block --bucket "$$BUCKET" \
-	  --query 'PublicAccessBlockConfiguration.RestrictPublicBuckets' --output text 2>/dev/null); \
-	LIFECYCLE=$$(aws s3api get-bucket-lifecycle-configuration --bucket "$$BUCKET" \
-	  --query 'Rules[?Status==`Enabled`] | length(@)' --output text 2>/dev/null); \
+	s3() { aws s3api "$$@" --bucket "$$BUCKET" --region "$$REGION" 2>/dev/null; }; \
+	check() { [ -n "$$2" ] && printf '[OK]   %-20s %s\n' "$$1" "$$3" \
+	                       || { printf '[FAIL] %-20s %s\n' "$$1" "$$4"; FAILED=1; }; }; \
+	EXISTS=$$(s3 head-bucket >/dev/null && echo yes); \
+	LATEST=$$(s3 list-object-versions --prefix "$$KEY" \
+	  --query "Versions[?Key=='$$KEY' && IsLatest].LastModified | [0]" --output text | grep -v '^None$$'); \
+	WRITTEN=$$([ -n "$$EXISTS" ] && echo "$$LATEST"); \
+	OLD=$$(s3 list-object-versions --prefix "$$KEY" \
+	  --query "Versions[?Key=='$$KEY' && IsLatest==\`false\`] | [0].VersionId" --output text | grep -v '^None$$'); \
+	TMP=$$(mktemp); \
+	OLD_SERIAL=$$([ -n "$$OLD" ] && s3 get-object --key "$$KEY" --version-id "$$OLD" "$$TMP" >/dev/null \
+	  && jq -r .serial "$$TMP"); \
+	rm -f "$$TMP"; \
+	CUR_SERIAL=$$(aws s3 cp "s3://$$BUCKET/$$KEY" - --region "$$REGION" 2>/dev/null | jq -r .serial); \
+	VERSIONED=$$([ "$$OLD_SERIAL" -lt "$$CUR_SERIAL" ] 2>/dev/null && echo yes); \
+	SSE=$$(s3 head-object --key "$$KEY" --query ServerSideEncryption --output text | grep -x AES256); \
+	PAB=$$(s3 get-public-access-block --output text --query \
+	  'PublicAccessBlockConfiguration.[BlockPublicAcls,IgnorePublicAcls,BlockPublicPolicy,RestrictPublicBuckets]' \
+	  | xargs | grep -x 'True True True True'); \
+	OWNERSHIP=$$(s3 get-bucket-ownership-controls --output text \
+	  --query 'OwnershipControls.Rules[0].ObjectOwnership' | grep -x BucketOwnerEnforced); \
+	EXPIRE=$$(s3 get-bucket-lifecycle-configuration --output text --query \
+	  "Rules[?ID=='expire-noncurrent-state-versions' && Status=='Enabled'] | [0].NoncurrentVersionExpiration.NoncurrentDays" \
+	  | grep -x '$(TF_STATE_NONCURRENT_DAYS)'); \
+	ABORT=$$(s3 get-bucket-lifecycle-configuration --output text --query \
+	  "Rules[?ID=='abort-incomplete-uploads' && Status=='Enabled'] | [0].AbortIncompleteMultipartUpload.DaysAfterInitiation" \
+	  | grep -x 7); \
+	POLICY=$$(s3 get-bucket-policy --query Policy --output text | jq -e \
+	  '.Statement[] | select(.Effect == "Deny" and .Condition.Bool["aws:SecureTransport"] == "false")' \
+	  >/dev/null && echo yes); \
+	HTTP=$$(aws s3api head-object --bucket "$$BUCKET" --key "$$KEY" --region "$$REGION" \
+	  --endpoint-url "http://s3.$$REGION.amazonaws.com" 2>&1 | grep -o '(403)'); \
 	echo "=== Checklist ==="; \
-	[ "$$VERSIONING" = "Enabled" ] \
-	  && echo "[OK]   Versioning enabled" \
-	  || echo "[FAIL] Versioning is '$$VERSIONING' (expected Enabled)"; \
-	[ "$$ENCRYPTION" = "AES256" ] \
-	  && echo "[OK]   Default encryption AES256" \
-	  || echo "[FAIL] Default encryption is '$$ENCRYPTION' (expected AES256)"; \
-	[ "$$PUBLIC" = "True" ] \
-	  && echo "[OK]   Public access blocked" \
-	  || echo "[FAIL] Public access block is '$$PUBLIC' (expected True)"; \
-	[ -n "$$LIFECYCLE" ] && [ "$$LIFECYCLE" != "0" ] \
-	  && echo "[OK]   Lifecycle rules active: $$LIFECYCLE" \
-	  || echo "[FAIL] No enabled lifecycle rules"; \
-	if [ -n "$$TABLE" ]; then \
-	  TSTATUS=$$(aws dynamodb describe-table --table-name "$$TABLE" --region "$$REGION" \
-	    --query 'Table.TableStatus' --output text 2>/dev/null); \
-	  THASH=$$(aws dynamodb describe-table --table-name "$$TABLE" --region "$$REGION" \
-	    --query 'Table.KeySchema[0].AttributeName' --output text 2>/dev/null); \
-	  [ "$$TSTATUS" = "ACTIVE" ] \
-	    && echo "[OK]   Lock table ACTIVE" \
-	    || echo "[FAIL] Lock table status is '$$TSTATUS' (expected ACTIVE)"; \
-	  [ "$$THASH" = "LockID" ] \
-	    && echo "[OK]   Lock table hash key LockID" \
-	    || echo "[FAIL] Lock table hash key is '$$THASH' (expected LockID)"; \
-	fi
+	check "Bucket + write:"   "$$WRITTEN"   "exists, $$KEY last written $$LATEST" \
+	                                        "bucket missing, or no state at $$KEY - apply an environment first"; \
+	check "Versioning:"       "$$VERSIONED" "older version $$OLD retrievable, serial $$OLD_SERIAL < $$CUR_SERIAL" \
+	                                        "no older version of $$KEY could be read"; \
+	check "Encryption:"       "$$SSE"       "$$KEY reports AES256" \
+	                                        "$$KEY does not report AES256"; \
+	check "Public access:"    "$$PAB"       "all four block settings on" \
+	                                        "not all four block settings are on"; \
+	check "Ownership:"        "$$OWNERSHIP" "BucketOwnerEnforced, ACLs disabled" \
+	                                        "object ownership is not BucketOwnerEnforced"; \
+	check "Lifecycle expiry:" "$$EXPIRE"    "noncurrent versions expire after $(TF_STATE_NONCURRENT_DAYS) days" \
+	                                        "expire-noncurrent-state-versions not enabled at $(TF_STATE_NONCURRENT_DAYS) days"; \
+	check "Lifecycle abort:"  "$$ABORT"     "incomplete uploads aborted after 7 days" \
+	                                        "abort-incomplete-uploads not enabled at 7 days"; \
+	check "TLS-only policy:"  "$$POLICY"    "Deny on aws:SecureTransport = false" \
+	                                        "no Deny statement on aws:SecureTransport"; \
+	check "Plain HTTP:"       "$$HTTP"      "signed HTTP request denied with 403" \
+	                                        "signed HTTP request was not denied"; \
+	[ -z "$$FAILED" ]
 
 # ---------------------------------------------------------------------------
 # Environment-specific commands
