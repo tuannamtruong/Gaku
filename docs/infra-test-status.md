@@ -2,14 +2,9 @@
 
 ## 1. AWS
 
-Two Terraform environments, `staging` and `production`, over the one shared state backend they
-both write to.
+Two environments: `staging` and `production`.
 
 ### 1.1 Shared bootstrap
-
-`infra/terraform/bootstrap` — the S3 remote state backend both AWS environments write to. Applied
-once, before anything in [§1.2 Staging](#12-staging) or
-[§1.3 Production](#13-production).
 
 | Component | Pass criterion | Status | Last tested | Commit | Evidence |
 | --- | --- | --- | --- | --- | --- |
@@ -23,7 +18,7 @@ once, before anything in [§1.2 Staging](#12-staging) or
 
 ### 1.2 Staging
 
-`infra/terraform/environments/staging`, `infra/k8s/overlays/staging`, and `Jenkinsfile.aws`.
+`infra/terraform/environments/staging`, `infra/k8s/eks/staging`, and `Jenkinsfile.aws`.
 EKS with RDS, images from ECR, traffic through an ALB.
 
 #### 1.2.1 Terraform
@@ -31,10 +26,13 @@ EKS with RDS, images from ECR, traffic through an ALB.
 | Component | Pass criterion | Status | Last tested | Commit | Evidence |
 | --- | --- | --- | --- | --- | --- |
 | `module.vpc` | Applies clean; subnets, routing and NAT reachable as designed | Pass | 2026-09-24 | 954a965 | [record](archive/2026-09-24-alb-controller-staging.md) — nodes ran in the private subnets and pulled images through NAT; the ALB came up in the public subnets |
-| `module.eks` | Cluster reachable with `kubectl`, nodes `Ready` | Pass | 2026-09-24 | 954a965 | [record](archive/2026-09-24-alb-controller-staging.md) — 2 nodes `Ready` |
-| `module.rds` | Instance available, reachable from a cluster pod | Not tested | — | — | — |
+| `module.eks` | Cluster reachable with `kubectl`, nodes `Ready` | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) — 1 node `Ready` at the 1–2 node range |
+| `module.eks` — `aws_autoscaling_group_tag.cluster_autoscaler` | Node group's ASG carries both `k8s.io/cluster-autoscaler` discovery tags | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) — `enabled = true` and `gaku-staging = owned` on the ASG |
+| `module.eks` — `aws_eks_addon.this["metrics-server"]` | Add-on `ACTIVE`, `kubectl top nodes` returns figures | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) |
+| `module.rds` | Instance available, reachable from a cluster pod | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) — `db-migrate` job completed against it |
 | `module.ecr` | Repositories exist and accept a push | Pass | 2026-09-20 | 82fcec6 | [record](archive/2026-09-20-jenkins-aws-ecr-push.md) — all three repositories accepted a push |
 | `module.in_cluster_controller_identity` | Controller service account assumes its IAM role | Pass | 2026-09-24 | 954a965 | [record](archive/2026-09-24-alb-controller-staging.md) — throwaway pod on the service account resolved the controller role, not the node role |
+| `module.in_cluster_controller_identity` — cluster autoscaler | `cluster-autoscaler` service account assumes `gaku-staging-cluster-autoscaler` | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) — throwaway pod resolved the autoscaler role, not the node role |
 | `module.jenkins` | Jenkins controller identity and access as designed | Partial | 2026-09-20 | 82fcec6 | [record](archive/2026-09-20-jenkins-aws-ecr-push.md) — instance profile and ECR policy proven; applied with `enable_eks_access = false`, so the EKS half is unexercised |
 | `aws_eks_access_entry.jenkins` + policy association | Jenkins can `kubectl` against the cluster | Not tested | — | — | — |
 | `terraform plan` on a clean tree | No drift after a successful apply | Not tested | — | — | — |
@@ -43,12 +41,17 @@ EKS with RDS, images from ECR, traffic through an ALB.
 
 | Component | Pass criterion | Status | Last tested | Commit | Evidence |
 | --- | --- | --- | --- | --- | --- |
-| `controllers/aws-load-balancer-controller.values.yaml` | Controller pods `Ready`, no IAM errors in the log | Pass | 2026-09-24 | 954a965 | [record](archive/2026-09-24-alb-controller-staging.md) |
-| `overlays/staging/external-secret.yaml` | `gaku-secret` is materialised from the external store | Not tested | — | — | — |
+| `eks/controllers/aws-load-balancer-controller.values.yaml` | Controller pods `Ready`, no IAM errors in the log | Pass | 2026-09-24 | 954a965 | [record](archive/2026-09-24-alb-controller-staging.md) |
+| `eks/controllers/cluster-autoscaler.values.yaml` | Autoscaler running, discovers the node group, no `AccessDenied` in the log | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) |
+| External Secrets Operator | Controller, webhook and cert-controller pods `Running` | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) |
+| `eks/staging/external-secret.yaml` | `gaku-secret` is materialised from the external store | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) |
 | `components/alb-ingress/ingress-api.yaml` | ALB provisioned, API reachable through it | Pass | 2026-09-24 | 954a965 | [record](archive/2026-09-24-alb-controller-staging.md) — internet-facing ALB `active`, targets healthy, `/api/echo` answered from both pods |
 | `components/alb-ingress/ingress-web.yaml` | Web reachable through the same ALB group | Not tested | — | — | — |
 | Image tag substitution | The overlay resolves to the ECR tag the build pushed | Not tested | — | — | — |
-| `overlays/staging/migrate` | Migration job completes against RDS | Not tested | — | — | — |
+| `migrate` | Migration job completes against RDS | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) |
+| `eks/production/hpa.yaml` (applied to staging by hand) | Under CPU load in the `gaku-api` pods, replicas scale out within 2–6 | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) — `SuccessfulRescale` events |
+| Cluster autoscaler scale-up | A pod `Pending` on `Insufficient cpu` brings a second node | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) — `ballast` at `1500m` × 2 grew the ASG to 2 |
+| Cluster autoscaler scale-down | Removing the load returns the ASG to 1 node | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) |
 
 #### 1.2.3 Pipeline (`Jenkinsfile.aws`)
 
@@ -65,7 +68,7 @@ EKS with RDS, images from ECR, traffic through an ALB.
 
 ### 1.3 Production
 
-`infra/terraform/environments/production`. Terraform only — there is no `overlays/production`
+`infra/terraform/environments/production`. Terraform only — there is no `eks/production`
 kustomization and no pipeline targeting production yet, so deployment rows will be added when
 those exist.
 
