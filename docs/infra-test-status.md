@@ -8,13 +8,13 @@ Two environments: `staging` and `production`.
 
 | Component | Pass criterion | Status | Last tested | Commit | Evidence |
 | --- | --- | --- | --- | --- | --- |
-| `aws_s3_bucket.state` | Bucket exists and accepts a state write | Not tested | — | — | — |
-| Versioning | Previous state versions are retrievable | Not tested | — | — | — |
-| Server-side encryption | Objects report SSE on `head-object` | Not tested | — | — | — |
-| Public access block | All four block settings are on | Not tested | — | — | — |
-| Ownership controls | Bucket-owner-enforced, ACLs disabled | Not tested | — | — | — |
-| Lifecycle configuration | Noncurrent versions expire on the configured schedule | Not tested | — | — | — |
-| `state_tls_only` policy | A plain-HTTP request to the bucket is denied | Not tested | — | — | — |
+| `aws_s3_bucket.state` | Bucket exists and accepts a state write | Pass | 2026-10-06 | 8d9e53d | `make tf_bootstrap_test` — `Bucket + write` |
+| Versioning | Previous state versions are retrievable | Pass | 2026-10-06 | 8d9e53d | `make tf_bootstrap_test` — `Versioning` |
+| Server-side encryption | Objects report SSE on `head-object` | Pass | 2026-10-06 | 8d9e53d | `make tf_bootstrap_test` — `Encryption` |
+| Public access block | All four block settings are on | Pass | 2026-10-06 | 8d9e53d | `make tf_bootstrap_test` — `Public access` |
+| Ownership controls | Bucket-owner-enforced, ACLs disabled | Pass | 2026-10-06 | 8d9e53d | `make tf_bootstrap_test` — `Ownership` |
+| Lifecycle configuration | Noncurrent versions expire on the configured schedule | Pass | 2026-10-06 | 8d9e53d | `make tf_bootstrap_test` — `Lifecycle expiry`, `Lifecycle abort`; configuration only, the expiry itself is observable after 90 days |
+| `state_tls_only` policy | A plain-HTTP request to the bucket is denied | Pass | 2026-10-06 | 8d9e53d | `make tf_bootstrap_test` — `TLS-only policy`, `Plain HTTP` |
 
 ### 1.2 Staging
 
