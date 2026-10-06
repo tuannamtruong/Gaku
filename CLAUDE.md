@@ -25,7 +25,7 @@ Gaku.Domain                             business rules and data shapes
 
 ### Frontend and Infrastructure
 
-`Gaku.Api` and `Gaku.Web` reference Infrastructure **only** in `Program.cs` (the composition root) to call `AddInfrastructure()` and wire up DI. No page, component, or controller should import an Infrastructure type directly — all business interactions go through Application service interfaces. If code outside `Program.cs` references an Infrastructure namespace, it is a layering violation.
+`Gaku.Api` and `Gaku.Web` reference Infrastructure **only** in `Program.cs` (the composition root) — `AddInfrastructure()`, DI wiring, startup seeding (`DataSeeder`). No page, component, or controller should import an Infrastructure type directly — all business interactions go through Application service interfaces. If code outside `Program.cs` references an Infrastructure namespace, it is a layering violation.
 
 ---
 
@@ -40,7 +40,6 @@ src/
   Gaku.Domain/
     Entities/                   Aggregate roots + children
     Enums/
-    Interfaces/
     ValueObjects/
   Gaku.Application/
     DTOs/
@@ -51,6 +50,7 @@ src/
     Cache/
     Data/
     Data/Configurations/
+    Migrations/
     Repositories/
     Services/
     Extensions/
@@ -73,7 +73,7 @@ tests/
 ### Naming Conventions
 
 - **Entities, DTOs, value objects**: singular — `Trail`, `TrailDto`, `Coordinates`
-- **C# folders**: singular — `Entity/`, `ValueObject/`, `Endpoint/`, `Repository/`, `Service/`, `Interface/`
+- **C# folders**: plural — `Entities/`, `ValueObjects/`, `Endpoints/`, `Repositories/`, `Services/`, `Interfaces/`
 - **Interfaces**: `I` prefix + singular noun — `ITrailRepository`, `IUnitOfWork`
 - **DB tables**: singular — `Trail`, `Waypoint`, `Location` (EF default; do not pluralise)
 - **Enums**: singular type name, plural only for `[Flags]` — `DifficultyLevel`, `TrailType`
