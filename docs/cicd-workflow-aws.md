@@ -22,7 +22,7 @@ flowchart TD
     end
 
     Dev -->|push| GH
-    GH -->|webhook| Jenkins
+    Jenkins -->|polls every 2 min| GH
     Restore --> Build 
     Build --> Test
     Test --> Copy

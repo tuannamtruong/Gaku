@@ -9,9 +9,10 @@
     </org.jenkinsci.plugins.github.GithubProjectProperty>
   </properties>
   <triggers>
-    <com.cloudbees.jenkins.GitHubPushTrigger plugin="github">
-      <spec></spec>
-    </com.cloudbees.jenkins.GitHubPushTrigger>
+    <hudson.triggers.SCMTrigger>
+      <spec>H/2 * * * *</spec>
+      <ignorePostCommitHooks>false</ignorePostCommitHooks>
+    </hudson.triggers.SCMTrigger>
   </triggers>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps">
     <scm class="hudson.plugins.git.GitSCM" plugin="git">

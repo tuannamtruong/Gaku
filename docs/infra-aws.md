@@ -37,7 +37,7 @@ graph TD
   SM["Secrets Manager<br/>gaku-&lt;env&gt;/database"]
   end
 
-  Repository --> |webhook| CICD-Instance
+  CICD-Instance --> |polls| Repository
   CICD-Instance -->|push| ECR
   CICD-Instance -->|kubectl<br/>API auth| CP
   CP --> Nodes

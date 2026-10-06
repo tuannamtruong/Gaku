@@ -9,7 +9,7 @@ variable "vpc_id" {
 }
 
 variable "subnet_id" {
-  description = "Public subnet id - the instance needs a routable address for GitHub webhooks."
+  description = "Public subnet id - the instance needs a routable address for the operator to reach the UI."
   type        = string
 }
 

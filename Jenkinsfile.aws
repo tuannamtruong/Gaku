@@ -32,8 +32,10 @@ def collectTestResults(String layerLabel) {
 pipeline {
     agent any
 
+    // Polling, not a webhook: the controller accepts inbound traffic only from the
+    // operator's network, so GitHub's webhook calls would be dropped.
     triggers {
-        githubPush()
+        pollSCM('H/2 * * * *')
     }
 
     options {

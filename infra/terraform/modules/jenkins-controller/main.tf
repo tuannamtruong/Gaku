@@ -181,7 +181,7 @@ resource "aws_instance" "this" {
   }
 }
 
-# Static address, so the GitHub webhook survives a stop/start.
+# Static address, so the Jenkins URL survives a stop/start.
 resource "aws_eip" "this" {
   instance = aws_instance.this.id
   domain   = "vpc"
