@@ -201,7 +201,7 @@ pipeline {
                       exit 1
                     fi
                     curl -sf --max-time 10 "http://\$ADDR/api/health" > /dev/null
-                    curl -s  --max-time 10 "http://\$ADDR/api/echo"
+                    curl -sf --max-time 10 "http://\$ADDR/api/echo"
                 """
             }
         }
