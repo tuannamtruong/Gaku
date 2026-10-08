@@ -153,6 +153,16 @@ pipeline {
                 sh """
                     aws eks update-kubeconfig --name ${env.CLUSTER} --region ${env.AWS_REGION}
 
+                    # Set tags for the migrator and the staging overlays.
+                    sed -i 's/newTag: .*/newTag: "${env.IMAGE_TAG}"/' \\
+                        infra/k8s/eks/migrate/kustomization.yaml \\
+                        infra/k8s/eks/staging/kustomization.yaml
+
+                    # The Job needs the namespace and gaku-secret; on a fresh cluster neither exists yet.
+                    kubectl apply -f infra/k8s/base/namespace.yaml -f infra/k8s/eks/staging/external-secret.yaml
+                    kubectl wait --for=condition=Ready externalsecret/gaku-secret \\
+                        -n ${env.NAMESPACE} --timeout=120s
+
                     kubectl delete job db-migrate -n ${env.NAMESPACE} --ignore-not-found
                     kubectl apply -k infra/k8s/eks/migrate
                     kubectl wait --for=condition=complete job/db-migrate \\
@@ -169,11 +179,11 @@ pipeline {
         stage('Deploy to Staging') {
             when { expression { env.BRANCH_NAME == null || env.BRANCH_NAME == 'master' } }
             steps {
+                // Creates the deployments on a fresh cluster. The overlay also holds the
+                // db-migrate Job; it renders the same as the one the previous stage
+                // created, so the apply leaves it unchanged.
                 sh """
-                    kubectl set image deployment/gaku-api \\
-                        gaku-api=${env.ECR_REGISTRY}/${env.API_IMAGE}:${env.IMAGE_TAG} -n ${env.NAMESPACE}
-                    kubectl set image deployment/gaku-web \\
-                        gaku-web=${env.ECR_REGISTRY}/${env.WEB_IMAGE}:${env.IMAGE_TAG} -n ${env.NAMESPACE}
+                    kubectl apply -k infra/k8s/eks/staging
                     kubectl rollout status deployment/gaku-api -n ${env.NAMESPACE} --timeout=300s
                     kubectl rollout status deployment/gaku-web -n ${env.NAMESPACE} --timeout=300s
                 """
