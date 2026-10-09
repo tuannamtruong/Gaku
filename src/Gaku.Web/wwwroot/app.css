@@ -181,3 +181,24 @@ body {
     text-align: center;
     padding: 3rem;
 }
+
+/* Blazor error bar - hidden until blazor.web.js shows it; above the Leaflet panes */
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: .6rem 2.5rem .7rem 1.25rem;
+    background: #fef3c7;
+    color: #92400e;
+    box-shadow: 0 -1px 2px rgba(0,0,0,.2);
+    z-index: 2000;
+}
+
+#blazor-error-ui .dismiss {
+    position: absolute;
+    right: .75rem;
+    top: .5rem;
+    cursor: pointer;
+}
