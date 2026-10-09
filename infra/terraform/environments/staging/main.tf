@@ -92,6 +92,20 @@ resource "aws_eks_access_entry" "jenkins" {
   type          = "STANDARD"
 }
 
+# Jenkins accesses the EKS API through its private endpoint. 
+# Allow HTTPS traffic from Jenkins by adding its security group to the cluster's ingress rules.
+resource "aws_vpc_security_group_ingress_rule" "jenkins_to_eks_api" {
+  count = var.enable_jenkins ? 1 : 0
+
+  security_group_id            = module.eks.cluster_security_group_id
+  referenced_security_group_id = module.jenkins[0].security_group_id
+  ip_protocol                  = "tcp"
+  from_port                    = 443
+  to_port                      = 443
+  description                  = "Jenkins to the EKS API"
+}
+
+# Grant Jenkins admin access to the EKS cluster.
 resource "aws_eks_access_policy_association" "jenkins" {
   count = var.enable_jenkins ? 1 : 0
 
