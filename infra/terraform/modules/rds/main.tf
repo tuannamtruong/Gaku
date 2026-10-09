@@ -123,7 +123,7 @@ resource "aws_db_instance" "this" {
 resource "aws_secretsmanager_secret" "db" {
   name                    = "${var.name}/database"
   description             = "Postgres credentials and connection string for ${var.name}"
-  recovery_window_in_days = 7
+  recovery_window_in_days = var.secret_recovery_window_in_days
 }
 
 resource "aws_secretsmanager_secret_version" "db" {

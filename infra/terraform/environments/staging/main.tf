@@ -53,6 +53,7 @@ module "rds" {
   backup_retention_period = 1
   deletion_protection     = false
   skip_final_snapshot     = true
+  secret_recovery_window_in_days = 0
 }
 
 module "in_cluster_controller_identity" {

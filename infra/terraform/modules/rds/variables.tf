@@ -90,3 +90,9 @@ variable "force_ssl" {
   type        = bool
   default     = true
 }
+
+variable "secret_recovery_window_in_days" {
+  description = "Days a destroyed credentials secret can be restored. 0 deletes immediately."
+  type        = number
+  default     = 7
+}
