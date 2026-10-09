@@ -33,9 +33,9 @@ EKS with RDS, images from ECR, traffic through an ALB.
 | `module.ecr` | Repositories exist and accept a push | Pass | 2026-09-20 | 82fcec6 | [record](archive/2026-09-20-jenkins-aws-ecr-push.md) — all three repositories accepted a push |
 | `module.in_cluster_controller_identity` | Controller service account assumes its IAM role | Pass | 2026-09-24 | 954a965 | [record](archive/2026-09-24-alb-controller-staging.md) — throwaway pod on the service account resolved the controller role, not the node role |
 | `module.in_cluster_controller_identity` — cluster autoscaler | `cluster-autoscaler` service account assumes `gaku-staging-cluster-autoscaler` | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) — throwaway pod resolved the autoscaler role, not the node role |
-| `module.jenkins` | Jenkins controller identity and access as designed | Partial | 2026-09-20 | 82fcec6 | [record](archive/2026-09-20-jenkins-aws-ecr-push.md) — instance profile and ECR policy proven; applied with `enable_eks_access = false`, so the EKS half is unexercised |
-| `aws_eks_access_entry.jenkins` + policy association | Jenkins can `kubectl` against the cluster | Not tested | — | — | — |
-| `terraform plan` on a clean tree | No drift after a successful apply | Not tested | — | — | — |
+| `module.jenkins` | Jenkins controller identity and access as designed | Pass | 2026-10-09 | cbd9e68 | [record](archive/2026-10-09-e2e-pipeline-staging.md) — instance profile, ECR push and EKS access all exercised |
+| `aws_eks_access_entry.jenkins` + policy association | Jenkins can `kubectl` against the cluster | Pass | 2026-10-09 | cbd9e68 | [record](archive/2026-10-09-e2e-pipeline-staging.md) — `kubectl get nodes` and `auth can-i '*' '*' -A` as the `jenkins` user |
+| `terraform plan` on a clean tree | No drift after a successful apply | Pass | 2026-10-09 | cbd9e68 | [record](archive/2026-10-09-e2e-pipeline-staging.md) — `make tf_env_plan ENV=staging` |
 
 #### 1.2.2 Cluster add-ons and manifests
 
@@ -46,8 +46,8 @@ EKS with RDS, images from ECR, traffic through an ALB.
 | External Secrets Operator | Controller, webhook and cert-controller pods `Running` | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) |
 | `eks/staging/external-secret.yaml` | `gaku-secret` is materialised from the external store | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) |
 | `components/alb-ingress/ingress-api.yaml` | ALB provisioned, API reachable through it | Pass | 2026-09-24 | 954a965 | [record](archive/2026-09-24-alb-controller-staging.md) — internet-facing ALB `active`, targets healthy, `/api/echo` answered from both pods |
-| `components/alb-ingress/ingress-web.yaml` | Web reachable through the same ALB group | Not tested | — | — | — |
-| Image tag substitution | The overlay resolves to the ECR tag the build pushed | Not tested | — | — | — |
+| `components/alb-ingress/ingress-web.yaml` | Web reachable through the same ALB group | Pass | 2026-10-09 | cbd9e68 | [record](archive/2026-10-09-e2e-pipeline-staging.md) — `web-load-check.js` exit `0` |
+| Image tag substitution | The overlay resolves to the ECR tag the build pushed | Pass | 2026-10-09 | cbd9e68 | [record](archive/2026-10-09-e2e-pipeline-staging.md) — deployments run `:TAG`, revision is the pushed commit |
 | `migrate` | Migration job completes against RDS | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) |
 | `eks/production/hpa.yaml` (applied to staging by hand) | Under CPU load in the `gaku-api` pods, replicas scale out within 2–6 | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) — `SuccessfulRescale` events |
 | Cluster autoscaler scale-up | A pod `Pending` on `Insufficient cpu` brings a second node | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) — `ballast` at `1500m` × 2 grew the ASG to 2 |
@@ -57,14 +57,14 @@ EKS with RDS, images from ECR, traffic through an ALB.
 
 | Component | Pass criterion | Status | Last tested | Commit | Evidence |
 | --- | --- | --- | --- | --- | --- |
-| Stage `Restore & Build` | Solution builds in the CI image | Pass | 2026-09-20 | 82fcec6 | [record](archive/2026-09-20-jenkins-aws-ecr-push.md) |
-| Stages `Test — Domain/Application/Infrastructure/Web` | All four suites run and publish results | Pass | 2026-09-20 | 82fcec6 | [record](archive/2026-09-20-jenkins-aws-ecr-push.md) |
-| Stage `Docker Build` | All three images build | Pass | 2026-09-20 | 82fcec6 | [record](archive/2026-09-20-jenkins-aws-ecr-push.md) |
-| Stage `Push to ECR` | Images arrive in ECR under the build tag | Pass | 2026-09-20 | 82fcec6 | [record](archive/2026-09-20-jenkins-aws-ecr-push.md) |
-| Stage `Migrate Staging Database` | Migration job completes against RDS | Not tested | — | — | — |
-| Stage `Deploy to Staging` | Rollouts complete on the new tag | Not tested | — | — | — |
-| Stage `Smoke Test` | `/api/health` and `/api/echo` answer through the ALB hostname | Not tested | — | — | — |
-| End-to-end run | A push to `master` reaches a green smoke test | Not tested | — | — | — |
+| Stage `Restore & Build` | Solution builds in the CI image | Pass | 2026-10-09 | cbd9e68 | [record](archive/2026-10-09-e2e-pipeline-staging.md) |
+| Stages `Test — Domain/Application/Infrastructure/Web` | All four suites run and publish results | Pass | 2026-10-09 | cbd9e68 | [record](archive/2026-10-09-e2e-pipeline-staging.md) |
+| Stage `Docker Build` | All three images build | Pass | 2026-10-09 | cbd9e68 | [record](archive/2026-10-09-e2e-pipeline-staging.md) |
+| Stage `Push to ECR` | Images arrive in ECR under the build tag | Pass | 2026-10-09 | cbd9e68 | [record](archive/2026-10-09-e2e-pipeline-staging.md) |
+| Stage `Migrate Staging Database` | Migration job completes against RDS | Pass | 2026-10-09 | cbd9e68 | [record](archive/2026-10-09-e2e-pipeline-staging.md) |
+| Stage `Deploy to Staging` | Rollouts complete on the new tag | Pass | 2026-10-09 | cbd9e68 | [record](archive/2026-10-09-e2e-pipeline-staging.md) |
+| Stage `Smoke Test` | `/api/health` and `/api/echo` answer through the ALB hostname | Pass | 2026-10-09 | cbd9e68 | [record](archive/2026-10-09-e2e-pipeline-staging.md) |
+| End-to-end run | A push to `master` reaches a green smoke test | Pass | 2026-10-09 | cbd9e68 | [record](archive/2026-10-09-e2e-pipeline-staging.md) |
 
 ### 1.3 Production
 
@@ -79,8 +79,8 @@ those exist.
 | `module.rds` | Instance available, reachable from a cluster pod | Not tested | — | — | — |
 | `module.ecr` | Repositories exist and accept a push | Not tested | — | — | — |
 | `module.jenkins` | Jenkins controller identity and access as designed | Not tested | — | — | — |
-| `aws_eks_access_entry.jenkins` + policy association | Jenkins can `kubectl` against the cluster | Not tested | — | — | — |
-| `terraform plan` on a clean tree | No drift after a successful apply | Not tested | — | — | — |
+| `aws_eks_access_entry.jenkins` + policy association | Jenkins can `kubectl` against the cluster | Pass | 2026-10-09 | cbd9e68 | [record](archive/2026-10-09-e2e-pipeline-staging.md) — `kubectl get nodes` and `auth can-i '*' '*' -A` as the `jenkins` user |
+| `terraform plan` on a clean tree | No drift after a successful apply | Pass | 2026-10-09 | cbd9e68 | [record](archive/2026-10-09-e2e-pipeline-staging.md) — `make tf_env_plan ENV=staging` |
 | Cluster add-ons | — (no production overlay yet) | Not tested | — | — | — |
 | Deployment pipeline | — (no production pipeline yet) | Not tested | — | — | — |
 
