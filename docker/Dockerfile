@@ -159,7 +159,11 @@ ENV PATH="$PATH:/root/.dotnet/tools"
 # No real database connection is established during the build.
 ENV ConnectionStrings__DefaultConnection="Host=design-time;Database=gaku;Username=gaku;Password=gaku"
 
-# Create a self-contained migrations bundle so the runtime image only needs .NET runtime dependencies. 
+# Fail fast when no migration happened.
+RUN ls src/Gaku.Infrastructure/Migrations/*_*.cs > /dev/null 2>&1 \
+|| { echo "No EF Core migrations in src/Gaku.Infrastructure/Migrations - are they committed?"; exit 1; }
+
+# Create a self-contained migrations bundle so the runtime image only needs .NET runtime dependencies.
 RUN --mount=type=cache,target=$NUGET_HTTP_CACHE_PATH \
 dotnet ef migrations bundle \
 --project src/Gaku.Infrastructure \
