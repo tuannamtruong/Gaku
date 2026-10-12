@@ -33,6 +33,16 @@ jenkins_restart:
 jenkins_rebuild:
 	cd $(JENKINS_FOLDER) && docker compose up -d --build
 
+# Prints the setup wizard's unlock password.
+jenkins_password:
+	@docker exec gaku-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+
+# Creates the pipeline job from local/job-config.xml. 
+# Run after the setup wizard.
+jenkins_job:
+	@$(JENKINS_CREATE_JOB); \
+	create_job http://localhost:8090 $(JENKINS_JOB) $(JENKINS_FOLDER)/job-config.xml
+
 # -------------------------------------------------------------------------------------------------
 # AWS Jenkins (EC2 controller in staging)
 # -------------------------------------------------------------------------------------------------
@@ -61,4 +71,5 @@ jenkins_aws_job:
 	@URL=$$(cd $(JENKINS_AWS_TF) && terraform output -raw jenkins_url 2>/dev/null); \
 	case "$$URL" in http*) ;; *) \
 	  echo "[FAIL] No Jenkins URL - set enable_jenkins = true and apply staging first"; exit 1;; esac; \
-	$(JENKINS_CREATE_JOB); create_job "$$URL" $(JENKINS_JOB) ./infra/jenkins/aws/job-config.xml
+	$(JENKINS_CREATE_JOB); \
+	create_job "$$URL" $(JENKINS_JOB) ./infra/jenkins/aws/job-config.xml

@@ -94,37 +94,20 @@ GitHub repo → Settings → Webhooks → Add webhook
 Start Jenkins and the Smee relay:
 
 ```bash
-cd infra/jenkins/local && docker compose up -d
-```
-
-Retrieve the initial admin password under
-
-```bash
-docker exec gaku-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+make jenkins_up
+make jenkins_password       # initial admin password
 ```
 
 Open `http://localhost:8090`, log in, and install plugins: Pipeline, Git, GitHub, JUnit, Timestamper.
 
 ### 4.4 Pipeline Job Creation
 
-Fetch crumb and save the session cookie
-
-```
-CRUMB=$(curl -s --cookie-jar /tmp/jenkins-cookies.txt \
-"http://localhost:8090/crumbIssuer/api/json" \
---user "<username>:<password>" | grep -o '"crumb":"[^"]*"' | cut -d'"' -f4)
+```bash
+make jenkins_job
 ```
 
-Create the job reusing the same session cookie
-
-```
-curl -X POST "http://localhost:8090/createItem?name=gaku" \
---user "<username>:<password>" \
---cookie /tmp/jenkins-cookies.txt \
---header "Content-Type: application/xml" \
---header "Jenkins-Crumb: $CRUMB" \
---data @job-config.xml
-```
+Creates the job `gaku` from `infra/jenkins/local/job-config.xml` through the Jenkins REST API. It
+asks for the admin password; `JENKINS_USER=<name>` overrides the default user `admin`.
 
 ### 4.5 Verification
 
