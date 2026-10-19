@@ -56,11 +56,12 @@ module "rds" {
   secret_recovery_window_in_days = 0
 }
 
+# IAM identities for the controllers that run inside the cluster.
 module "in_cluster_controller_identity" {
   source = "../../modules/in-cluster-controller-identity"
-
   iam_name_prefix              = local.name
   cluster_name                 = module.eks.cluster_name
+  # Read access to this environment's database secret.
   external_secrets_secret_arns = [module.rds.secret_arn]
 }
 
