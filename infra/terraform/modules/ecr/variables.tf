@@ -34,7 +34,7 @@ variable "scan_on_push" {
 variable "force_delete" {
   description = "Allow terraform destroy to delete repositories that still hold images."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "keep_last_images" {
