@@ -121,6 +121,7 @@ pipeline {
                         web)      IMAGE=${env.WEB_IMAGE} ;;
                         migrator) IMAGE=${env.MIGRATOR_IMAGE} ;;
                       esac
+                      # --pull, the images start from the current base images rather than ones cached on the controller.
                       docker build --pull \\
                         --build-arg GIT_COMMIT=\${GIT_SHA} \\
                         --build-arg BUILD_NUMBER=${env.IMAGE_TAG} \\
