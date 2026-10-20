@@ -1,0 +1,22 @@
+# Prefers placing replicas on different AZ and nodes.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gaku-web
+  namespace: gaku
+spec:
+  template:
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: gaku-web
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: gaku-web

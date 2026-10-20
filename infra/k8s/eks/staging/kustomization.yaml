@@ -9,7 +9,7 @@ resources:
 components:
   - ../components/alb-ingress
 
-# The pipeline will set the tag using the build number before applying:
+# The pipeline will set the tag using the build number before applying.
 images:
 - name: gaku-api
   newName: 100731996173.dkr.ecr.eu-central-1.amazonaws.com/gaku-api
@@ -22,9 +22,9 @@ images:
   newTag: latest
 
 patches:
-# For alb-ingress component
 - target:
     kind: Ingress
+    name: gaku-(api|web)
   patch: |-
     apiVersion: networking.k8s.io/v1
     kind: Ingress

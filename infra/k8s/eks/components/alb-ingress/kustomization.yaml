@@ -9,6 +9,7 @@ kind: Component
 #   patches:
 #     - target:
 #         kind: Ingress
+#         name: gaku-(api|web)
 #       patch: |-
 #         ... alb.ingress.kubernetes.io/group.name: gaku-<env>
 resources:

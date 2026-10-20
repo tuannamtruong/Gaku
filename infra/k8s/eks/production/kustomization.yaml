@@ -1,0 +1,44 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../base
+- external-secret.yaml
+- hpa.yaml
+- pdb.yaml
+
+components:
+  - ../components/alb-ingress
+
+# The pipeline will set the tag using the build number before applying.
+images:
+- name: gaku-api
+  newName: 100731996173.dkr.ecr.eu-central-1.amazonaws.com/gaku-api
+  newTag: latest
+- name: gaku-migrator
+  newName: 100731996173.dkr.ecr.eu-central-1.amazonaws.com/gaku-migrator
+  newTag: latest
+- name: gaku-web
+  newName: 100731996173.dkr.ecr.eu-central-1.amazonaws.com/gaku-web
+  newTag: latest
+
+# Matches the HPA's settings, so the replica count is readable from the manifest.
+replicas:
+- count: 2
+  name: gaku-api
+- count: 2
+  name: gaku-web
+
+patches:
+- target:
+    kind: Ingress
+    name: gaku-(api|web)
+  patch: |-
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: not-used-the-target-selector-above-does-the-matching
+      annotations:
+        alb.ingress.kubernetes.io/group.name: gaku-production
+- path: patches/api-spread.yaml
+- path: patches/web-spread.yaml
