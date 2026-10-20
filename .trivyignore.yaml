@@ -1,0 +1,66 @@
+misconfigurations:
+  # Planned fix: remove curl from the web image, which removes the only apt-get line.
+  - id: DS-0029
+    paths: [docker/Dockerfile]
+    statement: "Idea 7: the only apt-get installs curl in the web image."
+    expired_at: 2027-01-31
+
+  # The production patches are partial manifests and keep matching after the base sets a securityContext.
+  # Planned fix: set readOnlyRootFilesystem in the container securityContext.
+  - id: KSV-0014
+    paths:
+      - infra/k8s/base/api/deployment.yaml
+      - infra/k8s/base/web/deployment.yaml
+      - infra/k8s/base/db-migration/job.yaml
+      - infra/k8s/local/postgres/statefulset.yaml
+    statement: "Idea 2: pod securityContext."
+    expired_at: 2027-01-31
+  # Planned fix: add a pod securityContext to the base deployments.
+  - id: KSV-0118
+    paths:
+      - infra/k8s/base/api/deployment.yaml
+      - infra/k8s/base/web/deployment.yaml
+      - infra/k8s/base/db-migration/job.yaml
+      - infra/k8s/eks/production/patches/*.yaml
+      - infra/k8s/local/postgres/statefulset.yaml
+    statement: "Idea 2: pod securityContext."
+    expired_at: 2027-01-31
+
+  # Planned fix: make ECR tags immutable and stop pushing :latest.
+  - id: AWS-0031
+    paths: [infra/terraform/modules/ecr/main.tf]
+    statement: "Idea 3: immutable ECR tags."
+    expired_at: 2027-01-31
+
+  # The CIDRs come from the gitignored terraform.tfvars, so the scan sees only the open default.
+  # Planned fix: turn off the public EKS endpoint in production and reach it through SSM or a bastion.
+  - id: AWS-0040
+    paths: [infra/terraform/modules/eks/main.tf]
+    statement: "Idea 22: private EKS endpoint in production."
+    expired_at: 2027-01-31
+  # Planned fix: turn off the public EKS endpoint in production, so no public CIDR is needed.
+  - id: AWS-0041
+    paths: [infra/terraform/modules/eks/main.tf]
+    statement: "Idea 22: private EKS endpoint in production."
+    expired_at: 2027-01-31
+
+  # Why it's accepted: secrets are still encrypted, with the AWS-managed key instead of a customer-managed one.
+  - id: AWS-0039
+    paths: [infra/terraform/modules/eks/main.tf]
+    statement: "Accepted: Kubernetes secrets are envelope-encrypted with the AWS-managed key."
+    expired_at: 2027-10-20
+  # Why it's accepted: SSE-S3 already encrypts the state; a customer-managed key costs money and keeps out no reader.
+  - id: AWS-0132
+    paths: [infra/terraform/bootstrap/main.tf]
+    statement: "Accepted: the state bucket uses SSE-S3; a customer-managed key adds cost and no reader."
+    expired_at: 2027-10-20
+  # Why it's accepted: GitHub, NuGet, Docker Hub and MCR have no fixed IPs to limit egress to.
+  - id: AWS-0104
+    paths: [infra/terraform/modules/jenkins-controller/main.tf]
+    statement: "Accepted: Jenkins pulls from GitHub, NuGet, Docker Hub and MCR, which have no fixed IPs."
+    expired_at: 2027-10-20
+  # Why it's accepted: the public subnets hold the ALB, the NAT gateway and the Jenkins controller by design.
+  - id: AWS-0164
+    paths: [infra/terraform/modules/vpc/main.tf]
+    statement: "Accepted: the public subnets hold the ALB, NAT and the Jenkins controller by design."
+    expired_at: 2027-10-20

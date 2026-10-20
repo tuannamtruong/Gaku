@@ -1,5 +1,6 @@
 # Security scans.
 trivy.yaml                  @tuannamtruong
+.trivyignore.yaml           @tuannamtruong
 .github/                    @tuannamtruong
 Jenkinsfile.aws             @tuannamtruong
 docker/Dockerfile           @tuannamtruong
