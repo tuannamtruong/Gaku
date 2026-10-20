@@ -19,6 +19,7 @@ flowchart TD
         Test["Test"]
         Copy["Collect and publish\ntest results"]
         DB["Build\napi / web / migrator"]
+        Scan["Security scan\nimages"]
     end
 
     Dev -->|push| GH
@@ -27,8 +28,11 @@ flowchart TD
     Build --> Test
     Test --> Copy
     Copy --> DB
+    DB --> Scan
     Jenkins --> |push images| ECR
 ```
+
+The security scan fails the build on HIGH or CRITICAL findings that have a fix, before anything reaches ECR. Trivy checks the three images; its settings are in `trivy.yaml`. Pull requests run the same scan in `.github/workflows/security-scan.yml`, so findings block the merge and show in the repository's Security tab.
 
 ### 1.2 CD process - migrate, deploy, verify
 

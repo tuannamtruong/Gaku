@@ -1,0 +1,5 @@
+# Security scans.
+trivy.yaml                  @tuannamtruong
+.github/                    @tuannamtruong
+Jenkinsfile.aws             @tuannamtruong
+docker/Dockerfile           @tuannamtruong

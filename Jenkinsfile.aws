@@ -58,6 +58,9 @@ pipeline {
         WEB_IMAGE     = "gaku-web"
         MIGRATOR_IMAGE = "gaku-migrator"
         IMAGE_TAG     = "${env.BUILD_NUMBER}"
+
+        // Trivy runs as a container. Digist changes together with .github/workflows/security-scan.yml.
+        TRIVY         = "docker run --rm -v trivy-cache:/root/.cache -v /var/run/docker.sock:/var/run/docker.sock -v ${env.WORKSPACE}:/src:ro -w /src aquasec/trivy:0.69.3@sha256:bcc376de8d77cfe086a917230e818dc9f8528e3c852f7b1aff648949b6258d1c"
     }
 
     stages {
@@ -118,13 +121,27 @@ pipeline {
                         web)      IMAGE=${env.WEB_IMAGE} ;;
                         migrator) IMAGE=${env.MIGRATOR_IMAGE} ;;
                       esac
-                      docker build \\
+                      docker build --pull \\
                         --build-arg GIT_COMMIT=\${GIT_SHA} \\
                         --build-arg BUILD_NUMBER=${env.IMAGE_TAG} \\
                         --build-arg BUILD_TIMESTAMP=\${BUILD_TS} \\
                         -f docker/Dockerfile --target \$target \\
                         -t \${IMAGE}:${env.IMAGE_TAG} -t \${IMAGE}:latest .
                     done
+                """
+            }
+        }
+
+        // Blocks the push on the findings trivy.yaml selects. Pull requests run the same scans in .github/workflows/security-scan.yml.
+        stage('Security Scan') {
+            steps {
+                // Every image is scanned even if one fails along the way.
+                sh """
+                    status=0
+                    for IMAGE in ${env.API_IMAGE} ${env.WEB_IMAGE} ${env.MIGRATOR_IMAGE}; do
+                      ${env.TRIVY} image \${IMAGE}:${env.IMAGE_TAG} || status=1
+                    done
+                    exit \$status
                 """
             }
         }

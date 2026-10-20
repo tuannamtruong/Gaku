@@ -1,0 +1,52 @@
+# Security scans on PR.
+name: Security scan
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+env:
+  # Pinned by digest; bump it together with TRIVY in Jenkinsfile.aws.
+  TRIVY: >-
+    docker run --rm -v trivy-cache:/root/.cache -v /var/run/docker.sock:/var/run/docker.sock
+    -v ${{ github.workspace }}:/src -w /src
+    aquasec/trivy:0.69.3@sha256:bcc376de8d77cfe086a917230e818dc9f8528e3c852f7b1aff648949b6258d1c
+
+jobs:
+  image:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [api, web, migrator]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build image
+        run: docker build --pull -f docker/Dockerfile --target ${{ matrix.target }} -t gaku-${{ matrix.target }}:pr .
+
+      - name: Scan image
+        id: scan
+        run: $TRIVY image gaku-${{ matrix.target }}:pr
+
+      # Pull requests from forks get a read-only token, which cannot upload to code scanning.
+      - name: Write SARIF report
+        if: >-
+          !cancelled() && steps.scan.outcome != 'skipped' &&
+          (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+        run: $TRIVY image --exit-code 0 --format sarif -o image-${{ matrix.target }}.sarif gaku-${{ matrix.target }}:pr
+
+      - name: Upload to code scanning
+        if: ${{ !cancelled() && hashFiles('image-*.sarif') != '' }}
+        uses: github/codeql-action/upload-sarif@88585263c0627ee42c0e1c5143a112c8d6f4aa18 # v4.38.2
+        with:
+          sarif_file: image-${{ matrix.target }}.sarif
+          category: image-${{ matrix.target }}
