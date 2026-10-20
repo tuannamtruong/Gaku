@@ -61,41 +61,33 @@ flowchart TD
 
 ## 2. DevSecOps
 
-The security measures in place in the build and the images. Update this chapter with every security change. Numbers such as "idea 8" refer to [devsecops-ideas.md](devsecops-ideas.md), which also lists what is not implemented yet.
-
-| Measure | Where |
-| --- | --- |
-| Containers run as non-root | `docker/Dockerfile` |
-| Image scan | `Jenkinsfile.aws`, `.github/workflows/security-scan.yml` |
-| NuGet vulnerability scan | `.github/workflows/security-scan.yml` |
-| Pinned tools, update PRs, code owners | `.github/` |
-
 ### 2.1 Generals
 
 #### Non-root containers
 
 The docker images use the unprivileged `app` user (UID 1654) from .NET base images to build. The pods do not enforce this yet: without a `securityContext` with `runAsNonRoot` (idea 2), an image without `USER` would still start as root.
 
+#### Pinned tools, update PRs, code owners
+
+Trivy is pinned by digest in `Jenkinsfile.aws` and `.github/workflows/security-scan.yml`; bump both together. The actions in the workflow are pinned by commit SHA, and Dependabot (`.github/dependabot.yml`) opens weekly PRs to update them. `.github/CODEOWNERS` requests the owner's review for the files that can weaken or switch off the scans.
+
 ### 2.2 Source scans
 
-Scans that read files in the repository: dependencies, IaC, secrets, code. They run on pull requests in `.github/workflows/security-scan.yml`, since the files on `master` after the merge are the ones the pull request checked. Pushes to `master` run them again, which catches advisories published since the pull request.
+Scans that read files in the repository: dependencies, IaC, secrets, code. 
+Execute by GitHub Actions in `.github/workflows/security-scan.yml`.
 
-Running them only on PR relies on `master` accepting changes through pull requests alone, with the scan as a required check.
-
-| Job | Checks | Fails on |
-| --- | --- | --- |
-| `nuget` | NuGet packages of every project, test projects included, with `dotnet list package --vulnerable --include-transitive` | a High or Critical advisory. The command exits 0 either way, so the job searches its output |
-| `image` | the `api`, `web` and `migrator` images, built on the runner and discarded after the scan | the findings described in [§2.3 Artifact scans](#23-artifact-scans) |
-
-Findings are in the job log. The `image` job also uploads them to the repository's Security tab as SARIF.
+| Job | Scans | Fails on | Results |
+| --- | --- | --- | --- |
+| `nuget` | NuGet packages of every project, test projects included, with `dotnet list package --vulnerable --include-transitive` | a High or Critical advisory | job log |
+| `iac` | Dockerfiles, Kubernetes manifests and Terraform, with `trivy config` | a HIGH or CRITICAL misconfiguration not accepted in `.trivyignore.yaml` | job log, Security tab (SARIF), PR annotations on the changed lines |
 
 ### 2.3 Artifact scans
 
-Scans of the built images. The gate is in the CI Process (`Security Scan`) stage in `Jenkinsfile.aws`.
+Scans of the built images, in the `Security Scan` stage of `Jenkinsfile.aws` and the `image` job of `.github/workflows/security-scan.yml`. The pull request scan catches a vulnerable base image before the merge; Jenkins scans the exact images it pushes.
 
-| | Jenkins |
-| --- | --- |
-| Runs on | every build of `master` |
-| Scans | the images about to be pushed |
-| On findings | the build fails, nothing is pushed |
-| Results | stage log |
+| | Jenkins | GitHub Actions (`image` job) |
+| --- | --- | --- |
+| Runs on | every build of `master` | every PR and push to `master` |
+| Scans | the images about to be pushed | the `api`, `web` and `migrator` images, built on the runner and discarded after the scan |
+| On findings | the build fails, nothing is pushed | the check fails |
+| Results | stage log | job log, Security tab (SARIF) |
