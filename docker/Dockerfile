@@ -118,6 +118,7 @@ EXPOSE 8080
 LABEL org.opencontainers.image.revision="${GIT_COMMIT}" \
       org.opencontainers.image.version="${BUILD_NUMBER}" \
       org.opencontainers.image.created="${BUILD_TIMESTAMP}"
+USER $APP_UID
 ENTRYPOINT ["dotnet", "Gaku.Api.dll"]
 
 ################################################################################################################################
@@ -137,14 +138,16 @@ ARG BUILD_TIMESTAMP=unknown
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=publish-web /app/publish .
-COPY --from=publish-web /root/.dotnet/tools /root/.dotnet/tools
-ENV PATH="$PATH:/root/.dotnet/tools"
+# The container runs as `app`, which cannot read /root.
+COPY --from=publish-web /root/.dotnet/tools /home/app/.dotnet/tools
+ENV PATH="$PATH:/home/app/.dotnet/tools"
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 EXPOSE 8080
 LABEL org.opencontainers.image.revision="${GIT_COMMIT}" \
       org.opencontainers.image.version="${BUILD_NUMBER}" \
       org.opencontainers.image.created="${BUILD_TIMESTAMP}"
+USER $APP_UID
 ENTRYPOINT ["dotnet", "Gaku.Web.dll"]
 
 ################################################################################################################################
@@ -183,5 +186,6 @@ org.opencontainers.image.version="${BUILD_NUMBER}" \
 org.opencontainers.image.created="${BUILD_TIMESTAMP}"
 WORKDIR /app
 COPY --from=publish-migrator /app/migrate /app/migrate
+USER $APP_UID
 
 ENTRYPOINT ["/bin/sh", "-c", "exec /app/migrate --connection \"${ConnectionStrings__DefaultConnection:?connection string not set}\""]
