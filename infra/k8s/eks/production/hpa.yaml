@@ -1,0 +1,48 @@
+# Keep the site responsive under stress, without too much idle capacity.
+# Each app always keeps two copies running so one can fail or be replaced during a deploy without an outage.
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: gaku-api
+  namespace: gaku
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gaku-api
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+
+# Same policy as the API, except the web app holds a live connection for each open browser tab. 
+# Removing a copy disconnects the users on it, so it waits for a longer steady low traffic before scale down.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: gaku-web
+  namespace: gaku
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gaku-web
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300

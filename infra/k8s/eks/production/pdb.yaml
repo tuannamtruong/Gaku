@@ -1,0 +1,23 @@
+# Planned infrastructure work must never take a service fully offline.
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gaku-api
+  namespace: gaku
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: gaku-api
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gaku-web
+  namespace: gaku
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: gaku-web
