@@ -1,5 +1,6 @@
 using Gaku.Application.Extensions;
 using Gaku.Infrastructure.Extensions;
+using Prometheus;
 using Gaku.Api.Endpoints;
 using Scalar.AspNetCore;
 
@@ -11,6 +12,10 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddOpenApi();
+
+// Separate port so /metrics stays off the Service port the Ingress routes to. Unset outside Kubernetes.
+if (builder.Configuration.GetValue<int?>("METRICS_PORT") is { } metricsPort)
+    builder.Services.AddMetricServer(options => options.Port = (ushort)metricsPort);
 builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
