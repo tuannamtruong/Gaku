@@ -24,11 +24,16 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
+            - name: metrics
+              containerPort: 9464
           envFrom:
             - configMapRef:
                 name: gaku-config
             - secretRef:
                 name: gaku-secret
+          env:
+            - name: METRICS_PORT
+              value: "9464"
           resources:
             requests:
               cpu: 100m
