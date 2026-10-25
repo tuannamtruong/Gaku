@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Read-only traffic against the Gaku API, to fill the Prometheus and Grafana panels.
 
+What it sends:
+- Normal requests: a weighted random mix of /api/health, the trail list, trail by id (real ids taken from /api/trails at startup), nearby search (PostGIS) and text search.
+- Errors on purpose: a random id (404), nearby search with no query parameters (400) and a route that doesn't exist (404). These give your status-code panels something besides 200s.
+- Output: a count of responses by status code every 5 seconds, and a total when it stops.
+
 Skips /api/map/*: those call Nominatim and Overpass, which rate-limit.
 
 Usage:
