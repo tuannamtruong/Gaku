@@ -130,6 +130,45 @@ controllers_install: lbc_install eso_install ca_install
 
 
 #############################################################################
+# Monitoring commands (local and AWS)
+#############################################################################
+
+# Commands run against the current kubectl context.
+# The archive lives in $(MON_ARCHIVE_DIR), one TSDB per environment.
+MON_CHART_VERSION ?= 92.11.0
+MON_VALUES        := infra/k8s/monitoring/kube-prometheus-stack.values.yaml
+MON_NAMESPACE     := monitoring
+MON_RELEASE       := monitoring
+MON_ARCHIVE_DIR   ?= $(HOME)/gaku-metrics/$(or $(ENV),local)
+
+monitoring_install:
+	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	helm repo update prometheus-community
+	helm upgrade --install $(MON_RELEASE) prometheus-community/kube-prometheus-stack \
+	  --namespace $(MON_NAMESPACE) --create-namespace \
+	  --version $(MON_CHART_VERSION) \
+	  --values $(MON_VALUES) \
+	  --wait --timeout 10m
+
+monitoring_uninstall:
+	helm uninstall $(MON_RELEASE) --namespace $(MON_NAMESPACE)
+
+# Snapshot Prometheus's TSDB, then copy its blocks into $(MON_ARCHIVE_DIR).
+monitoring_archive:
+	@set -e; \
+	POD=$$(kubectl -n $(MON_NAMESPACE) get pod -l app.kubernetes.io/name=prometheus -o jsonpath='{.items[0].metadata.name}'); \
+	prom() { kubectl -n $(MON_NAMESPACE) exec $$POD -c prometheus -- "$$@"; }; \
+	NAME=$$(prom wget -qO- --post-data= http://localhost:9090/api/v1/admin/tsdb/snapshot \
+	  | sed -n 's/.*"name":"\([^"]*\)".*/\1/p'); \
+	[ -n "$$NAME" ] || { echo "[FAIL] snapshot not created"; exit 1; }; \
+	mkdir -p $(MON_ARCHIVE_DIR); \
+	kubectl -n $(MON_NAMESPACE) cp -c prometheus \
+	  $$POD:/prometheus/snapshots/$$NAME $(MON_ARCHIVE_DIR)/.incoming; \
+	cp -r $(MON_ARCHIVE_DIR)/.incoming/. $(MON_ARCHIVE_DIR)/ && rm -rf $(MON_ARCHIVE_DIR)/.incoming; \
+	prom rm -rf /prometheus/snapshots/$$NAME; \
+	echo "[OK] snapshot $$NAME archived to $(MON_ARCHIVE_DIR)"
+
+#############################################################################
 # LOCAL cluster commands
 #############################################################################
 
