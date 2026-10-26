@@ -1,0 +1,40 @@
+# Not reachable on EKS: the control plane is managed.
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeEtcd:
+  enabled: false
+# kube-proxy binds its metrics to localhost.
+kubeProxy:
+  enabled: false
+# No receiver to send alerts to.
+alertmanager:
+  enabled: false
+
+prometheus:
+  prometheusSpec:
+    # Needed for the TSDB snapshot taken before a destroy (make monitoring_archive).
+    enableAdminAPI: true
+    # The default distroless image has no busybox (tar, wget, rm), which 'make monitoring_archive' executes in the pod.
+    image:
+      tag: v3.15.0
+    retention: 7d
+    retentionSize: 2GB
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        memory: 1Gi
+  additionalPodMonitors:
+    - name: gaku
+      namespaceSelector:
+        matchNames: [gaku]
+      selector:
+        matchExpressions:
+          - key: app
+            operator: In
+            values: [gaku-api, gaku-web]
+      podMetricsEndpoints:
+        - port: metrics
