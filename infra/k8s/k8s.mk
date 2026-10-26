@@ -174,8 +174,14 @@ monitoring_archive:
 
 K8S_FOLDER=infra/k8s/local/
 
-minikube_up:
+startup:
 	minikube start
+	kubectl -n gaku wait --for=condition=ready pod -l 'app in (gaku-api,gaku-web)' --timeout=180s
+	kubectl -n monitoring wait --for=condition=ready pod -l app.kubernetes.io/name=prometheus --timeout=180s
+	kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-prometheus 9090 &
+	kubectl -n gaku port-forward deploy/gaku-api 9464 &
+	kubectl -n gaku port-forward deploy/gaku-web 9465:9464 &
+	kubectl -n gaku port-forward deploy/gaku-api 8082:8080 &
 
 k8s_apply:
 	kubectl delete job db-migrate -n gaku --ignore-not-found
