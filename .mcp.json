@@ -2,7 +2,7 @@
   "mcpServers": {
     "kubernetes": {
       "command": "npx",
-      "args": ["-y", "kubernetes-mcp-server@latest", "--read-only"]
+      "args": ["-y", "kubernetes-mcp-server@0.0.69", "--config", ".claude/kubernetes-mcp.toml"]
     }
   }
 }
