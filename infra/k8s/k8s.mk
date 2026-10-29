@@ -153,6 +153,12 @@ monitoring_install:
 monitoring_uninstall:
 	helm uninstall $(MON_RELEASE) --namespace $(MON_NAMESPACE)
 
+# Grafana of the running cluster.
+monitoring_grafana:
+	@echo "admin password: $$(kubectl -n $(MON_NAMESPACE) get secret $(MON_RELEASE)-grafana \
+	  -o jsonpath='{.data.admin-password}' | base64 -d)"
+	kubectl -n $(MON_NAMESPACE) port-forward svc/$(MON_RELEASE)-grafana 3000:80
+
 # Snapshot Prometheus's TSDB, then copy its blocks into $(MON_ARCHIVE_DIR).
 monitoring_archive:
 	@set -e; \
@@ -167,6 +173,15 @@ monitoring_archive:
 	cp -r $(MON_ARCHIVE_DIR)/.incoming/. $(MON_ARCHIVE_DIR)/ && rm -rf $(MON_ARCHIVE_DIR)/.incoming; \
 	prom rm -rf /prometheus/snapshots/$$NAME; \
 	echo "[OK] snapshot $$NAME archived to $(MON_ARCHIVE_DIR)"
+
+# Prometheus and Grafana over the archive.
+monitoring_view:
+	MON_ARCHIVE_DIR=$(MON_ARCHIVE_DIR) UID=$$(id -u) \
+	  docker compose -f infra/k8s/monitoring/docker-compose.yml up
+
+# MON_ARCHIVE_DIR is required to be set, even not used.
+monitoring_view_down:
+	MON_ARCHIVE_DIR=/unused docker compose -f infra/k8s/monitoring/docker-compose.yml down
 
 #############################################################################
 # LOCAL cluster commands
