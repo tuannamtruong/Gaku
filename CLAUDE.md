@@ -182,7 +182,7 @@ docker compose up postgres db-migrator -d
 docker compose up --build -d
 ```
 
-Ports: PostgreSQL on `5432` · API on `8080` · Web on `8081`.
+Ports: see [docs/ports.md](docs/ports.md).
 
 Stop and remove containers (data volume is preserved):
 
