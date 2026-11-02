@@ -67,9 +67,18 @@ flowchart TD
 
 The docker images use the unprivileged `app` user (UID 1654) from .NET base images to build. The pods do not enforce this yet: without a `securityContext` with `runAsNonRoot` (idea 2), an image without `USER` would still start as root.
 
-#### Pinned tools, update PRs, code owners
+#### Pinned tools, update PRs
 
-Trivy is pinned by digest in `Jenkinsfile.aws` and `.github/workflows/security-scan.yml`; bump both together. The actions in the workflow are pinned by commit SHA, and Dependabot (`.github/dependabot.yml`) opens weekly PRs to update them. `.github/CODEOWNERS` requests the owner's review for the files that can weaken or switch off the scans.
+| Tool | Pinned by | Pinned in | Updated by |
+| --- | --- | --- | --- |
+| Trivy | image digest | `Jenkinsfile.aws`, `.github/workflows/security-scan.yml` | hand, in both files together |
+| Helm | release version | `infra/jenkins/local/Dockerfile`, `modules/jenkins-controller/user_data.sh.tftpl` | hand, in both files together |
+| Gitleaks | image digest | `.github/workflows/security-scan.yml`, `.githooks/pre-commit` | hand, in both files together |
+| GitHub Actions | commit SHA | `.github/workflows/security-scan.yml` | Dependabot, a weekly PR (`.github/dependabot.yml`) |
+
+#### Code owners
+
+`.github/CODEOWNERS` requests the owner's review for changes to the files that can weaken or switch off the scans.
 
 ### 2.2 Source scans
 
@@ -80,6 +89,11 @@ Execute by GitHub Actions in `.github/workflows/security-scan.yml`.
 | --- | --- | --- | --- |
 | `nuget` | NuGet packages of every project, test projects included, with `dotnet list package --vulnerable --include-transitive` | a High or Critical advisory | job log |
 | `iac` | Dockerfiles, Kubernetes manifests and Terraform, with `trivy config` | a HIGH or CRITICAL misconfiguration not accepted in `.trivyignore.yaml` | job log, Security tab (SARIF), PR annotations on the changed lines |
+| `secrets` | every commit in the history, with `gitleaks git`. | any finding not allowed in `.gitleaks.toml`, `.gitleaksignore` or by a `gitleaks:allow` comment | job log, secrets redacted |
+
+#### Pre-commit hook
+
+`.githooks/pre-commit` runs the same gitleaks image on the staged changes and blocks the commit on a finding, before the secret enters the history. `setup-dev-station.sh` enables it with `git config core.hooksPath .githooks`; run that once in any other clone. The hook needs Docker. `git commit --no-verify` skips it, so the `secrets` job is the gate.
 
 ### 2.3 Artifact scans
 
