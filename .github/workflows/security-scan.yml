@@ -98,3 +98,18 @@ jobs:
           dotnet list Gaku.sln package --vulnerable --include-transitive > nuget-audit.txt
           cat nuget-audit.txt
           ! grep -qwE 'High|Critical' nuget-audit.txt
+
+  secrets:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      # Digest changes together with .githooks/pre-commit.
+      - name: Scan commits for secrets
+        run: >-
+          docker run --rm -v ${{ github.workspace }}:/repo
+          ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
+          git --redact --verbose --no-banner /repo
