@@ -109,14 +109,14 @@ Applying [§3 Deploy](infra-local.md#3-deploy), [§4 Verification](infra-local.m
 
 | Stage | Status | Last tested | Commit |
 | --- | --- | --- | --- |
-| [§3 Deploy](infra-local.md#3-deploy) | Not tested | 2026-09-20 | 7ec0c45 |
-| [§4 Verification](infra-local.md#4-verification) — `k8s_test_layer1` | Not tested | 2026-09-20 | 7ec0c45 |
-| [§4 Verification](infra-local.md#4-verification) — `k8s_test_layer2` | Not tested | 2026-09-20 | 7ec0c45 |
-| [§4 Verification](infra-local.md#4-verification) — `k8s_test_layer3` | Not tested | 2026-09-20 | 7ec0c45 |
-| [§4 Verification](infra-local.md#4-verification) — `k8s_test_layer4` | Not tested | 2026-09-20 | 7ec0c45 |
-| [§4 Verification](infra-local.md#4-verification) — `k8s_test_layer5` | Not tested | 2026-09-20 | 7ec0c45 |
-| [§5 Redeploy](infra-local.md#5-redeploy) | Not tested | 2026-09-20 | 7ec0c45 |
-| Gaku-Web E2E testing. `kubectl port-forward -n gaku svc/gaku-web 8081:8080` <br/> Open http://localhost:8081. | Not tested | 2026-09-20 | 7ec0c45 |
+| [§3 Deploy](infra-local.md#3-deploy) | Pass | 2026-09-20 | 7ec0c45 |
+| [§4 Verification](infra-local.md#4-verification) — `k8s_test_layer1` | Pass | 2026-09-20 | 7ec0c45 |
+| [§4 Verification](infra-local.md#4-verification) — `k8s_test_layer2` | Pass | 2026-09-20 | 7ec0c45 |
+| [§4 Verification](infra-local.md#4-verification) — `k8s_test_layer3` | Pass | 2026-09-20 | 7ec0c45 |
+| [§4 Verification](infra-local.md#4-verification) — `k8s_test_layer4` | Pass | 2026-09-20 | 7ec0c45 |
+| [§4 Verification](infra-local.md#4-verification) — `k8s_test_layer5` | Pass | 2026-09-20 | 7ec0c45 |
+| [§5 Redeploy](infra-local.md#5-redeploy) | Pass | 2026-09-20 | 7ec0c45 |
+| Gaku-Web E2E testing. `kubectl port-forward -n gaku svc/gaku-web 8081:8080` <br/> Open http://localhost:8081. | Pass | 2026-09-20 | 7ec0c45 |
 
 ### 2.3 Jenkins
 

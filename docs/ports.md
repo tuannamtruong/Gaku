@@ -1,6 +1,6 @@
-# Ports
+# Ports in localhost
 
-## 1. Host
+This doc tracks which ports are taken on the local development environment.
 
 | Port | Purpose | What | Runs in | How |
 | --- | --- | --- | --- | --- |
