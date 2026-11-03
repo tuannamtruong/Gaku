@@ -130,6 +130,22 @@ controllers_install: lbc_install eso_install ca_install
 
 
 #############################################################################
+# Gaku chart (local and AWS)
+#############################################################################
+
+# The namespace, gaku-secret and the database belong to the environment, not the chart:
+# the migration hook runs before any chart resource exists, so they must be there first.
+CHART := infra/k8s/gaku
+TAG   ?= latest
+
+_helm_gaku = helm upgrade --install gaku $(CHART) -n gaku \
+  -f $(CHART)/values-$(1).yaml \
+  --set-string image.tag=$(TAG) \
+  --set-string gitSha=$$(git rev-parse HEAD) \
+  --rollback-on-failure --timeout 10m
+
+
+#############################################################################
 # Monitoring commands (local and AWS)
 #############################################################################
 
@@ -199,8 +215,12 @@ startup:
 	kubectl -n gaku port-forward deploy/gaku-api 8082:8080 &
 
 k8s_apply:
-	kubectl delete job db-migrate -n gaku --ignore-not-found
-	kubectl apply -k $(K8S_FOLDER)
+	kubectl create namespace gaku --dry-run=client -o yaml | kubectl apply -f -
+	kubectl -n gaku create secret generic gaku-secret --from-env-file=$(K8S_FOLDER).env.k8s \
+	  --dry-run=client -o yaml | kubectl apply -f -
+	kubectl apply -f $(K8S_FOLDER)postgres/
+	kubectl -n gaku rollout status statefulset/postgres --timeout=180s
+	$(call _helm_gaku,local)
 
 k8s_postgres:
 	kubectl exec -it -n gaku statefulset/postgres -- psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)

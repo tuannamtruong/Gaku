@@ -2,10 +2,10 @@
 
 Gaku runs on a single-node Kubernetes cluster and is deployed into a local minikube
 
-| `infra/k8s/local/*` | k8s overlay for local env. |
+| `infra/k8s/gaku/` | Helm chart for the API, web app and migration Job. |
 | --- | --- |
-| `infra/k8s/base/*` | Base k8s file for all env. |
-| `infra/k8s/local/kustomization.yaml` | Key config for local setup. |
+| `infra/k8s/gaku/values-local.yaml` | Local values: images from the node's daemon, nginx ingress on `gaku.local`. |
+| `infra/k8s/local/postgres/` | In-cluster Postgres, outside the chart. |
 | `infra/k8s/k8s.mk` | Make targets. |
 
 
@@ -21,7 +21,7 @@ graph TD
     ApiSvc["Service: gaku-api :8080"]
     Web["Deployment: gaku-web<br/>RollingUpdate, 1 replica"]
     Api["Deployment: gaku-api<br/>1 replica"]
-    Job["Job: db-migrate<br/>runs to completion"]
+    Job["Job: db-migrate<br/>pre-install/pre-upgrade hook"]
     PgSvc["Service: postgres :5432<br/>headless"]
     Pg["StatefulSet: postgres<br/>postgis 16-3.4"]
     PVC[("PVC: postgres<br/>1Gi")]
@@ -38,7 +38,8 @@ graph TD
 
 ## 2. Environment variables
 
-`.env.k8s` sits next to `kustomization.yaml` and holds four keys:
+`infra/k8s/local/.env.k8s` holds four keys. `make k8s_apply` creates the `gaku-secret` Secret from it, which Postgres
+and the chart's pods read:
 
 ```
 POSTGRES_DB=gaku
@@ -56,8 +57,20 @@ make docker_build               # api, web, migrator
 minikube image load gaku-api:latest
 minikube image load gaku-web:latest
 minikube image load gaku-migrator:latest
-make k8s_apply
+make k8s_apply                  # namespace, secret, Postgres, then the chart
 make k8s_test
+```
+
+`make k8s_apply` creates what the chart expects to exist, then runs `helm upgrade --install` with `values-local.yaml`.
+Postgres stays outside the chart because the migration Job is a pre-install hook: Helm runs it before creating any
+chart resource, so a Postgres inside the chart would not exist yet when the migrator connects.
+
+A cluster deployed before the chart holds `gaku-api`, `gaku-web`, their Services, `gaku-config` and `gaku-ingress`
+from `kubectl apply`, and Helm refuses to take over objects it did not create. Delete them once before the first
+`make k8s_apply`; Postgres and its volume stay:
+
+```bash
+kubectl -n gaku delete deploy/gaku-api deploy/gaku-web svc/gaku-api svc/gaku-web cm/gaku-config ingress/gaku-ingress
 ```
 
 Add `echo "$(minikube ip) gaku.local" | sudo tee -a /etc/hosts` once, and the site answers at
@@ -76,6 +89,10 @@ http://gaku.local.
 | `k8s_test_layer5` | Ingress External Routing check. |
 
 ## 5. Redeploy
+
+`make k8s_apply TAG=<tag>` deploys a tag. A failed migration or rollout rolls back to the previous release on its own;
+`helm history gaku -n gaku` lists the releases and `helm rollback gaku <revision> -n gaku` returns to one. Rollback
+does not undo a migration.
 
 `kubectl rollout restart` to force new pods onto the reloaded image.
 

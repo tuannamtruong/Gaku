@@ -138,12 +138,10 @@ kubectl rollout restart deployment/<name> -n gaku
 kubectl rollout status deployment/<name> -n gaku --timeout=60s
 ```
 
-Re-run the db-migrate Job (jobs are immutable — delete then re-apply):
+Re-run the db-migrate Job (a Helm pre-upgrade hook — every upgrade replaces it and waits for it):
 
 ```bash
-kubectl delete job db-migrate -n gaku --ignore-not-found
-kubectl apply -k infra/k8s/local/
-kubectl wait --for=condition=complete job/db-migrate -n gaku --timeout=120s
+make k8s_apply
 ```
 
 Run EF migrations via dotnet ef:

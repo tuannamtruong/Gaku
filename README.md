@@ -67,7 +67,7 @@ tests/                  one test project per layer except Api
 docker/                 one Dockerfile, a build target per deployable + docker.mk
 infra/jenkins/local/    Jenkins controller + Smee relay, via compose
 infra/k8s/base/         Kustomize manifests shared by every environment
-infra/k8s/local/        Kustomize overlay for minikube
+infra/k8s/local/        minikube prerequisites: Postgres and the .env.k8s secret
 infra/k8s/eks/          staging and production overlays, plus the AWS-only pieces
 infra/terraform/        bootstrap, reusable modules, staging and production environments
 scripts/                redeploy and benchmark helpers
@@ -157,8 +157,8 @@ make docker_build                   # api, web, migrator
 make docker_push IMAGE_TAG=1.2.3    # needs DOCKERHUB_USERNAME + DOCKERHUB_TOKEN in .env
 ```
 
-The local Kubernetes target is minikube, configured through Kustomize. `infra/k8s/local/.env.k8s`
-generates the `gaku-secret` secret and must be created by hand, like the root `.env`:
+The local Kubernetes target is minikube, deployed with the `gaku` Helm chart. `infra/k8s/local/.env.k8s`
+holds the `gaku-secret` values and must be created by hand, like the root `.env`:
 
 ```bash
 make minikube_up
