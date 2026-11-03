@@ -130,5 +130,5 @@ Applying [§3 Deploy](infra-local.md#3-deploy), [§4 Verification](infra-local.m
 | Stages `Test — Domain/Application/Infrastructure/Web` | All four suites run and publish results | Not tested | — | — |
 | Stage `Docker Build` | All three images build inside the agent | Not tested | — | — |
 | Stage `Load Images into Minikube` | Images land in the node daemon | Not tested | — | — |
-| Stage `Deploy to Local K8s` | Overlay applies and rollouts complete | Not tested | — | — |
+| Stage `Deploy to Local K8s` | Helm release deploys and rollouts complete | Not tested | — | — |
 | End-to-end run | A push to `master` produces a green build with the app redeployed | Not tested | — | — |

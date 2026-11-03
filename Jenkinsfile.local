@@ -3,9 +3,9 @@
 // Build Libary project (Domain, Application, Infrastructure) and all the test projects into a CI image 
 //
 // Run all unit tests
-// Dockerize API and WEB app
+// Dockerize API, WEB app and migrator
 // Load images into minikube
-// Deploy into k8s
+// Deploy into k8s with the Helm chart
 // Clean up the CI image
 
 pipeline {
@@ -28,6 +28,7 @@ pipeline {
         TEST_RESULTS  = "TestResults"
         API_IMAGE     = "gaku-api"
         WEB_IMAGE     = "gaku-web"
+        MIGRATOR_IMAGE = "gaku-migrator"
         IMAGE_TAG     = "${env.BUILD_NUMBER}"
     }
 
@@ -166,18 +167,30 @@ pipeline {
                 sh """
                     GIT_SHA=\$(git rev-parse HEAD)
                     BUILD_TS=\$(date -u +%Y-%m-%dT%H:%M:%SZ)
+                    
+                    # API container
                     docker build \\
                         --build-arg GIT_COMMIT=\${GIT_SHA} \\
                         --build-arg BUILD_NUMBER=${env.IMAGE_TAG} \\
                         --build-arg BUILD_TIMESTAMP=\${BUILD_TS} \\
                         -f docker/Dockerfile --target api \\
                         -t ${env.API_IMAGE}:${env.IMAGE_TAG} -t ${env.API_IMAGE}:latest .
+                    
+                    # WEB container
                     docker build \\
                         --build-arg GIT_COMMIT=\${GIT_SHA} \\
                         --build-arg BUILD_NUMBER=${env.IMAGE_TAG} \\
                         --build-arg BUILD_TIMESTAMP=\${BUILD_TS} \\
                         -f docker/Dockerfile --target web \\
                         -t ${env.WEB_IMAGE}:${env.IMAGE_TAG} -t ${env.WEB_IMAGE}:latest .
+
+                    # MIGRATOR container
+                    docker build \\
+                        --build-arg GIT_COMMIT=\${GIT_SHA} \\
+                        --build-arg BUILD_NUMBER=${env.IMAGE_TAG} \\
+                        --build-arg BUILD_TIMESTAMP=\${BUILD_TS} \\
+                        -f docker/Dockerfile --target migrator \\
+                        -t ${env.MIGRATOR_IMAGE}:${env.IMAGE_TAG} -t ${env.MIGRATOR_IMAGE}:latest .
                 """
             }
         }
@@ -189,27 +202,21 @@ pipeline {
                 sh "minikube image load ${env.API_IMAGE}:latest"
                 sh "minikube image load ${env.WEB_IMAGE}:${env.IMAGE_TAG}"
                 sh "minikube image load ${env.WEB_IMAGE}:latest"
+                sh "minikube image load ${env.MIGRATOR_IMAGE}:${env.IMAGE_TAG}"
+                sh "minikube image load ${env.MIGRATOR_IMAGE}:latest"
             }
         }
 
+        // Expects the namespace, gaku-secret and postgres are already applied.
         stage('Deploy to Local K8s') {
             when { branch 'master' }
             steps {
-                sh "kubectl set image deployment/gaku-api gaku-api=${env.API_IMAGE}:${env.IMAGE_TAG} -n gaku"
-                sh "kubectl set image deployment/gaku-web gaku-web=${env.WEB_IMAGE}:${env.IMAGE_TAG} -n gaku"
-                sh "kubectl rollout status deployment/gaku-api -n gaku --timeout=120s"
-                sh "kubectl rollout status deployment/gaku-web -n gaku --timeout=120s"
                 sh """
-                    GIT_SHA=\$(git rev-parse HEAD)
-                    BUILD_TS=\$(date -u +%Y-%m-%dT%H:%M:%SZ)
-                    kubectl annotate deployment/gaku-api -n gaku --overwrite \\
-                        org.opencontainers.image.revision=\${GIT_SHA} \\
-                        org.opencontainers.image.version=${env.IMAGE_TAG} \\
-                        org.opencontainers.image.created=\${BUILD_TS}
-                    kubectl annotate deployment/gaku-web -n gaku --overwrite \\
-                        org.opencontainers.image.revision=\${GIT_SHA} \\
-                        org.opencontainers.image.version=${env.IMAGE_TAG} \\
-                        org.opencontainers.image.created=\${BUILD_TS}
+                    helm upgrade --install gaku infra/k8s/gaku -n gaku \\
+                        -f infra/k8s/gaku/values-local.yaml \\
+                        --set-string image.tag=${env.IMAGE_TAG} \\
+                        --set-string gitSha=\$(git rev-parse HEAD) \\
+                        --rollback-on-failure --timeout 5m
                 """
             }
         }
