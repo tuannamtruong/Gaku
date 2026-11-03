@@ -1,0 +1,5 @@
+apiVersion: v2
+name: gaku
+description: Gaku API, web app and database migrations
+type: application
+version: 0.1.0

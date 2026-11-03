@@ -12,6 +12,8 @@ misconfigurations:
       - infra/k8s/base/api/deployment.yaml
       - infra/k8s/base/web/deployment.yaml
       - infra/k8s/base/db-migration/job.yaml
+      - infra/k8s/gaku/templates/api.yaml
+      - infra/k8s/gaku/templates/web.yaml
       - infra/k8s/local/postgres/statefulset.yaml
     statement: "Idea 2: pod securityContext."
     expired_at: 2027-01-31
@@ -21,6 +23,8 @@ misconfigurations:
       - infra/k8s/base/api/deployment.yaml
       - infra/k8s/base/web/deployment.yaml
       - infra/k8s/base/db-migration/job.yaml
+      - infra/k8s/gaku/templates/api.yaml
+      - infra/k8s/gaku/templates/web.yaml
       - infra/k8s/eks/production/patches/*.yaml
       - infra/k8s/local/postgres/statefulset.yaml
     statement: "Idea 2: pod securityContext."

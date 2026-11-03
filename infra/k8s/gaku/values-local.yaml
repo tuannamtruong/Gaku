@@ -1,0 +1,6 @@
+image:
+  pullPolicy: Never
+
+ingress:
+  nginx:
+    host: gaku.local

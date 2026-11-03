@@ -1,0 +1,6 @@
+image:
+  registry: 100731996173.dkr.ecr.eu-central-1.amazonaws.com
+
+ingress:
+  alb:
+    group: gaku-staging

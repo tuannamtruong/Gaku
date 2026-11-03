@@ -1,0 +1,28 @@
+{{- if .Values.pdb }}
+# Planned infrastructure work must never take a service fully offline.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gaku-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "gaku.labels" . | nindent 4 }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: gaku-api
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gaku-web
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "gaku.labels" . | nindent 4 }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: gaku-web
+{{- end }}

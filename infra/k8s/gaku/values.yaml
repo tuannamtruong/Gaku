@@ -1,0 +1,19 @@
+#   values-local.yaml        minikube: images from the node's daemon, nginx ingress
+#   values-staging.yaml      EKS staging
+#   values-production.yaml   EKS production
+
+image:
+  registry: ""
+  tag: latest
+  pullPolicy: Always
+
+# Not rendered when autoscaling is on: the HPA owns the replica count.
+replicas: 1
+autoscaling: false
+
+# Recorded on the Deployments as org.opencontainers.image.revision.
+gitSha: ""
+
+ingress: {}
+pdb: false
+topologySpread: false
