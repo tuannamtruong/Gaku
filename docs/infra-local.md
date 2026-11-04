@@ -38,7 +38,7 @@ graph TD
 
 ## 2. Environment variables
 
-`infra/k8s/local/.env.k8s` holds four keys. `make k8s_apply` creates the `gaku-secret` Secret from it, which Postgres
+`infra/k8s/local/.env.k8s` holds four keys. `make gaku_install_local` creates the `gaku-secret` Secret from it, which Postgres
 and the chart's pods read:
 
 ```
@@ -57,18 +57,18 @@ make docker_build               # api, web, migrator
 minikube image load gaku-api:latest
 minikube image load gaku-web:latest
 minikube image load gaku-migrator:latest
-make k8s_apply                  # namespace, secret, Postgres, then the chart
+make gaku_install_local           # namespace, secret, Postgres, then the chart
 make k8s_test
 helm test gaku -n gaku          # /api/health and /health from inside the cluster
 ```
 
-`make k8s_apply` creates what the chart expects to exist, then runs `helm upgrade --install` with `values-local.yaml`.
+`make gaku_install_local` creates what the chart expects to exist, then runs `helm upgrade --install` with `values-local.yaml`.
 Postgres stays outside the chart because the migration Job is a pre-install hook: Helm runs it before creating any
 chart resource, so a Postgres inside the chart would not exist yet when the migrator connects.
 
 A cluster deployed before the chart holds `gaku-api`, `gaku-web`, their Services, `gaku-config` and `gaku-ingress`
 from `kubectl apply`, and Helm refuses to take over objects it did not create. Delete them once before the first
-`make k8s_apply`; Postgres and its volume stay:
+`make gaku_install_local`; Postgres and its volume stay:
 
 ```bash
 kubectl -n gaku delete deploy/gaku-api deploy/gaku-web svc/gaku-api svc/gaku-web cm/gaku-config ingress/gaku-ingress
@@ -91,7 +91,7 @@ http://gaku.local.
 
 ## 5. Redeploy
 
-`make k8s_apply TAG=<tag>` deploys a tag. A failed migration or rollout rolls back to the previous release on its own;
+`make gaku_install_local TAG=<tag>` deploys a tag. A failed migration or rollout rolls back to the previous release on its own;
 `helm history gaku -n gaku` lists the releases and `helm rollback gaku <revision> -n gaku` returns to one. Rollback
 does not undo a migration.
 

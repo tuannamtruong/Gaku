@@ -15,13 +15,13 @@ LBC_VALUES        := $(EKS)/controllers/aws-load-balancer-controller.values.yaml
 LBC_NAMESPACE     := kube-system
 LBC_RELEASE       := aws-load-balancer-controller
 
-_lbc_require_env:
+_require_env:
 	@if [ -z "$(ENV)" ]; then \
 	  echo "ENV is required, e.g. make lbc_install ENV=staging"; exit 1; fi
 
 # Installs or upgrades the controller in the cluster.
 # vpcId comes from Terraform: without it the controller asks IMDS for the VPC, which pods cannot reach because of IMDS hop limit.
-lbc_install: _lbc_require_env
+lbc_install: _require_env
 	helm repo add eks https://aws.github.io/eks-charts
 	helm repo update eks
 	VPC_ID=$$(cd $(TF_ENV_DIR) && terraform output -raw vpc_id); \
@@ -34,14 +34,14 @@ lbc_install: _lbc_require_env
 	  --wait --timeout 5m
 	kubectl -n $(LBC_NAMESPACE) rollout status deploy/$(LBC_RELEASE) --timeout=300s
 
-lbc_uninstall: _lbc_require_env
+lbc_uninstall: _require_env
 	helm uninstall $(LBC_RELEASE) --namespace $(LBC_NAMESPACE)
 
 # Validate the AWS Load Balancer Controller setup before Ingress is required. 
 # This checks the Helm release, controller readiness, IngressClass, Pod Identity agent, pod credentials, and IAM association.
 #
 # Each check returns a non-empty value on success and an empty value on failure.
-lbc_preingress_check: _lbc_require_env
+lbc_preingress_check: _require_env
 	@echo "=== AWS Load Balancer Controller Report (gaku-$(ENV)) ==="
 	@kubectl -n $(LBC_NAMESPACE) get deploy,pod -l app.kubernetes.io/name=$(LBC_RELEASE) 2>&1 | sed 's/^/  /'
 	@echo ""
@@ -84,7 +84,7 @@ CA_NAMESPACE     := kube-system
 CA_RELEASE       := cluster-autoscaler
 
 # Setup for the cluster autoscaler.
-ca_install: _lbc_require_env
+ca_install: _require_env
 	helm repo add autoscaler https://kubernetes.github.io/autoscaler
 	helm repo update autoscaler
 	helm upgrade --install $(CA_RELEASE) autoscaler/cluster-autoscaler \
@@ -95,7 +95,7 @@ ca_install: _lbc_require_env
 	  --wait --timeout 5m
 	kubectl -n $(CA_NAMESPACE) rollout status deploy/$(CA_RELEASE) --timeout=300s
 
-ca_uninstall: _lbc_require_env
+ca_uninstall: _require_env
 	helm uninstall $(CA_RELEASE) --namespace $(CA_NAMESPACE)
 
 # ---------------------------------------------------------------------------
@@ -108,7 +108,7 @@ ESO_CHART_VERSION ?= 2.11.0
 ESO_NAMESPACE     := external-secrets
 ESO_RELEASE       := external-secrets
 
-eso_install: _lbc_require_env
+eso_install: _require_env
 	helm repo add external-secrets https://charts.external-secrets.io
 	helm repo update external-secrets
 	helm upgrade --install $(ESO_RELEASE) external-secrets/external-secrets \
@@ -118,7 +118,7 @@ eso_install: _lbc_require_env
 	  --wait --timeout 5m
 	kubectl -n $(ESO_NAMESPACE) rollout status deploy/$(ESO_RELEASE) --timeout=300s
 
-eso_uninstall: _lbc_require_env
+eso_uninstall: _require_env
 	helm uninstall $(ESO_RELEASE) --namespace $(ESO_NAMESPACE)
 
 # ---------------------------------------------------------------------------
@@ -145,7 +145,7 @@ _helm_gaku = helm upgrade --install gaku $(CHART) -n gaku \
   --rollback-on-failure --timeout 10m
 
 # Migrations, then both rollouts. Rolls back on failure.
-k8s_deploy: _lbc_require_env
+gaku_install: _require_env
 	kubectl create namespace gaku --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -f $(EKS)/$(ENV)/external-secret.yaml
 	kubectl -n gaku wait --for=condition=Ready externalsecret/gaku-secret --timeout=120s
@@ -221,11 +221,12 @@ startup:
 	kubectl -n gaku port-forward deploy/gaku-web 9465:9464 &
 	kubectl -n gaku port-forward deploy/gaku-api 8082:8080 &
 
-k8s_apply:
+gaku_install_local:
 	kubectl create namespace gaku --dry-run=client -o yaml | kubectl apply -f -
 	kubectl -n gaku create secret generic gaku-secret --from-env-file=$(K8S_FOLDER).env.k8s \
 	  --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -f $(K8S_FOLDER)postgres/
+# Without the wait, a cold start races the Job
 	kubectl -n gaku rollout status statefulset/postgres --timeout=180s
 	$(call _helm_gaku,local)
 

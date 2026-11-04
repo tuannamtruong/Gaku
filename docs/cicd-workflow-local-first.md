@@ -171,7 +171,7 @@ Apply and validate layer by layer.
 ### 5.3 Layer 1 - k8s resources
 
 ```
-  make k8s_apply
+  make gaku_install_local
 ```
 
 ```

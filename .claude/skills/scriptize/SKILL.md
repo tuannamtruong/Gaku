@@ -141,7 +141,7 @@ kubectl rollout status deployment/<name> -n gaku --timeout=60s
 Re-run the db-migrate Job (a Helm pre-upgrade hook — every upgrade replaces it and waits for it):
 
 ```bash
-make k8s_apply
+make gaku_install_local
 ```
 
 Run EF migrations via dotnet ef:

@@ -162,7 +162,7 @@ holds the `gaku-secret` values and must be created by hand, like the root `.env`
 
 ```bash
 make minikube_up
-make k8s_apply
+make gaku_install_local
 make k8s_test                       # five layers: resources, pods, DNS, TCP, ingress
 ```
 

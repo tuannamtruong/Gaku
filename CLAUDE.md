@@ -148,7 +148,7 @@ Used by: local `docker compose` and EF Core CLI tools.
 
 ### `infra/k8s/local/.env.k8s`
 
-Used by: `make k8s_apply` — creates the `gaku-secret` Kubernetes secret from it with `kubectl create secret --from-env-file`, for the local Postgres and the `gaku` Helm chart.
+Used by: `make gaku_install_local` — creates the `gaku-secret` Kubernetes secret from it with `kubectl create secret --from-env-file`, for the local Postgres and the `gaku` Helm chart.
 
 | Variable                               | Responsibility                                                 |
 | -------------------------------------- | -------------------------------------------------------------- |
