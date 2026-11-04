@@ -5,27 +5,19 @@ misconfigurations:
     statement: "Idea 7: the only apt-get installs curl in the web image."
     expired_at: 2027-01-31
 
-  # The production patches are partial manifests and keep matching after the base sets a securityContext.
   # Planned fix: set readOnlyRootFilesystem in the container securityContext.
   - id: KSV-0014
     paths:
-      - infra/k8s/base/api/deployment.yaml
-      - infra/k8s/base/web/deployment.yaml
-      - infra/k8s/base/db-migration/job.yaml
       - infra/k8s/gaku/templates/api.yaml
       - infra/k8s/gaku/templates/web.yaml
       - infra/k8s/local/postgres/statefulset.yaml
     statement: "Idea 2: pod securityContext."
     expired_at: 2027-01-31
-  # Planned fix: add a pod securityContext to the base deployments.
+  # Planned fix: add a pod securityContext to the chart's deployments.
   - id: KSV-0118
     paths:
-      - infra/k8s/base/api/deployment.yaml
-      - infra/k8s/base/web/deployment.yaml
-      - infra/k8s/base/db-migration/job.yaml
       - infra/k8s/gaku/templates/api.yaml
       - infra/k8s/gaku/templates/web.yaml
-      - infra/k8s/eks/production/patches/*.yaml
       - infra/k8s/local/postgres/statefulset.yaml
     statement: "Idea 2: pod securityContext."
     expired_at: 2027-01-31

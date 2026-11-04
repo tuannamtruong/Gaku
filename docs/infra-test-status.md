@@ -68,9 +68,8 @@ EKS with RDS, images from ECR, traffic through an ALB.
 
 ### 1.3 Production
 
-`infra/terraform/environments/production`. Terraform only — there is no `eks/production`
-kustomization and no pipeline targeting production yet, so deployment rows will be added when
-those exist.
+`infra/terraform/environments/production`. Terraform only — `values-production.yaml` exists but no
+pipeline targets production yet, so deployment rows will be added when one does.
 
 | Component | Pass criterion | Status | Last tested | Commit | Evidence |
 | --- | --- | --- | --- | --- | --- |

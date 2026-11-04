@@ -50,7 +50,7 @@ Read what's needed to ground the script in the project's actual setup:
 
 - `Makefile`, `infra/k8s/k8s.mk`, `infra/jenkins/jenkins.mk` — existing targets you can model from
 - `docker-compose.yml` and `docker/Dockerfile.*` — image names, build args, compose service names
-- `infra/k8s/base/` — shared k8s manifests (deployments, jobs, namespaces); `infra/k8s/local/ + infra/k8s/eks/{staging,production}/` — per-environment overlays
+- `infra/k8s/gaku/` — Helm chart (deployments, services, the db-migrate hook Job) with `values-<env>.yaml` per environment; `infra/k8s/local/` — minikube Postgres and `.env.k8s`; `infra/k8s/eks/<env>/` — ExternalSecret
 - `scripts/export-oci-env.sh` — OCI build-arg exports (GIT_COMMIT, BUILD_TIMESTAMP)
 
 Only read the files that are relevant to the requested process.
