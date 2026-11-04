@@ -78,6 +78,17 @@ pipeline {
             }
         }
 
+        // Every environment's values, so a broken production file fails before a staging deploy.
+        stage('Lint Chart') {
+            steps {
+                sh """
+                    for ENV in local staging production; do
+                      helm lint --strict infra/k8s/gaku -f infra/k8s/gaku/values-\${ENV}.yaml
+                    done
+                """
+            }
+        }
+
         stage('Restore & Build') {
             steps {
                 sh """
@@ -196,6 +207,7 @@ pipeline {
         stage('Smoke Test') {
             when { expression { env.BRANCH_NAME == null || env.BRANCH_NAME == 'master' } }
             steps {
+                sh "helm test gaku -n ${env.NAMESPACE} --logs"
                 // The ALB takes time to provision on new cluster, try and wait up to 5 minutes.
                 sh """
                     for i in \$(seq 30); do
