@@ -115,6 +115,7 @@ so the `ExternalSecret` in `infra/k8s/eks/<env>/` is applied before it.
 ```bash
 make tf_env_kubeconfig ENV=staging
 make k8s_deploy ENV=staging TAG=42      # namespace, ExternalSecret, then helm upgrade --install
+helm test gaku -n gaku                  # /api/health and /health from inside the cluster
 ```
 
 `k8s_deploy` runs the same commands as the `Deploy to Staging` stage in `Jenkinsfile.aws`, so production, which has no
@@ -128,9 +129,11 @@ to stay compatible with the previous app version.
 | Command | Does |
 | --- | --- |
 | `helm template gaku infra/k8s/gaku -f infra/k8s/gaku/values-<env>.yaml` | Prints the rendered manifests |
-| `helm lint --strict infra/k8s/gaku -f infra/k8s/gaku/values-<env>.yaml` | Checks the templates |
+| `helm lint --strict infra/k8s/gaku -f infra/k8s/gaku/values-<env>.yaml` | Checks the templates, and the values against `values.schema.json` |
 | `helm history gaku -n gaku` | Lists the releases |
 | `helm rollback gaku <revision> -n gaku` | Returns to a release |
+
+The tag goes in with `--set-string`: `--set image.tag=42` passes a number, which the schema rejects.
 
 A cluster deployed before the chart holds objects that `kubectl apply` created, and Helm refuses to take them over.
 Delete the namespace once with `kubectl delete namespace gaku` before the first `k8s_deploy`. Nothing in it outlives a
@@ -235,6 +238,7 @@ The password is in Terraform state, which is why the bucket in
 | `make tf_bootstrap_test` | Bootstrap state test |
 | `make tf_env_plan ENV=<env>` | Diff against an environment |
 | `make tf_env_kubeconfig ENV=<env>` | Points `kubectl` at that cluster |
+| `helm lint --strict infra/k8s/gaku -f infra/k8s/gaku/values-<env>.yaml` | Chart templates, and the values against `values.schema.json` |
 
 ## 8. Cost  
 Rough estimate for eu-central-1 on-demand list prices for running 730 hours, excluding data transfer.

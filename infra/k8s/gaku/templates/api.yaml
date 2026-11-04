@@ -23,6 +23,8 @@ spec:
     metadata:
       labels:
         app: gaku-api
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       {{- if .Values.topologySpread }}
       {{- include "gaku.spread" "gaku-api" | nindent 6 }}

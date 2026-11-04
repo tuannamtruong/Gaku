@@ -1,0 +1,35 @@
+# helm test gaku -n gaku
+apiVersion: v1
+kind: Pod
+metadata:
+  name: gaku-test-health
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "gaku.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: curl
+      image: curlimages/curl:8.15.0
+      command: ["sh", "-c"]
+      args:
+        - curl -fsS http://gaku-api:8080/api/health && echo && curl -fsS http://gaku-web:8080/health
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: [ALL]
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+        limits:
+          memory: 32Mi

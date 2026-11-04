@@ -59,6 +59,7 @@ minikube image load gaku-web:latest
 minikube image load gaku-migrator:latest
 make k8s_apply                  # namespace, secret, Postgres, then the chart
 make k8s_test
+helm test gaku -n gaku          # /api/health and /health from inside the cluster
 ```
 
 `make k8s_apply` creates what the chart expects to exist, then runs `helm upgrade --install` with `values-local.yaml`.

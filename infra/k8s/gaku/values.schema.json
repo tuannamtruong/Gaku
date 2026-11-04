@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registry", "tag", "pullPolicy"],
+      "properties": {
+        "registry": { "type": "string" },
+        "tag": { "type": "string", "minLength": 1 },
+        "pullPolicy": { "enum": ["Always", "IfNotPresent", "Never"] }
+      }
+    },
+    "replicas": { "type": "integer", "minimum": 1 },
+    "gitSha": { "type": "string" },
+    "ingress": {
+      "type": "object",
+      "additionalProperties": false,
+      "maxProperties": 1,
+      "properties": {
+        "nginx": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["host"],
+          "properties": { "host": { "type": "string", "minLength": 1 } }
+        },
+        "alb": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["group"],
+          "properties": { "group": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "autoscaling": { "type": "boolean" },
+    "pdb": { "type": "boolean" },
+    "topologySpread": { "type": "boolean" }
+  }
+}
