@@ -47,7 +47,7 @@ flowchart TD
 
     Jenkins["Jenkins"]
 
-    Jenkins -->|1. apply migration job<br/>2. rollout deployment| EKS-CP
+    Jenkins -->|helm<br/>1. migration hook<br/>2. rollout deployment| EKS-CP
     Jenkins -->|3. smoke test| Nodes  
     EKS-CP -->|schedules| Nodes
     ECR -->|image pull| Nodes
@@ -56,7 +56,7 @@ flowchart TD
 | Component | Provisioned by | Purpose |
 | --- | --- | --- |
 | `gaku-staging` EKS cluster | `modules/eks` | Runs the deployed workloads in namespace `gaku` |
-| AWS Load Balancer Controller | Helm, in-cluster | Turns the overlay's Ingress objects into a shared ALB |
+| AWS Load Balancer Controller | Helm, in-cluster | Turns the chart's Ingress objects into a shared ALB |
 | External Secrets Operator | Helm, in-cluster | Materialises `gaku-secret` from Secrets Manager |
 
 ## 2. DevSecOps

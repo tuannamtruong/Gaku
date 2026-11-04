@@ -18,7 +18,7 @@ Two environments: `staging` and `production`.
 
 ### 1.2 Staging
 
-`infra/terraform/environments/staging`, `infra/k8s/eks/staging`, and `Jenkinsfile.aws`.
+`infra/terraform/environments/staging`, `infra/k8s/gaku` with `values-staging.yaml`, and `Jenkinsfile.aws`.
 EKS with RDS, images from ECR, traffic through an ALB.
 
 #### 1.2.1 Terraform

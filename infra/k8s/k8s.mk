@@ -144,6 +144,13 @@ _helm_gaku = helm upgrade --install gaku $(CHART) -n gaku \
   --set-string gitSha=$$(git rev-parse HEAD) \
   --rollback-on-failure --timeout 10m
 
+# Migrations, then both rollouts. Rolls back on failure.
+k8s_deploy: _lbc_require_env
+	kubectl create namespace gaku --dry-run=client -o yaml | kubectl apply -f -
+	kubectl apply -f $(EKS)/$(ENV)/external-secret.yaml
+	kubectl -n gaku wait --for=condition=Ready externalsecret/gaku-secret --timeout=120s
+	$(call _helm_gaku,$(ENV))
+
 
 #############################################################################
 # Monitoring commands (local and AWS)

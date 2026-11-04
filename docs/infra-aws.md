@@ -106,6 +106,37 @@ make tf_env_init ENV=production
 make tf_env_apply ENV=production
 ```
 
+### 3.5 Deploy Gaku
+
+The `gaku` chart in `infra/k8s/gaku/` deploys the API, the web app and the EF Core migration Job, with
+`values-<env>.yaml` holding what each environment changes. The chart expects the namespace and `gaku-secret` to exist,
+so the `ExternalSecret` in `infra/k8s/eks/<env>/` is applied before it.
+
+```bash
+make tf_env_kubeconfig ENV=staging
+make k8s_deploy ENV=staging TAG=42      # namespace, ExternalSecret, then helm upgrade --install
+```
+
+`k8s_deploy` runs the same commands as the `Deploy to Staging` stage in `Jenkinsfile.aws`, so production, which has no
+pipeline yet, deploys with `ENV=production`.
+
+The migration Job is a `pre-install,pre-upgrade` hook: Helm runs it to completion before changing the Deployments, and
+a failed migration fails the release without touching them. `--rollback-on-failure` returns a release whose migration
+or rollout fails to the previous one. Rollback restores the Kubernetes objects but not the schema, so a migration has
+to stay compatible with the previous app version.
+
+| Command | Does |
+| --- | --- |
+| `helm template gaku infra/k8s/gaku -f infra/k8s/gaku/values-<env>.yaml` | Prints the rendered manifests |
+| `helm lint --strict infra/k8s/gaku -f infra/k8s/gaku/values-<env>.yaml` | Checks the templates |
+| `helm history gaku -n gaku` | Lists the releases |
+| `helm rollback gaku <revision> -n gaku` | Returns to a release |
+
+A cluster deployed before the chart holds objects that `kubectl apply` created, and Helm refuses to take them over.
+Delete the namespace once with `kubectl delete namespace gaku` before the first `k8s_deploy`. Nothing in it outlives a
+deploy anyway: the database is RDS and `gaku-secret` comes back from Secrets Manager. The ALB is recreated with a new
+hostname.
+
 ## 4. Module
 
 ### 4.1 vpc
@@ -168,6 +199,8 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 | RDS backups | 1 day, no final snapshot | 14 days, final snapshot |
 | Performance Insights | off | on |
 | Deletion protection | off | on |
+| Helm values | `infra/k8s/gaku/values-staging.yaml` | `infra/k8s/gaku/values-production.yaml` |
+| Gaku replicas | 1 each | 2 each, HPA to 6, PDB minAvailable 1 |
 | ECR repositories | CRUD | read only |
 | Jenkins | CRUD | read only |
 
@@ -175,14 +208,15 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
 The RDS module generates a 32-character master password with `random_password` and writes it,
 along with a ready-made Npgsql connection string, to a Secrets Manager entry named
-`gaku-<env>/database`. The JSON keys match `infra/k8s/overlays/local/.env.k8s` exactly:
+`gaku-<env>/database`. The JSON keys match `infra/k8s/local/.env.k8s` exactly:
 
 ```
 POSTGRES_DB  POSTGRES_USER  POSTGRES_PASSWORD  ConnectionStrings__DefaultConnection
 ```
 
-plus `host` and `port`. A Phase 7 secret store can therefore map the entry onto `gaku-secret`
-without renaming anything.
+plus `host` and `port`. The `ExternalSecret` in `infra/k8s/eks/<env>/` copies the whole document into
+`gaku-secret` with `dataFrom.extract`, so the keys the pods read through `envFrom` are the same
+ones `make k8s_apply` creates locally from `.env.k8s` — nothing is renamed on the way through.
 
 The connection string carries `SSL Mode=Require;Trust Server Certificate=true`, matching the
 `rds.force_ssl` parameter. `Trust Server Certificate` skips CA validation — mounting the RDS CA
