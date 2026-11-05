@@ -1,10 +1,4 @@
 misconfigurations:
-  # Planned fix: remove curl from the web image, which removes the only apt-get line.
-  - id: DS-0029
-    paths: [docker/Dockerfile]
-    statement: "Idea 7: the only apt-get installs curl in the web image."
-    expired_at: 2027-01-31
-
   # Planned fix: set readOnlyRootFilesystem in the container securityContext.
   - id: KSV-0014
     paths:

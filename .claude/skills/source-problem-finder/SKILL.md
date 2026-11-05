@@ -86,9 +86,9 @@ kubectl logs deployment/gaku-web -n gaku --tail=100
 # Is the database accepting connections?
 kubectl exec -n gaku deploy/postgres -- psql -U <user> -d <db> -c "SELECT 1;"
 
-# Is the API reachable from the web pod?
-kubectl exec -n gaku deployment/gaku-web -- \
-  curl -s -o /dev/null -w "%{http_code}" http://gaku-api:8080/health
+# Is the API reachable from the web pod? The image has no curl, so attach an ephemeral container.
+kubectl debug -n gaku -it $(kubectl get pod -n gaku -l app=gaku-web -o name | head -1) \
+  --image=curlimages/curl:8.15.0 -- curl -s -o /dev/null -w "%{http_code}" http://gaku-api:8080/api/health
 ```
 
 - DB refusing connections, returning errors, or API unreachable → **Dependency layer** — go to Phase 4 › Dependency.
@@ -290,7 +290,7 @@ Common k8s causes: stale cached image in minikube (pod running old image), wrong
 kubectl exec -n gaku deployment/<pod> -- getent ahosts <hostname>
 
 # Direct connectivity and TLS handshake
-kubectl exec -n gaku deployment/<pod> -- curl -v https://<external-host>/
+kubectl debug -n gaku -it <pod> --image=curlimages/curl:8.15.0 -- curl -v https://<external-host>/
 
 # Ingress logs for routing and TLS errors
 kubectl logs <ingress-pod> -n ingress-nginx --tail=200 | grep -E "50[0-9]|40[0-9]|TLS|ssl"
