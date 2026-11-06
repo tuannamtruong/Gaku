@@ -1,3 +1,9 @@
+vulnerabilities:
+  # Ignorred: apt never runs in the runtime images; drop once MCR's 10.0 images ship apt >= 2.8.4ubuntu0.1.
+  - id: CVE-2026-109518
+    statement: "Ignored until MCR rebases: apt is not used at runtime."
+    expired_at: 2026-12-15
+
 misconfigurations:
   # Planned fix: set readOnlyRootFilesystem in the container securityContext.
   - id: KSV-0014
