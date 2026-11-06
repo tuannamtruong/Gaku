@@ -1,8 +1,11 @@
 root = true
 
 [*.cs]
+# Log calls in cold paths can be ignored.
 dotnet_diagnostic.CA1848.severity = none
+# The rule's gain is negligible, and following it would break the convention of returning read-only interfaces.
 dotnet_diagnostic.CA1859.severity = none
 
 [src/Gaku.Infrastructure/Migrations/*.cs]
+#Generated seed for migration code that runs once. Can be safely ignored.
 generated_code = true
