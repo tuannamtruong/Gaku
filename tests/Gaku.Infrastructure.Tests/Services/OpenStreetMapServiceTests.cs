@@ -121,6 +121,39 @@ public class OpenStreetMapServiceTests
         capturedBody.Should().NotContain("45,39375", "comma decimal separator breaks the Overpass query");
     }
 
+    [Fact]
+    public async Task SearchLocationsAsync_ParsesBoundingBox_UnderGermanLocale()
+    {
+        var nominatimJson = """
+            [{ "osm_id": 1, "lat": "45.9237", "lon": "6.8694", "boundingbox": ["45.90", "45.95", "6.85", "6.90"] }]
+            """;
+
+        var mockHttp = new MockHttpMessageHandler();
+        mockHttp.When("https://nominatim.openstreetmap.org/*")
+            .Respond("application/json", nominatimJson);
+
+        var factory = Substitute.For<IHttpClientFactory>();
+        factory.CreateClient(HttpClientNames.Nominatim)
+            .Returns(new HttpClient(mockHttp) { BaseAddress = new Uri("https://nominatim.openstreetmap.org") });
+
+        var sut = new OpenStreetMapService(factory, NullLogger<OpenStreetMapService>.Instance);
+
+        IReadOnlyList<NominatimResult> results;
+        var originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+            results = await sut.SearchLocationsAsync("Chamonix");
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+
+        results[0].Bounds.Should().NotBeNull();
+        results[0].Bounds!.MinLatitude.Should().BeApproximately(45.90, 0.001, "\"45.90\" must not parse as 4590 under a comma-decimal locale");
+    }
+
     private sealed class CapturingHttpHandler(Func<HttpRequestMessage, HttpResponseMessage> respond)
         : HttpMessageHandler
     {

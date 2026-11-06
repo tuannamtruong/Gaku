@@ -117,8 +117,8 @@ public class OpenStreetMapService(
         new Coordinates(r.Lat, r.Lon),
         r.BoundingBox is { Length: 4 }
             ? new BoundingBox(
-                double.Parse(r.BoundingBox[0]), double.Parse(r.BoundingBox[2]),
-                double.Parse(r.BoundingBox[1]), double.Parse(r.BoundingBox[3]))
+                double.Parse(r.BoundingBox[0], CultureInfo.InvariantCulture), double.Parse(r.BoundingBox[2], CultureInfo.InvariantCulture),
+                double.Parse(r.BoundingBox[1], CultureInfo.InvariantCulture), double.Parse(r.BoundingBox[3], CultureInfo.InvariantCulture))
             : null);
 
     private static readonly JsonSerializerOptions JsonOptions = new()
