@@ -5,5 +5,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+
+    <!-- SAST: the SDK's code analysis, with every security rule turned on as an error. -->
+    <AnalysisMode>Recommended</AnalysisMode>
+    <AnalysisModeSecurity>All</AnalysisModeSecurity>
+    <!-- The SDK has no public switch to make one category errors; this selects the security config with errors. -->
+    <_GlobalAnalyzerConfigFileName_MicrosoftCodeAnalysisNetAnalyzersSecurity_WarnAsErrorSuffix>_warnaserror</_GlobalAnalyzerConfigFileName_MicrosoftCodeAnalysisNetAnalyzersSecurity_WarnAsErrorSuffix>
   </PropertyGroup>
+
+  <!-- Fails the build if an SDK update ignores the property above, instead of silently turning the security rules back into warnings. -->
+  <Target Name="CheckSecurityRulesAreErrors" AfterTargets="AddGlobalAnalyzerConfigForPackage_MicrosoftCodeAnalysisNetAnalyzersSecurity">
+    <Error Condition="!$(_GlobalAnalyzerConfigFile_MicrosoftCodeAnalysisNetAnalyzersSecurity.EndsWith('_warnaserror.globalconfig'))"
+           Text="Security analyzer rules are no longer errors. Update the SAST settings in Directory.Build.props." />
+  </Target>
 </Project>
