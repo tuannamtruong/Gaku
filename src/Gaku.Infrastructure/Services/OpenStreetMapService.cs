@@ -40,6 +40,7 @@ public class OpenStreetMapService(
         }
     }
 
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<OsmTrailData>> GetTrailsInBoundsAsync(
         BoundingBox bounds, CancellationToken cancellationToken = default)
     {
@@ -78,6 +79,20 @@ public class OpenStreetMapService(
         }
     }
 
+
+    /// <summary>
+    /// Converts Overpass ways into trails by resolving each way's node IDs to coordinates.
+    /// </summary>
+    /// <param name="result">The deserialized Overpass response, or null if the body was empty.</param>
+    /// <returns>
+    /// The trails whose paths have at least two points, 
+    /// or an empty list if <paramref name="result"/> has no elements.
+    /// </returns>
+    /// <remarks>
+    /// Overpass returns ways and nodes as separate elements, and a way references its nodes only by ID.
+    /// Node IDs missing from the response are skipped, and a way left with fewer than two points
+    /// is dropped because it can't be drawn as a line.
+    /// </remarks>
     private static IReadOnlyList<OsmTrailData> ParseOverpassElements(OverpassResponse? result)
     {
         if (result?.Elements is null) return [];

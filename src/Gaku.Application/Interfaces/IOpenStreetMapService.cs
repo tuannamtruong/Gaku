@@ -20,6 +20,12 @@ public interface IOpenStreetMapService
     /// Fetches hiking paths within <paramref name="bounds"/> from the Overpass API
     /// (<c>highway=path/track</c> with <c>sac_scale</c> or <c>route=hiking</c>).
     /// </summary>
+    /// <param name="bounds">The map area to search, in WGS-84 decimal degrees.</param>
+    /// <param name="cancellationToken">A token to cancel the request.</param>
+    /// <returns>
+    /// One OSM trail per matching way whose path has at least two points,
+    /// or an empty list if the Overpass request fails.
+    /// </returns>
     Task<IReadOnlyList<OsmTrailData>> GetTrailsInBoundsAsync(BoundingBox bounds, CancellationToken cancellationToken = default);
 }
 
