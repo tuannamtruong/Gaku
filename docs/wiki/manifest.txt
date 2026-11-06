@@ -15,6 +15,5 @@ docs/class-diagram.md              | Class-Diagrams
 docs/database.md                   | Database-Schema
 docs/osm-integration.md            | OSM-Integration
 docs/cicd-workflow-local-first.md  | CICD-Workflow
-docs/cicd-plan.md                  | CICD-Roadmap
 docs/infra-local.md                | Infrastructure-Local
 docs/infra-aws.md                  | Infrastructure-AWS
