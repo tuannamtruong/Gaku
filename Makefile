@@ -10,11 +10,18 @@ pg_up:
 
 local_up: jenkins_up minikube_up pg_up
 
-#Pass git diff to host system
-gph:
-	git diff > $(HOST_SYSTEM_REPO)/my-changes.patch
 
-#Apply git diff in host system
-gap:
-	git apply .\my-changes.patch
-	rm  .\my-changes.patch
+#############################################################################
+# Repo syncing between Windows and WSL
+#############################################################################
+
+BRANCH ?= $(shell git branch --show-current)
+
+# Can only be executed in WSL.
+# Windows clone runs git.exe: Linux git there ignores core.autocrlf
+wsl_to_win:
+	cd $(HOST_SYSTEM_REPO) && git.exe fetch wsl && git.exe merge --ff-only wsl/$(BRANCH)
+
+# Can only be executed in WSL.
+win_to_wsl:
+	git fetch win && git merge win/$(BRANCH)
