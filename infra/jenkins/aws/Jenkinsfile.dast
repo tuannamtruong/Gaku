@@ -1,0 +1,65 @@
+// Nightly DAST against staging, on the Jenkins controller in AWS.
+// Separate from infra/jenkins/aws/Jenkinsfile, so the ZAP scan does not slow down every build.
+
+pipeline {
+    agent any
+
+    triggers {
+        cron('H 2 * * *')
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '30'))
+        timeout(time: 30, unit: 'MINUTES')
+        disableConcurrentBuilds()
+        timestamps()
+    }
+
+    environment {
+        AWS_REGION = "eu-central-1"
+        CLUSTER    = "gaku-staging"
+        NAMESPACE  = "gaku"
+        REPORTS    = "zap"
+
+        // Digest changes by hand.
+        ZAP        = "ghcr.io/zaproxy/zaproxy:2.17.0@sha256:9624669db72f54d86c4b46a7064518bd9bf79d8c61a4c31befa9923489f328af"
+    }
+
+    stages {
+
+        // Passive scan only: the baseline spiders the site and reports what the responses show, without attacking it.
+        stage('ZAP Baseline') {
+            steps {
+                script {
+                    sh "aws eks update-kubeconfig --name ${env.CLUSTER} --region ${env.AWS_REGION}"
+                    def addr = sh(returnStdout: true, script: """
+                        kubectl get ingress gaku-web -n ${env.NAMESPACE} \\
+                            -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+                    """).trim()
+                    if (!addr) {
+                        error "Ingress gaku-web has no ALB address - is staging deployed?"
+                    }
+
+                    // ZAP runs as uid 1000 and writes the reports into the mounted directory.
+                    sh "rm -rf ${env.REPORTS} && mkdir ${env.REPORTS} && chmod 777 ${env.REPORTS}"
+                    def rc = sh(returnStatus: true, script: """
+                        docker run --rm -v ${env.WORKSPACE}/${env.REPORTS}:/zap/wrk:rw ${env.ZAP} \\
+                            zap-baseline.py -t http://${addr}/ -r report.html -J report.json
+                    """)
+
+                    // zap-baseline.py exits 0 when clean, 1 on a FAIL alert, 2 on WARN alerts only, 3 on any other error.
+                    if (rc == 2) {
+                        unstable "ZAP raised warnings, see ${env.REPORTS}/report.html"
+                    } else if (rc != 0) {
+                        error "ZAP baseline exited with ${rc}"
+                    }
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: "${env.REPORTS}/report.*", allowEmptyArchive: true
+                }
+            }
+        }
+    }
+}

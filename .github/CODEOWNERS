@@ -2,7 +2,7 @@
 trivy.yaml                      @tuannamtruong
 .trivyignore.yaml               @tuannamtruong
 .github/                        @tuannamtruong
-infra/jenkins/aws/Jenkinsfile   @tuannamtruong
+infra/jenkins/aws/Jenkinsfile*  @tuannamtruong
 docker/Dockerfile               @tuannamtruong
 .gitleaks.toml                  @tuannamtruong
 .gitleaksignore                 @tuannamtruong

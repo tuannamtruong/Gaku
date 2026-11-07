@@ -2,6 +2,7 @@ JENKINS_FOLDER := ./infra/jenkins/local
 JENKINS_AWS_TF := infra/terraform/environments/staging
 JENKINS_JOB    ?= gaku
 JENKINS_USER   ?= admin
+JENKINS_AWS_JOB_CONFIG ?= ./infra/jenkins/aws/job-config.xml
 
 # Create a Jenkins job from a config.xml through the REST API.
 JENKINS_CREATE_JOB = create_job() { \
@@ -72,4 +73,9 @@ jenkins_aws_job:
 	case "$$URL" in http*) ;; *) \
 	  echo "[FAIL] No Jenkins URL - set enable_jenkins = true and apply staging first"; exit 1;; esac; \
 	$(JENKINS_CREATE_JOB); \
-	create_job "$$URL" $(JENKINS_JOB) ./infra/jenkins/aws/job-config.xml
+	create_job "$$URL" $(JENKINS_JOB) $(JENKINS_AWS_JOB_CONFIG)
+
+# Creates the nightly DAST job (aws/Jenkinsfile.dast) from aws/dast-job-config.xml on the staging controller.
+jenkins_aws_dast_job:
+	@$(MAKE) --no-print-directory jenkins_aws_job JENKINS_JOB=gaku-dast \
+	  JENKINS_AWS_JOB_CONFIG=./infra/jenkins/aws/dast-job-config.xml

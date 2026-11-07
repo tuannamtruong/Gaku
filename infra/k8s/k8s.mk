@@ -233,6 +233,24 @@ gaku_install_local:
 k8s_postgres:
 	kubectl exec -it -n gaku statefulset/postgres -- psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
 
+# ZAP baseline against the local ingress, with the image pinned in the AWS DAST pipeline.
+# ZAP joins the minikube network: the default bridge cannot reach the minikube IP.
+DAST_REPORTS ?= $(CURDIR)/docs/reports
+ZAP_IMAGE     = $(shell sed -n 's/^ *ZAP *= *"\(.*\)"/\1/p' infra/jenkins/aws/Jenkinsfile.dast)
+
+dast_local:
+	@mkdir -p $(DAST_REPORTS); RC=0; \
+	docker run --rm --network minikube --add-host gaku.local:$$(minikube ip) \
+	  -v $(DAST_REPORTS):/zap/wrk:rw $(ZAP_IMAGE) \
+	  zap-baseline.py -t http://gaku.local/ -r zap-local.html -J zap-local.json || RC=$$?; \
+	rm -f $(DAST_REPORTS)/zap.yaml; \
+	case $$RC in \
+	  0) echo "[OK]   ZAP clean";; \
+	  2) echo "[WARN] ZAP raised warnings";; \
+	  *) echo "[FAIL] ZAP exited with $$RC"; exit $$RC;; \
+	esac; \
+	echo "Report: $(DAST_REPORTS)/zap-local.html"
+
 k8s_test_layer1:
 	@echo "=== Gaku Kubernetes Resource Report ==="
 	@RAW=$$(kubectl get all,ingress,pvc,secret,configmap -n gaku 2>&1); \
