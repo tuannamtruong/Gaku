@@ -118,7 +118,7 @@ make k8s_deploy ENV=staging TAG=42      # namespace, ExternalSecret, then helm u
 helm test gaku -n gaku                  # /api/health and /health from inside the cluster
 ```
 
-`k8s_deploy` runs the same commands as the `Deploy to Staging` stage in `Jenkinsfile.aws`, so production, which has no
+`k8s_deploy` runs the same commands as the `Deploy to Staging` stage in `infra/jenkins/aws/Jenkinsfile`, so production, which has no
 pipeline yet, deploys with `ENV=production`.
 
 The migration Job is a `pre-install,pre-upgrade` hook: Helm runs it to completion before changing the Deployments, and

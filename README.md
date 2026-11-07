@@ -171,7 +171,7 @@ objects exist" to "does `gaku.local/api/health` answer through the ingress" and 
 at each layer.
 
 CI runs on a local Jenkins instance fed by a Smee relay, so GitHub webhooks reach a controller that
-has no public address. `make jenkins_up` starts it. The pipeline lives in `Jenkinsfile.local`; the EC2 controller runs `Jenkinsfile.aws`.
+has no public address. `make jenkins_up` starts it. The pipeline lives in `infra/jenkins/local/Jenkinsfile`; the EC2 controller runs `infra/jenkins/aws/Jenkinsfile`.
 
 ## 7. Documentation
 

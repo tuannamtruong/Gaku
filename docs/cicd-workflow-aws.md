@@ -71,7 +71,7 @@ The docker images use the unprivileged `app` user (UID 1654) from .NET base imag
 
 | Tool | Pinned by | Pinned in | Updated by |
 | --- | --- | --- | --- |
-| Trivy | image digest | `Jenkinsfile.aws`, `.github/workflows/security-scan.yml` | hand, in both files together |
+| Trivy | image digest | `infra/jenkins/aws/Jenkinsfile`, `.github/workflows/security-scan.yml` | hand, in both files together |
 | Helm | release version | `infra/jenkins/local/Dockerfile`, `modules/jenkins-controller/user_data.sh.tftpl` | hand, in both files together |
 | Gitleaks | image digest | `.github/workflows/security-scan.yml`, `.githooks/pre-commit` | hand, in both files together |
 | GitHub Actions | commit SHA | `.github/workflows/security-scan.yml` | Dependabot, a weekly PR (`.github/dependabot.yml`) |
@@ -97,7 +97,7 @@ Execute by GitHub Actions in `.github/workflows/security-scan.yml`.
 
 ### 2.3 Artifact scans
 
-Scans of the built images, in the `Security Scan` stage of `Jenkinsfile.aws` and the `image` job of `.github/workflows/security-scan.yml`. The pull request scan catches a vulnerable base image before the merge; Jenkins scans the exact images it pushes.
+Scans of the built images, in the `Security Scan` stage of `infra/jenkins/aws/Jenkinsfile` and the `image` job of `.github/workflows/security-scan.yml`. The pull request scan catches a vulnerable base image before the merge; Jenkins scans the exact images it pushes.
 
 | | Jenkins | GitHub Actions (`image` job) |
 | --- | --- | --- |

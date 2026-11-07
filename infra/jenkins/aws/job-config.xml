@@ -31,7 +31,7 @@
       <submoduleCfg class="empty-list"/>
       <extensions/>
     </scm>
-    <scriptPath>Jenkinsfile.aws</scriptPath>
+    <scriptPath>infra/jenkins/aws/Jenkinsfile</scriptPath>
     <lightweight>true</lightweight>
   </definition>
   <disabled>false</disabled>

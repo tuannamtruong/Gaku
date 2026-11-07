@@ -18,7 +18,7 @@ Two environments: `staging` and `production`.
 
 ### 1.2 Staging
 
-`infra/terraform/environments/staging`, `infra/k8s/gaku` with `values-staging.yaml`, and `Jenkinsfile.aws`.
+`infra/terraform/environments/staging`, `infra/k8s/gaku` with `values-staging.yaml`, and `infra/jenkins/aws/Jenkinsfile`.
 EKS with RDS, images from ECR, traffic through an ALB.
 
 #### 1.2.1 Terraform
@@ -53,7 +53,7 @@ EKS with RDS, images from ECR, traffic through an ALB.
 | Cluster autoscaler scale-up | A pod `Pending` on `Insufficient cpu` brings a second node | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) — `ballast` at `1500m` × 2 grew the ASG to 2 |
 | Cluster autoscaler scale-down | Removing the load returns the ASG to 1 node | Pass | 2026-10-02 | 1fdd623 | [record](archive/2026-10-02-autoscaling-staging.md) |
 
-#### 1.2.3 Pipeline (`Jenkinsfile.aws`)
+#### 1.2.3 Pipeline (`infra/jenkins/aws/Jenkinsfile`)
 
 | Component | Pass criterion | Status | Last tested | Commit | Evidence |
 | --- | --- | --- | --- | --- | --- |
@@ -119,7 +119,7 @@ Applying [§3 Deploy](infra-local.md#3-deploy), [§4 Verification](infra-local.m
 
 ### 2.3 Jenkins
 
-`infra/jenkins/local` (controller image, compose file, Smee relay, seed job).
+`infra/jenkins/local` (controller image, compose file, Smee relay, seed job, pipeline).
 
 | Component | Pass criterion | Status | Last tested | Evidence |
 | --- | --- | --- | --- | --- |

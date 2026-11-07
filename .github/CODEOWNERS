@@ -1,10 +1,10 @@
 # Security scans.
-trivy.yaml                  @tuannamtruong
-.trivyignore.yaml           @tuannamtruong
-.github/                    @tuannamtruong
-Jenkinsfile.aws             @tuannamtruong
-docker/Dockerfile           @tuannamtruong
-.gitleaks.toml              @tuannamtruong
-.gitleaksignore             @tuannamtruong
-Directory.Build.props       @tuannamtruong
-.editorconfig               @tuannamtruong
+trivy.yaml                      @tuannamtruong
+.trivyignore.yaml               @tuannamtruong
+.github/                        @tuannamtruong
+infra/jenkins/aws/Jenkinsfile   @tuannamtruong
+docker/Dockerfile               @tuannamtruong
+.gitleaks.toml                  @tuannamtruong
+.gitleaksignore                 @tuannamtruong
+Directory.Build.props           @tuannamtruong
+.editorconfig                   @tuannamtruong

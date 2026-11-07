@@ -67,7 +67,7 @@ sequenceDiagram
 
 ## 4. Local CI Setup for Smee & Jenkins
 
-Pipeline job config: Git push → `https://github.com/tuannamtruong/Gaku` → Webhook to Smee → Relay to Jenkins → Filter by branch `*/master` → script path `Jenkinsfile.local`.
+Pipeline job config: Git push → `https://github.com/tuannamtruong/Gaku` → Webhook to Smee → Relay to Jenkins → Filter by branch `*/master` → script path `infra/jenkins/local/Jenkinsfile`.
 
 ### 4.1 Smee Channel
 
@@ -126,12 +126,11 @@ infra/jenkins/local/
   docker-compose.yml   jenkins + smee
   smee-relay.js        pure Node.js SSE client; converts Smee payloads to JSON for Jenkins
   job-config.xml       Jenkins pipeline job config
+  Jenkinsfile          builds CI image, runs test containers, publishes JUnit results, removes image
   .env
 
 docker/
   Dockerfile           
-
-Jenkinsfile.local      builds CI image, runs test containers, publishes JUnit results, removes image
 ```
 
 ---
