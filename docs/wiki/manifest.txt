@@ -9,8 +9,8 @@
 # A missing source file fails the publish. An empty one is skipped with a
 # warning, so a placeholder doc can sit in the manifest until it is written.
 
-docs/solution-architecture.md      | System-Context
-docs/software-architecture.md      | Architecture-Overview
+docs/architecture-solution.md      | System-Context
+docs/architecture-software.md      | Architecture-Overview
 docs/class-diagram.md              | Class-Diagrams
 docs/database.md                   | Database-Schema
 docs/osm-integration.md            | OSM-Integration

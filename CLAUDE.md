@@ -6,7 +6,7 @@ ASP.NET application for hiking across Europe.
 
 ### Deep dive
 
-See [docs/software-architecture.md](docs/software-architecture.md) for more architectural details and diagrams.
+See [docs/architecture-software.md](docs/architecture-software.md) for more architectural details and diagrams.
 
 ### Clean Architecture Overview
 

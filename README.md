@@ -179,8 +179,8 @@ Docs for this project are in `docs/`.
 
 | Page | Source |
 | --- | --- |
-| [Solution architecture](../../wiki/System-Context) | `docs/solution-architecture.md` |
-| [Software architecture](../../wiki/Architecture-Overview) | `docs/software-architecture.md` |
+| [Solution architecture](../../wiki/System-Context) | `docs/architecture-solution.md` |
+| [Software architecture](../../wiki/Architecture-Overview) | `docs/architecture-software.md` |
 | [Class Diagrams](../../wiki/Class-Diagrams) | `docs/class-diagram.md` |
 | [Database Schema](../../wiki/Database-Schema) | `docs/database.md` |
 | [OSM Integration](../../wiki/OSM-Integration) | `docs/osm-integration.md` |
