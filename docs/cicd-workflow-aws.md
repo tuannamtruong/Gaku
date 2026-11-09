@@ -74,6 +74,7 @@ The docker images use the unprivileged `app` user (UID 1654) from .NET base imag
 | Trivy | image digest | `infra/jenkins/aws/Jenkinsfile`, `.github/workflows/security-scan.yml` | hand, in both files together |
 | Helm | release version | `infra/jenkins/local/Dockerfile`, `modules/jenkins-controller/user_data.sh.tftpl` | hand, in both files together |
 | Gitleaks | image digest | `.github/workflows/security-scan.yml`, `.githooks/pre-commit` | hand, in both files together |
+| ZAP | image digest | `infra/jenkins/aws/Jenkinsfile.dast` | hand |
 | GitHub Actions | commit SHA | `.github/workflows/security-scan.yml` | Dependabot, a weekly PR (`.github/dependabot.yml`) |
 
 #### Code owners
@@ -95,6 +96,10 @@ Execute by GitHub Actions in `.github/workflows/security-scan.yml`.
 
 `.githooks/pre-commit` runs the same gitleaks image on the staged changes and blocks the commit on a finding, before the secret enters the history. `setup-dev-station.sh` enables it with `git config core.hooksPath .githooks`; run that once in any other clone. The hook needs Docker. `git commit --no-verify` skips it, so the `secrets` job is the gate.
 
+#### Code analysis
+
+Every `dotnet build` runs the SDK's code analysis, set in `Directory.Build.props`: the `Recommended` rule set, plus every rule of the Security category as an error. A security finding fails the `Restore & Build` stage in Jenkins and any local build; the other categories stay warnings. The SDK has no public property for the severity of one category, so `Directory.Build.props` sets an internal one and fails the build if a later SDK ignores it. `tests/.editorconfig` turns off CA1707, which flags the underscores in test names.
+
 ### 2.3 Artifact scans
 
 Scans of the built images, in the `Security Scan` stage of `infra/jenkins/aws/Jenkinsfile` and the `image` job of `.github/workflows/security-scan.yml`. The pull request scan catches a vulnerable base image before the merge; Jenkins scans the exact images it pushes.
@@ -105,3 +110,18 @@ Scans of the built images, in the `Security Scan` stage of `infra/jenkins/aws/Je
 | Scans | the images about to be pushed | the `api`, `web` and `migrator` images, built on the runner and discarded after the scan |
 | On findings | the build fails, nothing is pushed | the check fails |
 | Results | stage log | job log, Security tab (SARIF) |
+
+### 2.4 Dynamic scan
+
+`infra/jenkins/aws/Jenkinsfile.dast` runs the OWASP ZAP baseline scan against the staging ALB every night, as its own job `gaku-dast`, so the main build stays fast. The baseline is passive: it spiders the web app and checks the responses, without sending attacks, so it does not push traffic through the API to Nominatim or Overpass.
+
+| | |
+| --- | --- |
+| Runs on | nightly at a fixed hour around 02:00, controller time |
+| Scans | the web app at `http://<ALB>/`, which the spider reaches from the start page |
+| On findings | a FAIL alert or a ZAP error fails the build; WARN alerts only mark it unstable |
+| Results | `zap/report.html` and `zap/report.json`, archived on the build |
+
+`make jenkins_aws_dast_job` creates the job from `infra/jenkins/aws/dast-job-config.xml`, the same way as `make jenkins_aws_job` in [infra-aws.md](infra-aws.md).
+
+`make dast_local` runs the same scan with the same image against the minikube ingress at `http://gaku.local/`, without Jenkins, and writes `docs/reports/zap-local.html` and `docs/reports/zap-local.json`.

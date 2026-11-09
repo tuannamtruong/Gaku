@@ -142,7 +142,7 @@ Used by: local `docker compose` and EF Core CLI tools.
 | `POSTGRES_USER`                        | PostgreSQL login role                                                                                          |
 | `POSTGRES_PASSWORD`                    | PostgreSQL login password                                                                                      |
 | `ConnectionStrings__DefaultConnection` | Full ADO.NET connection string for the ASP.NET Core apps and EF Core migrations                                |
-| `HOST_SYSTEM_REPO`                     | Absolute path to the repo on the host machine (used when bind-mounting the source into containers)             |
+| `HOST_SYSTEM_REPO`                     | WSL path to the Windows clone used by Visual Studio (`make wsl_to_win`)                                        |
 | `DOCKERHUB_USERNAME`                   | DockerHub account name used by `make docker_login` / `make docker_push`                                        |
 | `DOCKERHUB_TOKEN`                      | DockerHub personal access token (Read/Write/Delete) — generate at hub.docker.com > Account Settings > Security |
 
@@ -197,3 +197,5 @@ docker compose down
 > For CI/CD setup (Jenkins, pipeline, Smee) see [docs/cicd-workflow-local-first.md](docs/cicd-workflow-local-first.md).
 > For local infrastructure (Kubernetes, Minikube) see [docs/infra-local.md](docs/infra-local.md).
 > For AWS infrastructure (Terraform, AWS resources) see [docs/infra-aws.md](docs/infra-aws.md).
+> For monitoring (Prometheus, Grafana, metric archive) see [docs/monitoring.md](docs/monitoring.md).
+> For editing from Windows (VS Code + WSL, Visual Studio clone synced via git remotes) see [docs/dev-workflow-windows.md](docs/dev-workflow-windows.md).
