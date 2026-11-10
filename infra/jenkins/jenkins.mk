@@ -38,7 +38,7 @@ jenkins_rebuild:
 jenkins_password:
 	@docker exec gaku-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 
-# Creates the pipeline job from local/job-config.xml. 
+# Creates the multibranch job from local/job-config.xml. 
 # Run after the setup wizard.
 jenkins_job:
 	@$(JENKINS_CREATE_JOB); \

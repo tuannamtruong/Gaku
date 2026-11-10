@@ -38,7 +38,7 @@ flowchart TD
 | ----------------- | ------------------------------------- | ---------------------------------------------------------------------------------- |
 | `gaku-jenkins`    | built from `infra/jenkins/local/Dockerfile` | Jenkins server - hosts UI, schedules jobs, runs pipeline                           |
 | `smee`            | `node:lts-alpine`                     | Runs `smee-relay.js` - SSE client that forwards GitHub webhook payloads to Jenkins |
-| `gaku-ci-<build>` | `docker/Dockerfile` target `ci`       | Ephemeral per-build container - compiles and tests .NET code                       |
+| `gaku-ci-<branch>-<build>` | `docker/Dockerfile` target `ci`       | Ephemeral per-build container - compiles and tests .NET code                       |
 
 ## 3. Stage Detail
 
@@ -67,7 +67,7 @@ sequenceDiagram
 
 ## 4. Local CI Setup for Smee & Jenkins
 
-Pipeline job config: Git push → `https://github.com/tuannamtruong/Gaku` → Webhook to Smee → Relay to Jenkins → Filter by branch `*/master` → script path `infra/jenkins/local/Jenkinsfile`.
+Multibranch job config: Git push or pull request → `https://github.com/tuannamtruong/Gaku` → Webhook to Smee → Relay to Jenkins → one build per branch or pull request → script path `infra/jenkins/local/Jenkinsfile`.
 
 ### 4.1 Smee Channel
 
@@ -87,7 +87,7 @@ GitHub repo → Settings → Webhooks → Add webhook
 | ------------ | ------------------------ |
 | Payload URL  | your Smee.io channel URL |
 | Content type | `application/json`       |
-| Events       | push event               |
+| Events       | Pushes, Pull requests    |
 
 ### 4.3 Jenkins
 
@@ -98,16 +98,24 @@ make jenkins_up
 make jenkins_password       # initial admin password
 ```
 
-Open `http://localhost:8090`, log in, and install plugins: Pipeline, Git, GitHub, JUnit, Timestamper.
+Open `http://localhost:8090`, log in, and install plugins: Pipeline, Git, GitHub, GitHub Branch Source, JUnit,
+Timestamper.
 
 ### 4.4 Pipeline Job Creation
 
-```bash
-make jenkins_job
-```
+`gaku` is a Multibranch Pipeline. It builds every branch and every pull request opened from a branch of this
+repository, and reports each result to GitHub as a commit status. Only `master` runs `Push to Docker Hub` and
+`Deploy to Local K8s`. 
 
-Creates the job `gaku` from `infra/jenkins/local/job-config.xml` through the Jenkins REST API. It
-asks for the admin password; `JENKINS_USER=<name>` overrides the default user `admin`.
+1. GitHub → Settings → Developer settings → Fine-grained personal access tokens → Generate, for the `Gaku` repository
+   only, with Commit statuses read and write, and Contents and Pull requests read.
+2. Jenkins → Manage Jenkins → Credentials → System → Global credentials → Add Credentials: kind
+   `Username with password`, username `tuannamtruong`, password the token, ID `github`.
+3. `make jenkins_job` creates the job `gaku` from `infra/jenkins/local/job-config.xml` through the Jenkins REST API. It
+   asks for the admin password; `JENKINS_USER=<name>` overrides the default user `admin`.
+4. Jenkins → `gaku` → Scan Repository Now, so the existing branches build without waiting for a push.
+5. GitHub repo → Settings → Branches → add a rule for `master` that requires status checks to pass, and select the
+   Jenkins check. It is listed after the first pull request build.
 
 ### 4.5 Verification
 
@@ -116,7 +124,8 @@ asks for the admin password; `JENKINS_USER=<name>` overrides the default user `a
 | Smee relay is running | `docker logs smee` - should show SSE connected                                        |
 | Jenkins is reachable  | `curl -s -o /dev/null -w "%{http_code}" http://localhost:8090` → `200`                |
 | Webhook delivery      | Push a commit; GitHub repo → Settings → Webhooks → Recent Deliveries → `200` response |
-| Pipeline triggered    | Jenkins dashboard shows a new build for the pipeline job                              |
+| Pipeline triggered    | Jenkins → `gaku` → `master` shows a new build                                         |
+| Pull request check    | Open a pull request; Jenkins builds `PR-<number>` and the pull request shows its status |
 
 ### 4.6 Filemap
 
@@ -125,7 +134,7 @@ infra/jenkins/local/
   Dockerfile           custom Jenkins image
   docker-compose.yml   jenkins + smee
   smee-relay.js        pure Node.js SSE client; converts Smee payloads to JSON for Jenkins
-  job-config.xml       Jenkins pipeline job config
+  job-config.xml       Jenkins multibranch job config
   Jenkinsfile          builds CI image, runs test containers, publishes JUnit results, removes image
   .env
 

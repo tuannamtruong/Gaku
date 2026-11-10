@@ -11,10 +11,6 @@
 pipeline {
     agent any
 
-    triggers {
-        githubPush()
-    }
-
     options {
         buildDiscarder(logRotator(numToKeepStr: '10'))
         timeout(time: 20, unit: 'MINUTES')
@@ -23,13 +19,14 @@ pipeline {
     }
 
     environment {
-        CI_IMAGE      = "gaku-ci:${env.BUILD_NUMBER}"
-        CONTAINER     = "gaku-ci-${env.BUILD_NUMBER}"
+        BUILD_KEY     = "${env.BRANCH_NAME.replaceAll('[^A-Za-z0-9_.-]', '-')}-${env.BUILD_NUMBER}"
+        CI_IMAGE      = "gaku-ci:${env.BUILD_KEY}"
+        CONTAINER     = "gaku-ci-${env.BUILD_KEY}"
         TEST_RESULTS  = "TestResults"
         API_IMAGE     = "gaku-api"
         WEB_IMAGE     = "gaku-web"
         MIGRATOR_IMAGE = "gaku-migrator"
-        IMAGE_TAG     = "${env.BUILD_NUMBER}"
+        IMAGE_TAG     = "${env.GIT_COMMIT.substring(0, 7)}"
     }
 
     stages {
