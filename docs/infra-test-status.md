@@ -124,7 +124,7 @@ Applying [§3 Deploy](infra-local.md#3-deploy), [§4 Verification](infra-local.m
 | Component | Pass criterion | Status | Last tested | Evidence |
 | --- | --- | --- | --- | --- |
 | `smee-relay.js` | A GitHub push webhook arrives at the local controller | Not tested | — | — |
-| `job-config.xml` | Seeded job appears and points at this repo | Not tested | — | — |
+| `job-config.xml` | Seeded multibranch job discovers `master` and pull requests from this repo, and reports commit statuses to GitHub | Not tested | — | — |
 | Stage `Restore & Build` | Solution restores and builds inside the agent | Not tested | — | — |
 | Stages `Test — Domain/Application/Infrastructure/Web` | All four suites run and publish results | Not tested | — | — |
 | Stage `Docker Build` | All three images build inside the agent | Not tested | — | — |

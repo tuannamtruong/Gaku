@@ -269,55 +269,7 @@ Mounts into `gaku-jenkins`:
 | `~/.kube`, read-only | `/home/nam/.kube` | `KUBECONFIG` points at its `config` | Removed |
 | `infra/jenkins/local/kubeconfig`, read-only | `/etc/kubeconfig` | – | `KUBECONFIG` points at it ([§2.1.2 Kubeconfig](#212-kubeconfig)) |
 
-## 4. Test
-
-### 4.1 Container access
-
-Before pushing:
-
-```bash
-make jenkins_rebuild
-docker exec gaku-jenkins kubectl config get-contexts -o name     # minikube only
-docker exec gaku-jenkins kubectl get ns gaku                     # Active
-docker exec gaku-jenkins helm list -n gaku                       # gaku, deployed
-docker exec minikube crictl pull docker.io/tuannamtruong/gaku-api:latest   # Image is up to date / pulled
-docker exec gaku-jenkins sh -c 'command -v minikube || echo removed'
-```
-
-`crictl pull` goes through the same runtime that kubelet uses, so it shows the node can pull from Docker Hub.
-
-### 4.2 Manual build
-
-After the push, click Build Now on `gaku` → `master`. Run `make k8s_test` within 10 minutes of the build, because the
-`db-migrate` Job is deleted 600 s after it finishes.
-
-| Check | Expected |
-| --- | --- |
-| Stages | All green, Push and Deploy included |
-| Docker Hub | `https://hub.docker.com/r/tuannamtruong/gaku-api/tags` lists `git rev-parse --short=7 HEAD`, and so do `gaku-web` and `gaku-migrator` |
-| Deployed image | `kubectl -n gaku get deploy gaku-api gaku-web -o jsonpath='{..image}'` → both `docker.io/tuannamtruong/gaku-*:<short commit SHA>` |
-| Pull policy | `kubectl -n gaku get deploy gaku-api -o jsonpath='{..imagePullPolicy}'` → `IfNotPresent` |
-| No stored login | `docker exec gaku-jenkins ls /var/jenkins_home/.docker/config.json` → `No such file or directory` |
-| Release | `helm history gaku -n gaku` → a new revision, `deployed` |
-| App | `make k8s_test` → every check `[OK]` |
-
-### 4.3 Push trigger
-
-Push a commit to `master`. Jenkins starts a `master` build without Build Now, and the checks in
-[§4.2 Manual build](#42-manual-build) pass with the new commit's SHA.
-
-Push a commit to another branch. Its build runs the tests and skips `Push to Docker Hub` and `Deploy to Local K8s`,
-and `helm history gaku -n gaku` gains no revision.
-
-### 4.4 Minikube stopped
-
-| Step | Expected |
-| --- | --- |
-| `minikube stop`, then Build Now | Tests and `Push to Docker Hub` pass; `Deploy to Local K8s` fails within seconds because helm cannot reach `minikube:8443`, long before helm's `--timeout 5m` or the pipeline's 20-minute `timeout` |
-| `make jenkins_up` while minikube is stopped | Succeeds: the network and the kubeconfig context outlive `minikube stop` |
-| `make startup`, then Build Now | Green again |
-
-## 5. Alternatives considered
+## 4. Alternatives considered
 
 | Option | Why not chosen |
 | --- | --- |
