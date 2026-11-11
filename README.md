@@ -161,7 +161,7 @@ The local Kubernetes target is minikube, deployed with the `gaku` Helm chart. `i
 holds the `gaku-secret` values and must be created by hand, like the root `.env`:
 
 ```bash
-make minikube_up
+minikube start
 make gaku_install_local
 make k8s_test                       # five layers: resources, pods, DNS, TCP, ingress
 ```
