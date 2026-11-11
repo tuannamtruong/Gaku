@@ -4,7 +4,7 @@ set -euxo pipefail
 # Rendered by modules/jenkins-controller. Output lands in /var/log/cloud-init-output.log.
 
 dnf update -y
-dnf install -y java-21-amazon-corretto-headless git docker tar unzip
+dnf install -y java-25-amazon-corretto-headless git docker tar unzip
 
 # --- Docker -----------------------------------------------------------------
 systemctl enable --now docker
