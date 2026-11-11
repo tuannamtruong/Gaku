@@ -42,6 +42,71 @@ jenkins_restart:
 jenkins_rebuild: jenkins_kubeconfig
 	cd $(JENKINS_FOLDER) && docker compose up -d --build
 
+# Updates every installed plugin to the latest version this Jenkins core supports, then restarts.
+jenkins_plugins_update:
+	@# Start a separate process in the Jenkins container to avoid logging in to Jenkins. \
+	JENKINS_EXEC="docker exec gaku-jenkins"; \
+	JENKINS_HOME=/var/jenkins_home; \
+	\
+	# 1. Stop if Jenkins is down or a build is running. A running Pipeline has completed==false in its build.xml. \
+	if ! $$JENKINS_EXEC true 2>/dev/null; then \
+	    echo "[FAIL] gaku-jenkins is not running - make jenkins_up"; \
+	    exit 1; \
+	fi; \
+	if $$JENKINS_EXEC grep -rqs --include=build.xml '<completed>false</completed>' $$JENKINS_HOME/jobs; then \
+	    echo "[FAIL] A build is running - retry when it finishes"; \
+	    exit 1; \
+	fi; \
+	\
+	# 2. List the installed plugins as name:version and print the outdated ones. Nothing outdated: exit. \
+	PLUGINS=$$($$JENKINS_EXEC jenkins-plugin-cli -d $$JENKINS_HOME/plugins --list 2>&1 \
+	    | awk '/^Installed plugins:/{in_list=1;next} /^$$/{in_list=0} in_list{print $$1":"$$2}'); \
+	if ! UPDATE_REPORT=$$($$JENKINS_EXEC jenkins-plugin-cli -d /tmp/pc --no-download \
+	        --available-updates --plugins $$PLUGINS 2>&1); then \
+	    echo "$$UPDATE_REPORT"; \
+	    echo "[FAIL] Could not check for updates"; \
+	    exit 1; \
+	fi; \
+	if ! echo "$$UPDATE_REPORT" | grep 'has an available update'; then \
+	    echo "[OK] All plugins are up to date"; \
+	    exit 0; \
+	fi; \
+	\
+	# 3. Back up the current plugins, replacing the previous backup, for jenkins_plugins_rollback. \
+	if ! $$JENKINS_EXEC sh -c "cd $$JENKINS_HOME && rm -rf plugins.bak && cp -a plugins plugins.bak"; then \
+	    echo "[FAIL] Backup failed - nothing was changed"; \
+	    exit 1; \
+	fi; \
+	\
+	# 4. Download the latest version of every plugin that supports this Jenkins core into jenkins_home. \
+	#    Jenkins keeps running the old plugins until it restarts, so a failure here does not take it down. \
+	if ! $$JENKINS_EXEC jenkins-plugin-cli -d $$JENKINS_HOME/plugins \
+	        --plugins $$(echo "$$PLUGINS" | sed 's/:.*/:latest/') >/dev/null; then \
+	    echo "[FAIL] Download failed - run make jenkins_plugins_rollback before the next restart"; \
+	    exit 1; \
+	fi; \
+	\
+	# 5. Restart so Jenkins loads the new plugins, wait up to 2 minutes for the login page, \
+	#    then fail if the log since the restart shows a plugin that did not load. \
+	RESTART_TIME=$$(date -u +%FT%TZ); \
+	cd $(JENKINS_FOLDER) && docker compose restart jenkins || exit 1; \
+	for i in $$(seq 40); do \
+	    if [ "$$(curl -s -o /dev/null -w '%{http_code}' localhost:8090/login)" = 200 ]; then \
+	        break; \
+	    fi; \
+	    sleep 3; \
+	done; \
+	if docker logs --since $$RESTART_TIME gaku-jenkins 2>&1 | grep -E 'SEVERE|Failed Loading'; then \
+	    echo "[FAIL] Errors above - make jenkins_plugins_rollback restores the previous plugins"; \
+	    exit 1; \
+	fi; \
+	echo "[OK] Plugins updated and Jenkins is up"
+
+# Restores the plugins saved by the last jenkins_plugins_update.
+jenkins_plugins_rollback:
+	docker exec gaku-jenkins sh -c 'cd /var/jenkins_home && test -d plugins.bak && rm -rf plugins && mv plugins.bak plugins'
+	cd $(JENKINS_FOLDER) && docker compose restart jenkins
+
 # Prints the setup wizard's unlock password.
 jenkins_password:
 	@docker exec gaku-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
