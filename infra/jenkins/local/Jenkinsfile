@@ -4,7 +4,7 @@
 //
 // Run all unit tests
 // Dockerize API, WEB app and migrator
-// Load images into minikube
+// Push images to Docker Hub
 // Deploy into k8s with the Helm chart
 // Clean up the CI image
 
@@ -27,6 +27,7 @@ pipeline {
         WEB_IMAGE     = "gaku-web"
         MIGRATOR_IMAGE = "gaku-migrator"
         IMAGE_TAG     = "${env.GIT_COMMIT.substring(0, 7)}"
+        REGISTRY      = "docker.io/tuannamtruong"
     }
 
     stages {
@@ -192,15 +193,22 @@ pipeline {
             }
         }
 
-        stage('Load Images into Minikube') {
+        stage('Push to Docker Hub') {
             when { branch 'master' }
             steps {
-                sh "minikube image load ${env.API_IMAGE}:${env.IMAGE_TAG}"
-                sh "minikube image load ${env.API_IMAGE}:latest"
-                sh "minikube image load ${env.WEB_IMAGE}:${env.IMAGE_TAG}"
-                sh "minikube image load ${env.WEB_IMAGE}:latest"
-                sh "minikube image load ${env.MIGRATOR_IMAGE}:${env.IMAGE_TAG}"
-                sh "minikube image load ${env.MIGRATOR_IMAGE}:latest"
+                withCredentials([usernamePassword(credentialsId: 'dockerhub',
+                        usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_TOKEN')]) {
+                    sh '''
+                        export DOCKER_CONFIG=$(mktemp -d)
+                        trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+                        echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
+
+                        for IMAGE in $API_IMAGE $WEB_IMAGE $MIGRATOR_IMAGE; do
+                          docker tag  $IMAGE:$IMAGE_TAG $REGISTRY/$IMAGE:$IMAGE_TAG
+                          docker push $REGISTRY/$IMAGE:$IMAGE_TAG
+                        done
+                    '''
+                }
             }
         }
 
@@ -211,6 +219,8 @@ pipeline {
                 sh """
                     helm upgrade --install gaku infra/k8s/gaku -n gaku \\
                         -f infra/k8s/gaku/values-local.yaml \\
+                        --set-string image.registry=${env.REGISTRY} \\
+                        --set-string image.pullPolicy=IfNotPresent \\
                         --set-string image.tag=${env.IMAGE_TAG} \\
                         --set-string gitSha=\$(git rev-parse HEAD) \\
                         --rollback-on-failure --timeout 5m

@@ -8,7 +8,7 @@ export
 pg_up:
 	docker compose up -d postgres
 
-local_up: jenkins_up minikube_up pg_up
+local_up: startup jenkins_up pg_up
 
 
 #############################################################################

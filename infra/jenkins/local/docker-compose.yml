@@ -13,13 +13,18 @@ services:
       - "50000:50000"
 
     environment:
-      KUBECONFIG: /home/nam/.kube/config
+      KUBECONFIG: /etc/kubeconfig
 
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/nam/Gaku:/home/nam/Gaku:ro
-      - /home/nam/.kube:/home/nam/.kube:ro
+      - ./kubeconfig:/etc/kubeconfig:ro
+
+    networks:
+      default:                        # smee reaches http://jenkins:8080 here
+      minikube:                       # kubectl and helm reach minikube:8443 here
+        ipv4_address: 192.168.49.254  # a dynamic one can take minikube's 192.168.49.2 while minikube is stopped
 
     # GID 1001 matches the docker socket group on this host.
     # Run `stat /var/run/docker.sock` to verify if docker socket access fails.
@@ -38,6 +43,9 @@ services:
     depends_on:
       - jenkins
 
+networks:
+  minikube:
+    external: true
 
 volumes:
   jenkins_home:

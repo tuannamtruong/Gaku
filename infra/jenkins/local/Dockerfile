@@ -27,9 +27,4 @@ RUN curl -fsSL "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release
 RUN curl -fsSL https://get.helm.sh/helm-v4.3.0-linux-amd64.tar.gz \
         | tar -xz -C /usr/local/bin --strip-components=1 linux-amd64/helm
 
-# --- minikube binary ---
-RUN curl -fsSL -o /usr/local/bin/minikube \
-        https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && \
-    chmod +x /usr/local/bin/minikube
-
 USER jenkins

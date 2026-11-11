@@ -22,7 +22,15 @@ JENKINS_CREATE_JOB = create_job() { \
 # -------------------------------------------------------------------------------------------------
 # Local Jenkins (docker compose, http://localhost:8090)
 # -------------------------------------------------------------------------------------------------
-jenkins_up:
+# Jenkins' own kubeconfig: certificates inlined, API server reached as minikube:8443 on the minikube network.
+# `>` rewrites the mounted file in place, so a running container sees the new content.
+jenkins_kubeconfig:
+	@CFG=$$(kubectl config view --minify --flatten --context minikube) || exit 1; \
+	echo "$$CFG" | sed -E 's#server: https://127.0.0.1:[0-9]+#server: https://minikube:8443#' \
+	  > $(JENKINS_FOLDER)/kubeconfig; \
+	chmod 600 $(JENKINS_FOLDER)/kubeconfig
+
+jenkins_up: jenkins_kubeconfig
 	cd $(JENKINS_FOLDER) && docker compose up -d
 
 jenkins_down:
@@ -31,7 +39,7 @@ jenkins_down:
 jenkins_restart:
 	cd $(JENKINS_FOLDER) && docker compose restart
 
-jenkins_rebuild:
+jenkins_rebuild: jenkins_kubeconfig
 	cd $(JENKINS_FOLDER) && docker compose up -d --build
 
 # Prints the setup wizard's unlock password.
