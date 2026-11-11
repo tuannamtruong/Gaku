@@ -3,6 +3,7 @@ JENKINS_AWS_TF := infra/terraform/environments/staging
 JENKINS_JOB    ?= gaku
 JENKINS_USER   ?= admin
 JENKINS_AWS_JOB_CONFIG ?= ./infra/jenkins/aws/job-config.xml
+JENKINS_PLUGINS_SCRIPT := ./infra/jenkins/jenkins-plugins.sh
 
 # Create a Jenkins job from a config.xml through the REST API.
 JENKINS_CREATE_JOB = create_job() { \
@@ -44,68 +45,11 @@ jenkins_rebuild: jenkins_kubeconfig
 
 # Updates every installed plugin to the latest version this Jenkins core supports, then restarts.
 jenkins_plugins_update:
-	@# Start a separate process in the Jenkins container to avoid logging in to Jenkins. \
-	JENKINS_EXEC="docker exec gaku-jenkins"; \
-	JENKINS_HOME=/var/jenkins_home; \
-	\
-	# 1. Stop if Jenkins is down or a build is running. A running Pipeline has completed==false in its build.xml. \
-	if ! $$JENKINS_EXEC true 2>/dev/null; then \
-	    echo "[FAIL] gaku-jenkins is not running - make jenkins_up"; \
-	    exit 1; \
-	fi; \
-	if $$JENKINS_EXEC grep -rqs --include=build.xml '<completed>false</completed>' $$JENKINS_HOME/jobs; then \
-	    echo "[FAIL] A build is running - retry when it finishes"; \
-	    exit 1; \
-	fi; \
-	\
-	# 2. List the installed plugins as name:version and print the outdated ones. Nothing outdated: exit. \
-	PLUGINS=$$($$JENKINS_EXEC jenkins-plugin-cli -d $$JENKINS_HOME/plugins --list 2>&1 \
-	    | awk '/^Installed plugins:/{in_list=1;next} /^$$/{in_list=0} in_list{print $$1":"$$2}'); \
-	if ! UPDATE_REPORT=$$($$JENKINS_EXEC jenkins-plugin-cli -d /tmp/pc --no-download \
-	        --available-updates --plugins $$PLUGINS 2>&1); then \
-	    echo "$$UPDATE_REPORT"; \
-	    echo "[FAIL] Could not check for updates"; \
-	    exit 1; \
-	fi; \
-	if ! echo "$$UPDATE_REPORT" | grep 'has an available update'; then \
-	    echo "[OK] All plugins are up to date"; \
-	    exit 0; \
-	fi; \
-	\
-	# 3. Back up the current plugins, replacing the previous backup, for jenkins_plugins_rollback. \
-	if ! $$JENKINS_EXEC sh -c "cd $$JENKINS_HOME && rm -rf plugins.bak && cp -a plugins plugins.bak"; then \
-	    echo "[FAIL] Backup failed - nothing was changed"; \
-	    exit 1; \
-	fi; \
-	\
-	# 4. Download the latest version of every plugin that supports this Jenkins core into jenkins_home. \
-	#    Jenkins keeps running the old plugins until it restarts, so a failure here does not take it down. \
-	if ! $$JENKINS_EXEC jenkins-plugin-cli -d $$JENKINS_HOME/plugins \
-	        --plugins $$(echo "$$PLUGINS" | sed 's/:.*/:latest/') >/dev/null; then \
-	    echo "[FAIL] Download failed - run make jenkins_plugins_rollback before the next restart"; \
-	    exit 1; \
-	fi; \
-	\
-	# 5. Restart so Jenkins loads the new plugins, wait up to 2 minutes for the login page, \
-	#    then fail if the log since the restart shows a plugin that did not load. \
-	RESTART_TIME=$$(date -u +%FT%TZ); \
-	cd $(JENKINS_FOLDER) && docker compose restart jenkins || exit 1; \
-	for i in $$(seq 40); do \
-	    if [ "$$(curl -s -o /dev/null -w '%{http_code}' localhost:8090/login)" = 200 ]; then \
-	        break; \
-	    fi; \
-	    sleep 3; \
-	done; \
-	if docker logs --since $$RESTART_TIME gaku-jenkins 2>&1 | grep -E 'SEVERE|Failed Loading'; then \
-	    echo "[FAIL] Errors above - make jenkins_plugins_rollback restores the previous plugins"; \
-	    exit 1; \
-	fi; \
-	echo "[OK] Plugins updated and Jenkins is up"
+	@sh $(JENKINS_PLUGINS_SCRIPT) update local
 
 # Restores the plugins saved by the last jenkins_plugins_update.
 jenkins_plugins_rollback:
-	docker exec gaku-jenkins sh -c 'cd /var/jenkins_home && test -d plugins.bak && rm -rf plugins && mv plugins.bak plugins'
-	cd $(JENKINS_FOLDER) && docker compose restart jenkins
+	@sh $(JENKINS_PLUGINS_SCRIPT) rollback local
 
 # Prints the setup wizard's unlock password.
 jenkins_password:
@@ -137,6 +81,43 @@ jenkins_aws_password:
 	  aws ssm get-command-invocation --command-id "$$CMD" --instance-id "$$ID" \
 	    --query StandardErrorContent --output text; \
 	  exit 1; \
+	fi
+
+# Runs jenkins-plugins.sh on the EC2 controller through SSM Run Command and prints its output.
+# Downloads and the restart outlast `aws ssm wait` (100 seconds), so this polls for up to 15 minutes.
+jenkins_aws_plugins_update:   JENKINS_PLUGINS_ACTION := update
+jenkins_aws_plugins_rollback: JENKINS_PLUGINS_ACTION := rollback
+jenkins_aws_plugins_update jenkins_aws_plugins_rollback:
+	@ID=$$(cd $(JENKINS_AWS_TF) && terraform output -raw jenkins_instance_id 2>/dev/null); \
+	case "$$ID" in \
+	    i-*) ;; \
+	    *) echo "[FAIL] No Jenkins instance - set enable_jenkins = true and apply $(JENKINS_AWS_TF) first"; exit 1;; \
+	esac; \
+	\
+	# The script becomes one SSM command, with its arguments set in front of it. \
+	PARAMS=$$(jq -n --rawfile script $(JENKINS_PLUGINS_SCRIPT) \
+	    '{commands: ["set -- $(JENKINS_PLUGINS_ACTION) ec2", $$script]}'); \
+	CMD=$$(aws ssm send-command --instance-ids "$$ID" --document-name AWS-RunShellScript \
+	    --parameters "$$PARAMS" --query Command.CommandId --output text) || exit 1; \
+	echo "Running $(JENKINS_PLUGINS_ACTION) on $$ID (SSM command $$CMD)"; \
+	\
+	# Status is empty until the instance picks the command up. \
+	for i in $$(seq 180); do \
+	    sleep 5; \
+	    STATUS=$$(aws ssm get-command-invocation --command-id "$$CMD" --instance-id "$$ID" \
+	        --query Status --output text 2>/dev/null); \
+	    case "$$STATUS" in \
+	        Pending|InProgress|Delayed|"") ;; \
+	        *) break;; \
+	    esac; \
+	done; \
+	aws ssm get-command-invocation --command-id "$$CMD" --instance-id "$$ID" \
+	    --query StandardOutputContent --output text; \
+	if [ "$$STATUS" != Success ]; then \
+	    aws ssm get-command-invocation --command-id "$$CMD" --instance-id "$$ID" \
+	        --query StandardErrorContent --output text; \
+	    echo "[FAIL] SSM command $$CMD ended as $${STATUS:-unknown}"; \
+	    exit 1; \
 	fi
 
 # Creates the pipeline job from aws/job-config.xml on the staging controller. 
