@@ -16,4 +16,3 @@ This doc tracks which ports are taken on the local development environment.
 | 9464 | Local monitoring | gaku-api metrics | minikube | `make startup` |
 | 9465 | Local monitoring | gaku-web metrics | minikube | `make startup` |
 | 32768–32772 | Local cluster | minikube node: SSH, Docker, registry, API server, 32443 | minikube | `make startup` |
-| 50000 | CI/CD | Jenkins agents | docker compose | `make jenkins_up` |

@@ -36,7 +36,8 @@ flowchart TD
 
 | Container         | Image                                 | Purpose                                                                            |
 | ----------------- | ------------------------------------- | ---------------------------------------------------------------------------------- |
-| `gaku-jenkins`    | built from `infra/jenkins/local/Dockerfile` | Jenkins server - hosts UI, schedules jobs, runs pipeline                           |
+| `gaku-jenkins`    | `jenkins/jenkins:lts-jdk25`           | Jenkins controller - hosts UI, schedules jobs; 0 executors, so it never runs a build |
+| `gaku-jenkins-agent` | built from `infra/jenkins/local/Dockerfile` | Jenkins agent `agent` - runs every pipeline with docker, kubectl and helm       |
 | `smee`            | `node:lts-alpine`                     | Runs `smee-relay.js` - SSE client that forwards GitHub webhook payloads to Jenkins |
 | `gaku-ci-<branch>-<build>` | `docker/Dockerfile` target `ci`       | Ephemeral per-build container - compiles and tests .NET code                       |
 
@@ -100,8 +101,8 @@ make jenkins_password       # initial admin password
 
 `jenkins_up` and `jenkins_rebuild` first run `make jenkins_kubeconfig`, which writes `infra/jenkins/local/kubeconfig`
 (gitignored) from the host's `minikube` context, with the certificates inlined and the server set to
-`https://minikube:8443`. Jenkins resolves that name because it also joins the `minikube` docker network, at the fixed
-address `192.168.49.254`, so minikube must have been started at least once. After a `minikube delete`, run
+`https://minikube:8443`. The agent resolves that name because it also joins the `minikube` docker network, at the
+fixed address `192.168.49.254`, so minikube must have been started at least once. After a `minikube delete`, run
 `make jenkins_down jenkins_up`.
 
 Open `http://localhost:8090`, log in, and install plugins: Pipeline, Git, GitHub, GitHub Branch Source, JUnit,
@@ -137,8 +138,9 @@ repository, and reports each result to GitHub as a commit status. Only `master` 
 
 ```
 infra/jenkins/local/
-  Dockerfile           custom Jenkins image
-  docker-compose.yml   jenkins + smee
+  Dockerfile           Jenkins agent image: inbound agent + docker CLI, kubectl, helm
+  agent.groovy         controller init script: 0 built-in executors, registers the agent, shares its secret
+  docker-compose.yml   jenkins + agent + smee
   smee-relay.js        pure Node.js SSE client; converts Smee payloads to JSON for Jenkins
   job-config.xml       Jenkins multibranch job config
   Jenkinsfile          builds CI image, runs test containers, publishes JUnit results, deploys to minikube, removes image

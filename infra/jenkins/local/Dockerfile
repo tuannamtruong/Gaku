@@ -1,4 +1,5 @@
-FROM jenkins/jenkins:lts-jdk25
+# This builds the Jenkins build agent 
+FROM jenkins/inbound-agent:latest-jdk25
 
 USER root
 

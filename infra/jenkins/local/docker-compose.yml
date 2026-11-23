@@ -2,27 +2,41 @@ name: jenkins
 
 services:
   jenkins:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: jenkins/jenkins:lts-jdk25
     container_name: gaku-jenkins
     restart: unless-stopped
 
     ports:
       - "8090:8080"
-      - "50000:50000"
-
-    environment:
-      KUBECONFIG: /etc/kubeconfig
 
     volumes:
       - jenkins_home:/var/jenkins_home
+      - ./agent.groovy:/var/jenkins_home/init.groovy.d/agent.groovy:ro
+      - agent_secret:/run/jenkins-agent
+
+  # Runs every build. Restarts until the controller has written the agent secret.
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gaku-jenkins-agent
+    restart: unless-stopped
+
+    environment:
+      JENKINS_URL: http://jenkins:8080
+      JENKINS_AGENT_NAME: agent
+      JENKINS_SECRET: "@/run/jenkins-agent/secret"
+      JENKINS_WEB_SOCKET: "true"
+      JENKINS_AGENT_WORKDIR: /home/jenkins/agent
+      KUBECONFIG: /etc/kubeconfig
+
+    volumes:
+      - agent_secret:/run/jenkins-agent:ro
       - /var/run/docker.sock:/var/run/docker.sock
-      - /home/nam/Gaku:/home/nam/Gaku:ro
       - ./kubeconfig:/etc/kubeconfig:ro
 
     networks:
-      default:                        # smee reaches http://jenkins:8080 here
+      default:
       minikube:                       # kubectl and helm reach minikube:8443 here
         ipv4_address: 192.168.49.254  # a dynamic one can take minikube's 192.168.49.2 while minikube is stopped
 
@@ -30,6 +44,9 @@ services:
     # Run `stat /var/run/docker.sock` to verify if docker socket access fails.
     group_add:
       - "1001"
+
+    depends_on:
+      - jenkins
 
   smee:
     image: node:lts-alpine
@@ -50,3 +67,5 @@ networks:
 volumes:
   jenkins_home:
     name: gaku-jenkins-home
+  agent_secret:                       # in memory, readable only by the jenkins user (uid 1000) of both images
+    driver_opts: { type: tmpfs, device: tmpfs, o: "uid=1000,gid=1000,mode=0700" }
