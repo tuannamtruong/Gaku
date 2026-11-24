@@ -123,11 +123,10 @@ Upon minikube restart, run `make jenkins_down jenkins_up` to rejoin the network 
 
 The jenkins controller installs the plugins listed in `infra/jenkins/local/plugins.txt`.
 
-#### 4.3.4 Configuration as code
+#### 4.3.4 Credentials
 
-At every start, the Configuration as Code plugin applies `infra/jenkins/local/jenkins.yaml`: 0 executors on the
-built-in node, the Jenkins URL, and the credentials below. Compose passes the secret values as files in
-`/run/secrets/`, which `jenkins.yaml` reads as `${NAME}`, so they stay out of git and out of environment variables.
+At every start, `infra/jenkins/local/jenkins.yaml` is applied.
+Compose passes the secret values as files in `/run/secrets/`, which `jenkins.yaml` reads as `${NAME}`.
 
 | Credential | Kind | Value from |
 | --- | --- | --- |
@@ -135,8 +134,8 @@ built-in node, the Jenkins URL, and the credentials below. Compose passes the se
 | `dockerhub` | Username with password | `DOCKERHUB_TOKEN` in `infra/jenkins/local/.env`, a Docker Hub personal access token with write access |
 | `kubeconfig` | Secret file | `infra/jenkins/local/kubeconfig`, see [§4.3.2 Jenkins-Agent kubeconfig](#432-jenkins-agent-kubeconfig) |
 
-The list replaces the stored credentials on every start, so a credential added in the UI is gone after the next
-restart. After changing `.env`, run `make jenkins_down jenkins_up`, since a restart keeps the old secret files.
+The list overwrites the stored credentials on every start.
+After changing `.env`, run `make jenkins_down jenkins_up`. A restart or `make jenkins_up` won't replaces the secret.
 
 ### 4.4 Pipeline Job Creation
 
