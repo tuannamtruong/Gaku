@@ -346,27 +346,39 @@ grep -rn "error message fragment" src/ --include="*.cs" -l
 Always produce this structured report. Be specific — "the exception is at TrailService.cs:47" is
 useful; "there might be an issue in the service layer" is not.
 
-```
-## Problem Source Report
+Emit it as plain markdown, never inside a code fence. Chapters are numbered `#` headings: the
+Claude Code terminal renders `#` bold, italic and underlined, but `##` and deeper only bold, which is
+indistinguishable from inline bold text.
 
-### Symptom
+````markdown
+# 1. Symptom
+
 [Restate what was reported, one sentence]
 
-### Layer
+# 2. Layer
+
 [.NET code | Docker build | Kubernetes infra | EF Core / migration | PostgreSQL | Jenkins CI | Network]
 
-### Evidence
-[The specific log line, exception message, or build output that points to the source]
-  Source: <kubectl logs gaku-api / docker build output / MSBuild output / etc.>
+# 3. Evidence
 
-### Root Cause
-  File: <src/Gaku.X/Y/Z.cs line N> (or config: infra/k8s/local/... or migration: 20250101_AddX.cs)
+Source: `<kubectl logs gaku-api / docker build output / MSBuild output / etc.>`
 
-  [One clear sentence: what is wrong and the mechanical reason it produces the observed symptom]
-
-### How to confirm
-  [Single command the user can run to reproduce or verify the diagnosis]
+```text
+[The specific log line, exception message, or build output that points to the source, verbatim]
 ```
+
+# 4. Root cause
+
+File: `<src/Gaku.X/Y/Z.cs:N>` (or config: `infra/k8s/local/...`, or migration: `20250101_AddX.cs`)
+
+[One clear sentence: what is wrong and the mechanical reason it produces the observed symptom]
+
+# 5. How to confirm
+
+```bash
+[Single command the user can run to reproduce or verify the diagnosis]
+```
+````
 
 If the evidence points to multiple possible causes, list each with its supporting evidence and your
 confidence. Do not speculate without evidence — if a layer shows no matching signal, state that
