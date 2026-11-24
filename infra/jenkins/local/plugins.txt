@@ -1,0 +1,10 @@
+# Pin a version only when a plugin update breaks a build.
+workflow-aggregator
+git
+github
+github-branch-source
+junit
+timestamper
+credentials-binding
+pipeline-graph-view
+dark-theme
