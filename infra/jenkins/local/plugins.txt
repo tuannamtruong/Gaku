@@ -8,3 +8,4 @@ timestamper
 credentials-binding
 pipeline-graph-view
 dark-theme
+configuration-as-code

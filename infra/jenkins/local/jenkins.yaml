@@ -1,0 +1,24 @@
+jenkins:
+  numExecutors: 0
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: github
+              username: tuannamtruong
+              password: "${GITHUB_TOKEN}"
+          - usernamePassword:
+              scope: GLOBAL
+              id: dockerhub
+              username: tuannamtruong
+              password: "${DOCKERHUB_TOKEN}"
+          - file:
+              scope: GLOBAL
+              id: kubeconfig
+              fileName: kubeconfig
+              secretBytes: "${readFileBase64:/run/secrets/kubeconfig}"
+unclassified:
+  location:
+    url: http://localhost:8090/

@@ -36,7 +36,7 @@ flowchart TD
 
 | Container         | Image                                 | Purpose                                                                            |
 | ----------------- | ------------------------------------- | ---------------------------------------------------------------------------------- |
-| `gaku-jenkins`    | built from `infra/jenkins/local/Dockerfile.controller` | Jenkins controller with plugins from `plugins.txt` - hosts UI, schedules jobs; 0 executors|
+| `gaku-jenkins`    | built from `infra/jenkins/local/Dockerfile.controller` | Jenkins controller with plugins from `plugins.txt`, configured by `jenkins.yaml` - hosts UI, schedules jobs; 0 executors|
 | `gaku-jenkins-agent` | built from `infra/jenkins/local/Dockerfile` | Jenkins agent `agent` - runs every pipeline with docker, kubectl and helm       |
 | `smee`            | `node:lts-alpine`                     | Runs `smee-relay.js` - SSE client that forwards GitHub webhook payloads to Jenkins |
 | `gaku-ci-<branch>-<build>` | `docker/Dockerfile` target `ci`       | Ephemeral per-build container - compiles and tests .NET code                       |
@@ -94,7 +94,8 @@ GitHub repo → Settings → Webhooks → Add webhook
 
 #### 4.3.1 Start
 
-Start Jenkins and the Smee relay:
+Start Jenkins and the Smee relay. The credentials come from `infra/jenkins/local/.env`, see
+[§4.3.4 Configuration as code](#434-configuration-as-code).
 
 ```bash
 make jenkins_up
@@ -103,14 +104,17 @@ make jenkins_password       # initial admin password
 
 #### 4.3.2 Jenkins-Agent kubeconfig
 
-The agent deploys to minikube with `kubectl` and `helm`, so it needs a kubeconfig that works from inside its
-container. Starting or rebuilding Jenkins first generates `infra/jenkins/local/kubeconfig` from the
-host's `minikube` context, with two changes:
+The agent deploys to minikube with `helm`, so it needs a kubeconfig that works from inside its container. Starting
+or rebuilding Jenkins first generates `infra/jenkins/local/kubeconfig` from the host's `minikube` context, with two
+changes:
 
 - The certificates are inlined, since the host's certificate files are not mounted in the container.
 - The server `https://127.0.0.1:<port>` becomes `https://minikube:8443`. The agent resolves `minikube` because it also
   joins the `minikube` docker network. Its address there is fixed at `192.168.49.254`, so it cannot take minikube's
   `192.168.49.2` while minikube is stopped.
+
+The controller loads the file as the secret file credential `kubeconfig` when it starts. The `Deploy to Local K8s`
+stage binds it to `KUBECONFIG` with `withCredentials`, so the other stages have no cluster access.
 
 Minikube needs to run to start `minikube` docker network. 
 Upon minikube restart, run `make jenkins_down jenkins_up` to rejoin the network and gets kubeconfig for the new cluster.
@@ -118,6 +122,21 @@ Upon minikube restart, run `make jenkins_down jenkins_up` to rejoin the network 
 #### 4.3.3 Plugins
 
 The jenkins controller installs the plugins listed in `infra/jenkins/local/plugins.txt`.
+
+#### 4.3.4 Configuration as code
+
+At every start, the Configuration as Code plugin applies `infra/jenkins/local/jenkins.yaml`: 0 executors on the
+built-in node, the Jenkins URL, and the credentials below. Compose passes the secret values as files in
+`/run/secrets/`, which `jenkins.yaml` reads as `${NAME}`, so they stay out of git and out of environment variables.
+
+| Credential | Kind | Value from |
+| --- | --- | --- |
+| `github` | Username with password | `GITHUB_TOKEN` in `infra/jenkins/local/.env`, see [§4.4 Pipeline Job Creation](#44-pipeline-job-creation) |
+| `dockerhub` | Username with password | `DOCKERHUB_TOKEN` in `infra/jenkins/local/.env`, a Docker Hub personal access token with write access |
+| `kubeconfig` | Secret file | `infra/jenkins/local/kubeconfig`, see [§4.3.2 Jenkins-Agent kubeconfig](#432-jenkins-agent-kubeconfig) |
+
+The list replaces the stored credentials on every start, so a credential added in the UI is gone after the next
+restart. After changing `.env`, run `make jenkins_down jenkins_up`, since a restart keeps the old secret files.
 
 ### 4.4 Pipeline Job Creation
 
@@ -127,8 +146,8 @@ repository, and reports each result to GitHub as a commit status. Only `master` 
 
 1. GitHub → Settings → Developer settings → Fine-grained personal access tokens → Generate, for the `Gaku` repository
    only, with Commit statuses read and write, and Contents and Pull requests read.
-2. Jenkins → Manage Jenkins → Credentials → System → Global credentials → Add Credentials: kind
-   `Username with password`, username `tuannamtruong`, password the token, ID `github`.
+2. Save the token as `GITHUB_TOKEN` in `infra/jenkins/local/.env` and run `make jenkins_down jenkins_up`. Jenkins
+   loads it as the credential `github`.
 3. `make jenkins_job` creates the job `gaku` from `infra/jenkins/local/job-config.xml` through the Jenkins REST API. It
    asks for the admin password; `JENKINS_USER=<name>` overrides the default user `admin`.
 4. Jenkins → `gaku` → Scan Repository Now, so the existing branches build without waiting for a push.
@@ -152,13 +171,14 @@ infra/jenkins/local/
   Dockerfile           Jenkins agent image: inbound agent + docker CLI, kubectl, helm
   Dockerfile.controller  Jenkins controller image: jenkins/jenkins + the plugins in plugins.txt
   plugins.txt          top-level controller plugins; jenkins-plugin-cli resolves their dependencies
-  agent.groovy         controller init script: 0 built-in executors, registers the agent, shares its secret
+  jenkins.yaml         controller configuration as code: executors, Jenkins URL, credentials
+  agent.groovy         controller init script: registers the agent, shares its secret
   docker-compose.yml   jenkins + agent + smee
   smee-relay.js        pure Node.js SSE client; converts Smee payloads to JSON for Jenkins
   job-config.xml       Jenkins multibranch job config
   Jenkinsfile          builds CI image, runs test containers, publishes JUnit results, deploys to minikube, removes image
-  kubeconfig           generated by make jenkins_kubeconfig
-  .env
+  kubeconfig           generated by make jenkins_kubeconfig; the controller loads it as credential kubeconfig
+  .env                 SMEE_URL and the credential tokens
 
 docker/
   Dockerfile           

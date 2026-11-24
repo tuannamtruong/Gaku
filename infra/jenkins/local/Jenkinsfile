@@ -216,15 +216,17 @@ pipeline {
         stage('Deploy to Local K8s') {
             when { branch 'master' }
             steps {
-                sh """
-                    helm upgrade --install gaku infra/k8s/gaku -n gaku \\
-                        -f infra/k8s/gaku/values-local.yaml \\
-                        --set-string image.registry=${env.REGISTRY} \\
-                        --set-string image.pullPolicy=IfNotPresent \\
-                        --set-string image.tag=${env.IMAGE_TAG} \\
-                        --set-string gitSha=\$(git rev-parse HEAD) \\
-                        --rollback-on-failure --timeout 5m
-                """
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh """
+                        helm upgrade --install gaku infra/k8s/gaku -n gaku \\
+                            -f infra/k8s/gaku/values-local.yaml \\
+                            --set-string image.registry=${env.REGISTRY} \\
+                            --set-string image.pullPolicy=IfNotPresent \\
+                            --set-string image.tag=${env.IMAGE_TAG} \\
+                            --set-string gitSha=\$(git rev-parse HEAD) \\
+                            --rollback-on-failure --timeout 5m
+                    """
+                }
             }
         }
     }

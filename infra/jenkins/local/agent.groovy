@@ -4,7 +4,6 @@ import hudson.slaves.JNLPLauncher
 import jenkins.model.Jenkins
 
 def jenkins = Jenkins.get()
-jenkins.numExecutors = 0
 if (jenkins.getNode('agent') == null) {
     def agent = new DumbSlave('agent', '/home/jenkins/agent', new JNLPLauncher())
     agent.numExecutors = 2

@@ -159,11 +159,13 @@ Used by: `make gaku_install_local` — creates the `gaku-secret` Kubernetes secr
 
 ### `infra/jenkins/local/.env`
 
-Used by: `infra/jenkins/local/docker-compose.yml` to configure the Smee relay sidecar.
+Used by: `infra/jenkins/local/docker-compose.yml` to configure the Smee relay sidecar, and to pass the tokens to the Jenkins controller as compose secrets, which `jenkins.yaml` loads as credentials.
 
-| Variable   | Responsibility                                                                        |
-| ---------- | ------------------------------------------------------------------------------------- |
-| `SMEE_URL` | Smee.io channel URL that relays GitHub webhook payloads to the local Jenkins instance |
+| Variable          | Responsibility                                                                                                              |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `SMEE_URL`        | Smee.io channel URL that relays GitHub webhook payloads to the local Jenkins instance                                       |
+| `GITHUB_TOKEN`    | Fine-grained GitHub PAT for the `Gaku` repo (Commit statuses read/write, Contents and Pull requests read); credential `github` |
+| `DOCKERHUB_TOKEN` | DockerHub personal access token the pipeline pushes images with; credential `dockerhub`                                      |
 
 ---
 

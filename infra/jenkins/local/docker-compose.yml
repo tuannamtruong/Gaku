@@ -14,8 +14,11 @@ services:
 
     volumes:
       - jenkins_home:/var/jenkins_home
+      - ./jenkins.yaml:/var/jenkins_home/jenkins.yaml:ro
       - ./agent.groovy:/var/jenkins_home/init.groovy.d/agent.groovy:ro
       - agent_secret:/run/jenkins-agent
+
+    secrets: [GITHUB_TOKEN, DOCKERHUB_TOKEN, kubeconfig]
 
   # Runs every build. Restarts until the controller has written the agent secret.
   agent:
@@ -31,12 +34,10 @@ services:
       JENKINS_SECRET: "@/run/jenkins-agent/secret"
       JENKINS_WEB_SOCKET: "true"
       JENKINS_AGENT_WORKDIR: /home/jenkins/agent
-      KUBECONFIG: /etc/kubeconfig
 
     volumes:
       - agent_secret:/run/jenkins-agent:ro
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./kubeconfig:/etc/kubeconfig:ro
 
     networks:
       default:
@@ -66,6 +67,15 @@ services:
 networks:
   minikube:
     external: true
+
+# Files in /run/secrets/, which jenkins.yaml reads as ${NAME}.
+secrets:
+  GITHUB_TOKEN:
+    environment: GITHUB_TOKEN
+  DOCKERHUB_TOKEN:
+    environment: DOCKERHUB_TOKEN
+  kubeconfig:
+    file: ./kubeconfig
 
 volumes:
   jenkins_home:
