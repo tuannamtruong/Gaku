@@ -9,3 +9,4 @@ credentials-binding
 pipeline-graph-view
 dark-theme
 configuration-as-code
+docker-plugin

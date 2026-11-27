@@ -95,7 +95,7 @@ GitHub repo → Settings → Webhooks → Add webhook
 #### 4.3.1 Start
 
 Start Jenkins and the Smee relay. The credentials come from `infra/jenkins/local/.env`, see
-[§4.3.4 Configuration as code](#434-configuration-as-code).
+[§4.3.4 Credentials](#434-credentials).
 
 ```bash
 make jenkins_up
@@ -168,6 +168,7 @@ repository, and reports each result to GitHub as a commit status. Only `master` 
 ```
 infra/jenkins/local/
   Dockerfile           Jenkins agent image: inbound agent + docker CLI, kubectl, helm
+  Dockerfile.agent     Jenkins agent image: jenkins/agent + docker CLI, kubectl, helm
   Dockerfile.controller  Jenkins controller image: jenkins/jenkins + the plugins in plugins.txt
   plugins.txt          top-level controller plugins; jenkins-plugin-cli resolves their dependencies
   jenkins.yaml         controller configuration as code: executors, Jenkins URL, credentials

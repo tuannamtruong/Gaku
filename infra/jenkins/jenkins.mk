@@ -31,7 +31,11 @@ jenkins_kubeconfig:
 	  > $(JENKINS_FOLDER)/kubeconfig; \
 	chmod 600 $(JENKINS_FOLDER)/kubeconfig
 
-jenkins_up: jenkins_kubeconfig
+# The controller starts one container from this image per build.
+jenkins_agent_image:
+	docker build -t gaku-jenkins-agent:latest -f $(JENKINS_FOLDER)/Dockerfile.agent $(JENKINS_FOLDER)
+
+jenkins_up: jenkins_kubeconfig jenkins_agent_image
 	cd $(JENKINS_FOLDER) && docker compose up -d
 
 jenkins_down:
@@ -40,7 +44,7 @@ jenkins_down:
 jenkins_restart:
 	cd $(JENKINS_FOLDER) && docker compose restart
 
-jenkins_rebuild: jenkins_kubeconfig
+jenkins_rebuild: jenkins_kubeconfig jenkins_agent_image
 	cd $(JENKINS_FOLDER) && docker compose up -d --build
 
 # Updates every installed plugin to the latest version this Jenkins core supports, then restarts.
