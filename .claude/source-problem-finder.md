@@ -1,20 +1,6 @@
----
-name: source-problem-finder
-description: >
-  Diagnoses the source of errors, exceptions, unexpected behaviour, or symptoms in the Gaku stack.
-  Given any symptom — a stack trace, pod crashing, failing Jenkins build, bad API response, blank
-  page, missing data, build error — this skill traces it all the way to the root cause without
-  assuming the layer first.
+# source-problem-finder — Gaku playbook
 
-  Trigger whenever the user reports: an error message, exception, stack trace, "it's broken",
-  "not working", "failing", "crashing", "can't deploy", unexpected behaviour, or any symptom
-  that needs a diagnosis. Also trigger when another skill or subagent needs a root cause
-  identified before proceeding.
-
-  This skill diagnoses only — it finds and explains the source. It does NOT fix anything.
----
-
-# source-problem-finder
+Loaded by the global `source-problem-finder` skill (`~/.claude/skills/source-problem-finder/`) when working in this repo. 
 
 Find the root cause of a problem in the Gaku stack. Your job ends when you can point at the exact
 file, line, config key, migration, or query that is causing the observed symptom. Do not fix it.
