@@ -9,7 +9,7 @@
 // Clean up the CI image
 
 pipeline {
-    agent any
+    agent { label 'gaku-agent' }
 
     options {
         buildDiscarder(logRotator(numToKeepStr: '10'))
