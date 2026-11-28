@@ -15,8 +15,6 @@ services:
     volumes:
       - jenkins_home:/var/jenkins_home
       - ./jenkins.yaml:/var/jenkins_home/jenkins.yaml:ro
-      - ./agent.groovy:/var/jenkins_home/init.groovy.d/agent.groovy:ro
-      - agent_secret:/run/jenkins-agent
       - /var/run/docker.sock:/var/run/docker.sock       # Allow jenkins controller to call Docker API in host system
 
     # GID 1001 is the docker socket group on this host.
@@ -25,38 +23,6 @@ services:
       - "1001"
 
     secrets: [GITHUB_TOKEN, DOCKERHUB_TOKEN, kubeconfig]
-
-  # Runs every build. Restarts until the controller has written the agent secret.
-  agent:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: gaku-jenkins-agent
-    restart: unless-stopped
-
-    environment:
-      JENKINS_URL: http://jenkins:8080
-      JENKINS_AGENT_NAME: agent
-      JENKINS_SECRET: "@/run/jenkins-agent/secret"
-      JENKINS_WEB_SOCKET: "true"
-      JENKINS_AGENT_WORKDIR: /home/jenkins/agent
-
-    volumes:
-      - agent_secret:/run/jenkins-agent:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-
-    networks:
-      default:
-      minikube:                       # kubectl and helm reach minikube:8443 here
-        ipv4_address: 192.168.49.254  # a dynamic one can take minikube's 192.168.49.2 while minikube is stopped
-
-    # GID 1001 matches the docker socket group on this host.
-    # Run `stat /var/run/docker.sock` to verify if docker socket access fails.
-    group_add:
-      - "1001"
-
-    depends_on:
-      - jenkins
 
   smee:
     image: node:lts-alpine
@@ -70,10 +36,6 @@ services:
     depends_on:
       - jenkins
 
-networks:
-  minikube:
-    external: true
-
 # Files in /run/secrets/, which jenkins.yaml reads as ${NAME}.
 secrets:
   GITHUB_TOKEN:
@@ -86,5 +48,3 @@ secrets:
 volumes:
   jenkins_home:
     name: gaku-jenkins-home
-  agent_secret:                       # in memory, readable only by the jenkins user (uid 1000) of both images
-    driver_opts: { type: tmpfs, device: tmpfs, o: "uid=1000,gid=1000,mode=0700" }

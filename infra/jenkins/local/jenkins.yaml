@@ -1,5 +1,30 @@
 jenkins:
   numExecutors: 0
+  clouds:
+    - docker:
+        name: local-docker
+        containerCap: 3
+        dockerApi:
+          dockerHost:
+            uri: unix:///var/run/docker.sock
+        templates:
+          - name: gaku-agent
+            labelString: gaku-agent
+            mode: NORMAL
+            remoteFs: /home/jenkins/agent
+            pullStrategy: PULL_NEVER
+            removeVolumes: true
+            connector:
+              attach:
+                user: jenkins
+            dockerTemplateBase:
+              image: gaku-jenkins-agent:latest
+              network: minikube
+              # GID 1001 matches the docker socket group on this host.
+              # Run `stat /var/run/docker.sock` to verify if docker socket access fails.
+              extraGroupsString: "1001"
+              mounts:
+                - type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock
 credentials:
   system:
     domainCredentials:

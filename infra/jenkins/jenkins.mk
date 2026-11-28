@@ -24,7 +24,7 @@ JENKINS_CREATE_JOB = create_job() { \
 # Local Jenkins (docker compose, http://localhost:8090)
 # -------------------------------------------------------------------------------------------------
 # Jenkins' own kubeconfig: certificates inlined, API server reached as minikube:8443 on the minikube network.
-# `>` rewrites the mounted file in place, so a running container sees the new content.
+# JCasC reads it only at controller start, so after `minikube delete` run `make jenkins_down jenkins_up`.
 jenkins_kubeconfig:
 	@CFG=$$(kubectl config view --minify --flatten --context minikube) || exit 1; \
 	echo "$$CFG" | sed -E 's#server: https://127.0.0.1:[0-9]+#server: https://minikube:8443#' \

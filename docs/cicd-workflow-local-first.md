@@ -37,7 +37,7 @@ flowchart TD
 | Container         | Image                                 | Purpose                                                                            |
 | ----------------- | ------------------------------------- | ---------------------------------------------------------------------------------- |
 | `gaku-jenkins`    | built from `infra/jenkins/local/Dockerfile.controller` | Jenkins controller with plugins from `plugins.txt`, configured by `jenkins.yaml` - hosts UI, schedules jobs; 0 executors|
-| `gaku-jenkins-agent` | built from `infra/jenkins/local/Dockerfile` | Jenkins agent `agent` - runs every pipeline with docker, kubectl and helm       |
+| `gaku-agent-<id>` | `gaku-jenkins-agent:latest`, built from `infra/jenkins/local/Dockerfile.agent` | Ephemeral agent the controller creates for one build and removes afterwards - runs the pipeline with docker, kubectl and helm, see [§4.3.5 Build agents](#435-build-agents) |
 | `smee`            | `node:lts-alpine`                     | Runs `smee-relay.js` - SSE client that forwards GitHub webhook payloads to Jenkins |
 | `gaku-ci-<branch>-<build>` | `docker/Dockerfile` target `ci`       | Ephemeral per-build container - compiles and tests .NET code                       |
 
@@ -109,15 +109,13 @@ or rebuilding Jenkins first generates `infra/jenkins/local/kubeconfig` from the 
 changes:
 
 - The certificates are inlined, since the host's certificate files are not mounted in the container.
-- The server `https://127.0.0.1:<port>` becomes `https://minikube:8443`. The agent resolves `minikube` because it also
-  joins the `minikube` docker network. Its address there is fixed at `192.168.49.254`, so it cannot take minikube's
-  `192.168.49.2` while minikube is stopped.
+- The server `https://127.0.0.1:<port>` becomes `https://minikube:8443`. The agent resolves `minikube` because it
+  runs on the `minikube` docker network.
 
 The controller loads the file as the secret file credential `kubeconfig` when it starts. The `Deploy to Local K8s`
 stage binds it to `KUBECONFIG` with `withCredentials`, so the other stages have no cluster access.
 
-Minikube needs to run to start `minikube` docker network. 
-Upon minikube restart, run `make jenkins_down jenkins_up` to rejoin the network and gets kubeconfig for the new cluster.
+After `minikube delete` and a new cluster, run `make jenkins_down jenkins_up` to load the new kubeconfig.
 
 #### 4.3.3 Plugins
 
@@ -136,6 +134,21 @@ Compose passes the secret values as files in `/run/secrets/`, which `jenkins.yam
 
 The list overwrites the stored credentials on every start.
 After changing `.env`, run `make jenkins_down jenkins_up`. A restart or `make jenkins_up` won't replaces the secret.
+
+#### 4.3.5 Build agents
+
+The controller has no executors. For each build, the docker-plugin cloud `local-docker` in `jenkins.yaml` starts a
+container from `gaku-jenkins-agent:latest` and removes it when the build ends, at most 3 at a time. `make jenkins_up`
+and `make jenkins_rebuild` build that image first; the cloud never pulls it.
+
+- The controller reaches the docker daemon through the mounted `/var/run/docker.sock`, and starts the agent process
+  with `docker exec` (the `attach` connector). No agent secret is exchanged, and the agent needs no network path to
+  the controller.
+- Agents join the `minikube` network for `helm`. Minikube must be running, or the network is missing and the agent
+  fails to start. An agent started while minikube is stopped can take minikube's address `192.168.49.2`, and then
+  minikube cannot start until that build ends.
+- The template mode is `NORMAL`, so a Jenkinsfile with `agent any` also gets an agent. Branches created before the
+  `gaku-agent` label was added still build.
 
 ### 4.4 Pipeline Job Creation
 
@@ -167,13 +180,11 @@ repository, and reports each result to GitHub as a commit status. Only `master` 
 
 ```
 infra/jenkins/local/
-  Dockerfile           Jenkins agent image: inbound agent + docker CLI, kubectl, helm
   Dockerfile.agent     Jenkins agent image: jenkins/agent + docker CLI, kubectl, helm
   Dockerfile.controller  Jenkins controller image: jenkins/jenkins + the plugins in plugins.txt
   plugins.txt          top-level controller plugins; jenkins-plugin-cli resolves their dependencies
-  jenkins.yaml         controller configuration as code: executors, Jenkins URL, credentials
-  agent.groovy         controller init script: registers the agent, shares its secret
-  docker-compose.yml   jenkins + agent + smee
+  jenkins.yaml         controller configuration as code: executors, docker cloud, Jenkins URL, credentials
+  docker-compose.yml   jenkins + smee
   smee-relay.js        pure Node.js SSE client; converts Smee payloads to JSON for Jenkins
   job-config.xml       Jenkins multibranch job config
   Jenkinsfile          builds CI image, runs test containers, publishes JUnit results, deploys to minikube, removes image

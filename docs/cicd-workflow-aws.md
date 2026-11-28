@@ -72,7 +72,7 @@ The docker images use the unprivileged `app` user (UID 1654) from .NET base imag
 | Tool | Pinned by | Pinned in | Updated by |
 | --- | --- | --- | --- |
 | Trivy | image digest | `infra/jenkins/aws/Jenkinsfile`, `.github/workflows/security-scan.yml` | hand, in both files together |
-| Helm | release version | `infra/jenkins/local/Dockerfile`, `infra/jenkins/local/Dockerfile.agent`, `modules/jenkins-controller/user_data.sh.tftpl` | hand, in all three files together |
+| Helm | release version | `infra/jenkins/local/Dockerfile.agent`, `modules/jenkins-controller/user_data.sh.tftpl` | hand, in both files together |
 | Gitleaks | image digest | `.github/workflows/security-scan.yml`, `.githooks/pre-commit` | hand, in both files together |
 | ZAP | image digest | `infra/jenkins/aws/Jenkinsfile.dast` | hand |
 | GitHub Actions | commit SHA | `.github/workflows/security-scan.yml` | Dependabot, a weekly PR (`.github/dependabot.yml`) |
